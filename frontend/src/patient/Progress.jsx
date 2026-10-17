@@ -1,13 +1,13 @@
 import { useRecords } from '../records/recordsContext';
-import { avg, exs } from '../metrics';
-import { LineChart, HBar, KPIs, DemoBanner } from '../utils';
+import { avg } from '../metrics';
+import { LineChart, KPIs, DemoBanner } from '../utils';
+import ScoreTimeCharts from '../components/ExerciseCharts';
 
 export default function PatientProgress() {
   const { patientId, sessions, assignment, backend } = useRecords();
   const history = sessions(patientId);
   const plan = assignment(patientId);
   const scored = history.filter(session => Number.isFinite(avg(session.r)));
-  const exerciseAverages = exs(history);
 
   return (
     <>
@@ -19,18 +19,7 @@ export default function PatientProgress() {
         <LineChart vals={scored.map(session => avg(session.r))} labs={scored.map(session => session.d.slice(0, 6))} />
         <p className="mut">Displayed on a 0–100 scale. This is not a recovery percentage.</p>
       </div>
-      <div className="card">
-        <h3>Average score by exercise</h3>
-        {exerciseAverages.length
-          ? <HBar rows={exerciseAverages.map(row => [row[0], Math.round((row[1] ?? 0) * 100), row[1] == null ? 'Unavailable' : `${Math.round(row[1] * 100)}`])} />
-          : <p className="mut">No exercise results yet.</p>}
-      </div>
-      <div className="card">
-        <h3>Average assessed time by exercise</h3>
-        {exerciseAverages.length
-          ? <HBar rows={exerciseAverages.map(row => [row[0], Math.min(100, Math.round(row[2] / 70 * 100)), `${Math.round(row[2])} s`])} />
-          : <p className="mut">No exercise results yet.</p>}
-      </div>
+      <ScoreTimeCharts results={history.flatMap(session => session.r)} scoreTitle="Average score for each exercise" timeTitle="Average time in seconds for each exercise" />
       <div className="card">
         <h3>Completion</h3>
         <p>{history.length} saved session{history.length === 1 ? '' : 's'} for {plan?.name ?? 'the current account'}.</p>

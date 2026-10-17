@@ -11,3 +11,9 @@ export function saveSessionDraft(patientId, draft) {
 export function clearSessionDraft(patientId) {
   localStorage.removeItem(key(patientId));
 }
+
+export function startDraft(plan, patientId, exIdx, all) {
+  const draft = { sessionId: crypto.randomUUID(), assignmentId: plan.assignmentId, assignmentVersion: plan.v, exIdx, all, done: [], startedAtClient: new Date().toISOString() };
+  saveSessionDraft(patientId, draft);
+  return draft;
+}

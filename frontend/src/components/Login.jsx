@@ -60,7 +60,6 @@ export default function Login() {
         ) : (
           <>
             <button type="button" className="btn" style={{ width: '100%', marginBottom: 8 }} onClick={() => enterDemo('patient')}>Open patient demo</button>
-            <button type="button" className="btn s" style={{ width: '100%', marginBottom: 8 }} onClick={() => enterDemo('patient2')}>Open second patient demo</button>
             <button type="button" className="btn s" style={{ width: '100%' }} onClick={() => enterDemo('clinician')}>Open clinician demo</button>
           </>
         )}

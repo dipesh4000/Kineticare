@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { EXERCISES } from '../data';
+import { ALL_EXERCISES, VIDEO_ONLY_EXERCISES } from '../data';
 import { useRecords } from '../records/recordsContext';
 import { toast } from '../components/toastBus';
 import { useAuth } from '../auth/authContext';
@@ -10,7 +10,8 @@ const defaults = exercise => ({
   checked: false,
   t: 45,
   targetReps: 5,
-  targetExcursionDeg: exercise === 'Squat' ? 45 : 75,
+  targetExcursionDeg: exercise === 'Squat' ? 45 : exercise === 'Toe Touch' ? 60 : 75,
+  videoOnly: VIDEO_ONLY_EXERCISES.includes(exercise),
   note: '',
   referenceVersionId: '',
 });
@@ -26,7 +27,7 @@ export default function ClientAssign() {
   const initial = savedDraft ?? current;
   const [planName, setPlanName] = useState(initial?.name ?? 'Mobility plan');
   const [frequency, setFrequency] = useState(initial?.schedule?.weeklyFrequency ?? 3);
-  const [items, setItems] = useState(EXERCISES.map(exercise => {
+  const [items, setItems] = useState(ALL_EXERCISES.map(exercise => {
     const item = initial?.items?.find(candidate => candidate.ex === exercise);
     return item ? { ...defaults(exercise), ...item, checked: true } : defaults(exercise);
   }));
@@ -60,7 +61,8 @@ export default function ClientAssign() {
     if (!Number.isInteger(frequency) || frequency < 1 || frequency > 7) return 'Weekly frequency must be between 1 and 7.';
     for (const item of assignmentValue.items) {
       if (![item.t, item.targetReps, item.targetExcursionDeg].every(Number.isFinite)) return `Enter valid targets for ${item.ex}.`;
-      if (item.t < 10 || item.t > 1800 || item.targetReps < 1 || item.targetReps > 100 || item.targetExcursionDeg <= 0 || item.targetExcursionDeg > 180) return `Targets for ${item.ex} are outside the supported range.`;
+      if (item.t < 10 || item.t > 1800 || item.targetReps < 1 || item.targetReps > 100) return `Targets for ${item.ex} are outside the supported range.`;
+      if (!item.videoOnly && (item.targetExcursionDeg <= 0 || item.targetExcursionDeg > 180)) return `Targets for ${item.ex} are outside the supported range.`;
       if (!item.referenceVersionId) return `Choose an approved reference for ${item.ex}.`;
     }
     return '';
@@ -109,8 +111,8 @@ export default function ClientAssign() {
               </select>
               {!approvedReferences(item.ex).length && <p className="mut">Capture and approve this exercise in the library before publishing.</p>}
               <div className="grid">
-                <label>Target reps<input type="number" min="1" max="100" value={item.targetReps} onChange={event => setItem(index, { targetReps: Number(event.target.value) })} /></label>
-                <label>Target movement (degrees)<input type="number" min="1" max="180" value={item.targetExcursionDeg} onChange={event => setItem(index, { targetExcursionDeg: Number(event.target.value) })} /></label>
+                <label>{item.videoOnly ? 'Suggested reps (not counted)' : 'Target reps'}<input type="number" min="1" max="100" value={item.targetReps} onChange={event => setItem(index, { targetReps: Number(event.target.value) })} /></label>
+                {!item.videoOnly && <label>Target movement (degrees)<input type="number" min="1" max="180" value={item.targetExcursionDeg} onChange={event => setItem(index, { targetExcursionDeg: Number(event.target.value) })} /></label>}
                 <label>Time limit (seconds)<input type="number" min="10" max="1800" value={item.t} onChange={event => setItem(index, { t: Number(event.target.value) })} /></label>
               </div>
               <label>Instructions<textarea rows="2" value={item.note} onChange={event => setItem(index, { note: event.target.value })} /></label>
@@ -123,7 +125,7 @@ export default function ClientAssign() {
       <div className="card">
         <h3>Patient preview</h3>
         <b>{planName || 'Plan'}</b>
-        {items.filter(item => item.checked).map(item => <p key={item.ex}>{item.ex}: {item.targetReps} reps, {item.targetExcursionDeg}° target · {item.note || 'No additional note'}</p>)}
+        {items.filter(item => item.checked).map(item => <p key={item.ex}>{item.ex}: {item.videoOnly ? `video guide, about ${item.targetReps} reps, not camera-measured` : `${item.targetReps} reps, ${item.targetExcursionDeg}° target`} · {item.note || 'No additional note'}</p>)}
       </div>
     </>
   );

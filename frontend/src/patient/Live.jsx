@@ -1,14 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useRecords } from '../records/recordsContext';
-import { armRaiseAngle, squatKneeAngle } from '../exercise/definitions';
+import { exerciseMeta, measureAngle, movementSignal } from '../exercise/measure';
+import ReferenceVideo from '../components/ReferenceVideo';
 import { advanceRep, createRepState } from '../exercise/engine';
 import { calibrateRest } from '../exercise/reference';
-import { scoreRepetitions } from '../exercise/score';
+import { scoreRep, scoreRepetitions } from '../exercise/score';
 import usePoseCamera from '../vision/usePoseCamera';
 import { saveSessionDraft } from '../session/drafts';
+import { startProfiler } from '../session/profiler';
 
 const CALIBRATION_MS = 2000;
+
+const ORDINAL = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const repVerdict = rep => (rep.withinTarget ? 'Good rep.' : rep.peak < 0.9 ? 'Go a little deeper.' : 'A little too far, ease off.')
+  + (rep.durationMs < 1500 ? ' Slow down.' : rep.durationMs > 5500 ? ' A bit quicker.' : '');
 
 function Skeleton({ paused }) {
   return (
@@ -38,7 +44,11 @@ export default function PatientLive() {
 
 function LiveSession({ state, exIdx, plan, exercise, patientId }) {
   const nav = useNavigate();
-  const replayDuration = 8;
+  const { workspace } = useRecords();
+  const reference = workspace.references.find(item => item.versionId === exercise.referenceVersionId);
+  const [showDemo, setShowDemo] = useState(false);
+  const meta = exerciseMeta(exercise.ex);
+  const replayDuration = Math.ceil(exercise.targetReps * 3);
   const [mode, setMode] = useState(null);
   const [timing, setTiming] = useState({ elapsed: 0, active: 0, paused: 0, unassessed: 0, readyRest: 0 });
   const [paused, setPaused] = useState(false);
@@ -48,7 +58,9 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
   const [calibration, setCalibration] = useState({ status: 'idle', progress: 0, message: '' });
   const [repState, setRepState] = useState(createRepState);
   const [movementProgress, setMovementProgress] = useState(0);
-  const [speechEnabled, setSpeechEnabled] = useState(false);
+  const [speechEnabled, setSpeechEnabled] = useState(true);
+  const speechRef = useRef(true);
+  const coachRef = useRef({ reached: false, lastPhase: 'REST' });
   const [cue, setCue] = useState('');
   const completedRef = useRef(state?.done || []);
   const calibrationRef = useRef(null);
@@ -56,40 +68,52 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
   const repRef = useRef(createRepState());
   const squatSideRef = useRef(null);
   const lastCueRef = useRef(0);
+  const smoothRef = useRef([]);
+  const profilerRef = useRef(null);
 
-  const announce = useCallback((text, timestamp) => {
-    if (timestamp - lastCueRef.current < 3000) return;
+  useEffect(() => { speechRef.current = speechEnabled; if (!speechEnabled && 'speechSynthesis' in window) speechSynthesis.cancel(); }, [speechEnabled]);
+
+  // Spoken coaching. interrupt=true cuts off whatever is being said (used for rep counts).
+  const speak = useCallback((text, interrupt = false) => {
+    if (!speechRef.current || !('speechSynthesis' in window)) return;
+    if (interrupt) speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = speechSynthesis.getVoices();
+    utterance.voice = voices.find(voice => /^en-(IN|GB|US)/i.test(voice.lang)) ?? voices.find(voice => voice.lang.startsWith('en')) ?? null;
+    utterance.lang = utterance.voice?.lang ?? 'en-US';
+    utterance.rate = 0.95;
+    speechSynthesis.speak(utterance);
+  }, []);
+
+  const announce = useCallback((text, timestamp, force = false) => {
+    if (!force && timestamp - lastCueRef.current < 3000) return;
     lastCueRef.current = timestamp;
     setCue(text);
-    if (speechEnabled && 'speechSynthesis' in window) {
-      speechSynthesis.cancel();
-      speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-    }
-  }, [speechEnabled]);
+    speak(text, force);
+  }, [speak]);
 
   useEffect(() => () => {
     if ('speechSynthesis' in window) speechSynthesis.cancel();
+    profilerRef.current?.stop();
   }, []);
 
   const measurePose = useCallback(pose => {
     if (!pose) return null;
-    if (exercise.ex === 'Squat') {
-      const available = ['left', 'right']
-        .map(side => ({ side, angle: squatKneeAngle(pose.keypoints, side) }))
-        .filter(result => Number.isFinite(result.angle));
-      if (!available.length) return null;
-      const selected = available.find(result => result.side === squatSideRef.current) ?? available[0];
-      if (calibrationRef.current && !squatSideRef.current) squatSideRef.current = selected.side;
-      return selected.angle;
-    }
-    const angles = ['left', 'right']
-      .map(side => armRaiseAngle(pose.keypoints, side))
-      .filter(Number.isFinite);
-    return angles.length === 2 ? (angles[0] + angles[1]) / 2 : null;
+    const result = measureAngle(exercise.ex, pose.keypoints, squatSideRef.current);
+    if (calibrationRef.current && !squatSideRef.current) squatSideRef.current = result.side;
+    return result.angle;
   }, [exercise.ex]);
 
   const onPose = useCallback((pose, timestamp) => {
-    const angle = measurePose(pose);
+    profilerRef.current?.tick();
+    const raw = measurePose(pose);
+    // Median of the last 5 samples removes single-frame keypoint jumps.
+    let angle = raw;
+    if (Number.isFinite(raw)) {
+      smoothRef.current = [...smoothRef.current.slice(-4), raw];
+      const sorted = [...smoothRef.current].sort((a, b) => a - b);
+      angle = sorted[Math.floor(sorted.length / 2)];
+    } else smoothRef.current = [];
     setMeasurement(Number.isFinite(angle) ? Math.round(angle) : null);
 
     if (calibrationRef.current) {
@@ -110,6 +134,8 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       setRepState(repRef.current);
       setMovementProgress(0);
       setCalibration({ status: 'ready', progress: 100, message: `Rest position: ${Math.round(result.value)}°` });
+      coachRef.current = { reached: false, lastPhase: 'REST' };
+      announce(`Calibrated. Start your first repetition, target ${exercise.targetReps}.`, timestamp, true);
       return;
     }
 
@@ -122,16 +148,29 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       return;
     }
 
-    const signal = exercise.ex === 'Squat' ? restRef.current - angle : angle - restRef.current;
+    const signal = movementSignal(exercise.ex, restRef.current, angle);
     const progress = signal / exercise.targetExcursionDeg;
     setMovementProgress(Math.max(0, progress));
     const previous = repRef.current;
     repRef.current = advanceRep(previous, { progress, timestamp });
     setRepState(repRef.current);
-    if (repRef.current.attemptedReps > previous.attemptedReps) {
-      announce(repRef.current.withinTargetReps > previous.withinTargetReps ? 'Repetition reached the assigned target.' : 'Repetition recorded below the assigned target.', timestamp);
+    if (repRef.current.rejectedReps > (previous.rejectedReps ?? 0)) {
+      announce('Movement not counted. Check your camera position and move smoothly.', timestamp, true);
     }
-  }, [exercise.ex, exercise.targetExcursionDeg, measurePose, paused, announce]);
+    // Mid-rep coaching: tell the user when they have reached the target depth.
+    const coach = coachRef.current;
+    if (repRef.current.phase === 'OUTBOUND' && !coach.reached && progress >= 0.9) {
+      coach.reached = true;
+      announce('Good, now return.', timestamp, true);
+    }
+    if (repRef.current.phase === 'REST') coach.reached = false;
+    if (repRef.current.attemptedReps > previous.attemptedReps) {
+      const rep = repRef.current.reps.at(-1);
+      const count = repRef.current.attemptedReps;
+      const done = repRef.current.withinTargetReps >= exercise.targetReps;
+      announce(`${ORDINAL[count] ?? count}. ${repVerdict(rep)}${done ? ' All repetitions done. Press finish exercise.' : ''}`, timestamp, true);
+    }
+  }, [exercise.ex, exercise.targetExcursionDeg, exercise.targetReps, measurePose, paused, announce]);
 
   const {
     videoRef, canvasRef, status: cameraStatus, error: cameraError,
@@ -151,23 +190,59 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [mode, paused, active, calibration.status, replayTrackingLost]);
+  }, [mode, paused, active, calibration.status, replayTrackingLost, replayDuration]);
 
   const finish = useCallback(result => {
+    speak('Exercise complete.', true);
     const completed = [...completedRef.current, result];
     saveSessionDraft(patientId, { ...state, exIdx, done: completed, sessionId: state?.sessionId });
-    if (state?.all && exIdx + 1 < plan.items.length) {
-      nav('/patient/live', { state: { ...state, exIdx: exIdx + 1, done: completed, all: true } });
+    const nextIdx = plan.items.findIndex((item, index) => index > exIdx && !item.videoOnly);
+    if (state?.all && nextIdx !== -1) {
+      nav('/patient/live', { state: { ...state, exIdx: nextIdx, done: completed, all: true } });
     } else {
       nav('/patient/sum', { state: { ...state, done: completed } });
     }
-  }, [state, exIdx, plan.items.length, nav, patientId]);
+  }, [state, exIdx, plan.items, nav, patientId, speak]);
 
+  // Replay: a synthetic movement signal goes through the same rep counter and scoring as the camera.
   useEffect(() => {
-    if (mode === 'replay' && timing.active >= replayDuration) {
-      finish({ ex: exercise.ex, t: replayDuration, s: +(.7 + Math.random() * .25).toFixed(2), c: 'Replay demo' });
-    }
-  }, [mode, timing.active, finish, exercise.ex]);
+    if (mode !== 'replay' || paused || replayTrackingLost) return undefined;
+    const peaks = [1, 0.98, 1.04, 0.95, 1.02, 1.0, 0.97];
+    const startedAt = performance.now() - timing.active * 1000;
+    const id = setInterval(() => {
+      const now = performance.now();
+      const cycle = (now - startedAt) / 3000;
+      const phase = cycle % 1;
+      const peak = peaks[Math.floor(cycle) % peaks.length];
+      const progress = phase < 0.12 || phase > 0.92 ? 0 : peak * Math.sin(Math.PI * (phase - 0.12) / 0.8);
+      setMovementProgress(Math.max(0, progress));
+      const before = repRef.current.attemptedReps;
+      repRef.current = advanceRep(repRef.current, { progress, timestamp: now });
+      setRepState(repRef.current);
+      if (repRef.current.attemptedReps > before) {
+        const count = repRef.current.attemptedReps;
+        setCue(`Rep ${count}: ${repVerdict(repRef.current.reps.at(-1))}`);
+        speak(`${ORDINAL[count] ?? count}. ${repVerdict(repRef.current.reps.at(-1))}`, true);
+      }
+    }, 100);
+    return () => clearInterval(id);
+  }, [mode, paused, replayTrackingLost, speak]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const replayDone = mode === 'replay' && timing.active >= replayDuration;
+  useEffect(() => {
+    if (!replayDone) return;
+    const reps = repRef.current.reps;
+    const score = scoreRepetitions(reps);
+    finish({
+      ex: exercise.ex, t: replayDuration, elapsedMs: replayDuration * 1000, activeMs: replayDuration * 1000,
+      trackingCoverage: 1,
+      s: score ? score.score / 100 : null, movementScore: score?.score ?? null,
+      scoreComponents: score?.components ?? null, formulaVersion: score?.formulaVersion ?? null,
+      reps: reps.map(rep => ({ peak: +rep.peak.toFixed(2), durationMs: Math.round(rep.durationMs), withinTarget: rep.withinTarget, score: scoreRep(rep).score })),
+      attemptedReps: repRef.current.attemptedReps, assessedReps: repRef.current.assessedReps, withinTargetReps: repRef.current.withinTargetReps,
+      completion: 'completed', c: 'Replay demo (simulated)',
+    });
+  }, [replayDone]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startCamera = async () => {
     setMode('camera');
@@ -176,8 +251,12 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
     setCalibration({ status: 'idle', progress: 0, message: '' });
     restRef.current = null;
     squatSideRef.current = null;
+    smoothRef.current = [];
     repRef.current = createRepState();
     setRepState(repRef.current);
+    profilerRef.current?.stop();
+    profilerRef.current = startProfiler(`${exercise.ex} (camera)`);
+    speak(`${exercise.ex}. Stand ${exercise.ex === 'Side Arm Raise' ? 'facing' : 'side-on to'} the camera with your whole body in view.`, true);
     await startPoseCamera();
   };
 
@@ -187,7 +266,15 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
     repRef.current = createRepState();
     setRepState(repRef.current);
     setCalibration({ status: 'collecting', progress: 0, message: 'Hold still in your resting position.' });
+    speak('Hold still in your resting position.', true);
   };
+
+  // Start calibrating automatically once the camera sees the required joints.
+  useEffect(() => {
+    if (cameraStatus !== 'running' || calibration.status !== 'idle' || !trackingUsable) return undefined;
+    const id = setTimeout(() => startCalibration(), 2500);
+    return () => clearTimeout(id);
+  }, [cameraStatus, calibration.status, trackingUsable]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const togglePause = () => {
     if (!paused) {
@@ -213,6 +300,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       movementScore: score?.score ?? null,
       scoreComponents: score?.components ?? null,
       formulaVersion: score?.formulaVersion ?? null,
+      reps: repState.reps.map(rep => ({ peak: +rep.peak.toFixed(2), durationMs: Math.round(rep.durationMs), withinTarget: rep.withinTarget, score: scoreRep(rep).score })),
       attemptedReps: repState.attemptedReps,
       assessedReps: repState.assessedReps,
       withinTargetReps: repState.withinTargetReps,
@@ -220,6 +308,9 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       c: score ? 'Camera measured' : 'Unable to score',
     });
   };
+
+  const liveScore = scoreRepetitions(repState.reps);
+  const lastRep = repState.reps.at(-1);
 
   const cameraLabel = calibration.status === 'collecting'
     ? 'Calibrating'
@@ -229,8 +320,17 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
   return (
     <>
       <div className="row sp">
-        <h2 style={{ margin: 0 }}>{exercise.ex}</h2>
-        <span className="tag">{state?.all ? `${exIdx + 1} of ${plan.items.length}` : 'Single exercise'}</span>
+        <h2 style={{ margin: 0 }}>Workout</h2>
+      </div>
+      <div className="row" style={{ margin: '10px 0', flexWrap: 'wrap' }}>
+        {!mode ? (
+          <>
+            <button className="btn" onClick={startCamera}>Start camera</button>
+            <button className="btn s" onClick={() => setMode('replay')}>Use replay demo</button>
+          </>
+        ) : mode === 'camera' ? (
+          <button className="btn s" onClick={() => setViewMode(value => value === 'camera' ? 'skeleton' : 'camera')}>{viewMode === 'camera' ? 'Canvas Live' : 'Show camera'}</button>
+        ) : null}
       </div>
       {mode === 'replay' && <div className="demo">Replay demo: movement and score are simulated.</div>}
       <div className={`cam${paused || !active ? ' paused' : ''}`} aria-label={mode === 'camera' ? 'Live camera with pose overlay' : 'Exercise preview'}>
@@ -244,27 +344,55 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
         </span>
       </div>
 
+      <div style={{ marginTop: 12 }}>
+        <div className="prog" style={{ height: 22 }} role="progressbar" aria-label="Movement progress" aria-valuemin={0} aria-valuemax={100}
+          aria-valuenow={Math.round(Math.min(100, movementProgress * 100))}>
+          <b style={{ width: `${Math.min(100, movementProgress * 100)}%`, transition: 'width .12s linear' }} />
+        </div>
+        <div className="row sp mut" style={{ fontSize: 12, marginTop: 2 }}><span>0%</span><span>50%</span><span>100%</span></div>
+        <h2 style={{ textAlign: 'center', margin: '4px 0 0' }}>{exercise.ex}</h2>
+        <p className="mut" style={{ textAlign: 'center', margin: 0 }}>{state?.all ? `${plan.items.slice(0, exIdx + 1).filter(item => !item.videoOnly).length} of ${plan.items.filter(item => !item.videoOnly).length}` : 'Single exercise'} · target {exercise.targetExcursionDeg}° × {exercise.targetReps} reps</p>
+      </div>
+
+      {reference && (
+        <div style={{ marginTop: 12 }}>
+          <button className="btn s sm" onClick={() => setShowDemo(value => !value)}>{showDemo ? 'Hide demo video' : 'Show demo video'}</button>
+          {showDemo && <div className="vid" style={{ marginTop: 10, maxWidth: 220 }}><ReferenceVideo mediaPath={reference.mediaPath} loop autoPlay controls={false} /></div>}
+        </div>
+      )}
       {cameraError && <div className="demo" role="alert" style={{ marginTop: 12 }}>{cameraError}</div>}
       {mode === 'replay' && replayTrackingLost && <div className="demo" role="alert" style={{ marginTop: 12 }}>Unable to assess. Adjust your position and retry.</div>}
-      {cue && mode === 'camera' && <div className="demo" role="status" style={{ marginTop: 12 }}>{cue}</div>}
-      {mode === 'camera' && (
+      {cue && mode && <div className="demo" role="status" style={{ marginTop: 12 }}>{cue}</div>}
+      {(mode === 'camera' || mode === 'replay') && (
         <div className="card" style={{ marginTop: 12 }}>
           <div className="row sp">
-            <span>{measurement === null ? 'Required joints not visible' : `${exercise.ex === 'Squat' ? 'Knee angle' : 'Average shoulder angle'}: ${measurement}°`}</span>
-            <b>{repState.withinTargetReps}/{exercise.targetReps} reps</b>
+            <span>{mode === 'replay' ? 'Simulated movement' : measurement === null ? 'Required joints not visible' : `${meta.angleLabel}: ${measurement}°`}</span>
+            <b>{repState.attemptedReps}/{exercise.targetReps} reps</b>
           </div>
-          {calibration.status === 'collecting' && <div className="prog" style={{ marginTop: 10 }}><b style={{ width: `${calibration.progress}%` }} /></div>}
-          {calibration.message && <p className="mut" role={calibration.status === 'error' ? 'alert' : undefined}>{calibration.message}</p>}
-          {calibration.status === 'ready' && (
+          {mode === 'camera' && calibration.status === 'collecting' && <div className="prog" style={{ marginTop: 10 }}><b style={{ width: `${calibration.progress}%` }} /></div>}
+          {mode === 'camera' && calibration.message && <p className="mut" role={calibration.status === 'error' ? 'alert' : undefined}>{calibration.message}</p>}
+          {(calibration.status === 'ready' || mode === 'replay') && (
             <>
-              <div className="prog" aria-label={`Movement target ${Math.round(Math.min(1, movementProgress) * 100)} percent`}>
-                <b style={{ width: `${Math.min(100, movementProgress * 100)}%` }} />
+              <div className="st4" style={{ margin: '10px 0' }}>
+                <div><b>{repState.attemptedReps}</b>Reps counted</div>
+                <div><b>{repState.withinTargetReps}</b>On target</div>
+                <div><b>{liveScore ? liveScore.score : '—'}</b>Live score</div>
+                <div><b>{lastRep ? `${(lastRep.durationMs / 1000).toFixed(1)}s` : '—'}</b>Last rep time</div>
               </div>
-              <p className="mut">Phase: {repState.phase.toLowerCase()} · attempts {repState.attemptedReps} · target range 90–110%</p>
+              <p className="mut">Phase: {repState.phase.toLowerCase()} · target range 90–110% of {exercise.targetExcursionDeg}°{repState.rejectedReps ? ` · ${repState.rejectedReps} movement(s) ignored (tracking glitch or out of range)` : ''}</p>
+              {repState.reps.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} aria-label="Repetition log">
+                  {repState.reps.map((rep, index) => (
+                    <span key={index} className={`tag ${rep.withinTarget ? 'ok' : 'warn'}`}>
+                      #{index + 1} · {Math.round(rep.peak * 100)}% · {(rep.durationMs / 1000).toFixed(1)}s · {scoreRep(rep).score}
+                    </span>
+                  ))}
+                </div>
+              )}
               {repState.withinTargetReps >= exercise.targetReps && <p className="tag ok">Assigned repetitions reached. Finish when ready.</p>}
             </>
           )}
-          {cameraStatus === 'running' && calibration.status !== 'collecting' && (
+          {mode === 'camera' && cameraStatus === 'running' && calibration.status !== 'collecting' && (
             <button className="btn s sm" disabled={!trackingUsable} onClick={startCalibration}>
               {calibration.status === 'ready' ? 'Recalibrate' : 'Calibrate resting position'}
             </button>
@@ -272,12 +400,6 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
         </div>
       )}
 
-      {!mode && (
-        <div className="row" style={{ marginTop: 14, flexWrap: 'wrap' }}>
-          <button className="btn" onClick={startCamera}>Start camera</button>
-          <button className="btn s" onClick={() => setMode('replay')}>Use replay demo</button>
-        </div>
-      )}
       <div className="row sp">
         <b style={{ fontSize: 24 }}>{timing.active}s</b>
         <span className="mut">{mode === 'replay' ? `of ${replayDuration}s replay` : 'assessed active time'}</span>
@@ -287,9 +409,13 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       <div className="row" style={{ marginTop: 14, flexWrap: 'wrap' }}>
         {mode && <button className="btn s" onClick={togglePause}>{paused ? 'Resume' : 'Pause'}</button>}
         {mode === 'replay' && <button className="btn s" onClick={() => setReplayTrackingLost(value => !value)}>{replayTrackingLost ? 'Restore tracking' : 'Simulate tracking loss'}</button>}
-        {mode === 'camera' && <button className="btn s" onClick={() => setViewMode(value => value === 'camera' ? 'skeleton' : 'camera')}>{viewMode === 'camera' ? 'Canvas Live' : 'Show camera'}</button>}
-        {mode === 'camera' && <button className="btn s" onClick={() => setSpeechEnabled(value => !value)}>{speechEnabled ? 'Mute cues' : 'Speak cues'}</button>}
-        {mode === 'camera' && <button className="btn" disabled={!timing.active} onClick={finishCameraExercise}>Finish exercise</button>}
+        {mode && <button className="btn s" aria-pressed={speechEnabled} onClick={() => {
+          const next = !speechEnabled;
+          speechRef.current = next;
+          setSpeechEnabled(next);
+          if (next) speak('Voice guidance on.', true);
+        }}>{speechEnabled ? 'Voice on · tap to mute' : 'Voice off · tap to enable'}</button>}
+        {mode === 'camera' && <button className="btn" disabled={!timing.elapsed} onClick={() => finishCameraExercise()}>Finish exercise</button>}
         <button className="btn d" onClick={() => {
           if (!confirm('Stop and save this exercise as partial?')) return;
           if (mode === 'camera' && timing.elapsed) finishCameraExercise('partial');

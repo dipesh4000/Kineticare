@@ -5,12 +5,14 @@ export const DEFAULT_REP_CONFIG = {
   dwellMs: 120,
   targetMin: 0.9,
   targetMax: 1.1,
+  maxPlausible: 1.6,
+  minDurationMs: 600,
 };
 
 export function createRepState() {
   return {
     phase: 'REST', pending: null, peak: 0, startedAt: null,
-    attemptedReps: 0, assessedReps: 0, withinTargetReps: 0, reps: [],
+    attemptedReps: 0, assessedReps: 0, withinTargetReps: 0, rejectedReps: 0, reps: [],
   };
 }
 
@@ -47,8 +49,13 @@ export function advanceRep(previous, sample, config = DEFAULT_REP_CONFIG) {
   const transition = pendingTransition(state, 'COMPLETE', timestamp, config.dwellMs);
   if (!transition.ready) return { ...state, pending: transition.pending };
 
+  const durationMs = timestamp - state.startedAt;
+  if (state.peak > config.maxPlausible || durationMs < config.minDurationMs) {
+    // Tracking glitch or a movement far outside the assigned range: do not count it as a repetition.
+    return { ...state, phase: 'REST', pending: null, peak: 0, startedAt: null, rejectedReps: (state.rejectedReps ?? 0) + 1 };
+  }
   const withinTarget = state.peak >= config.targetMin && state.peak <= config.targetMax;
-  const rep = { peak: state.peak, durationMs: timestamp - state.startedAt, withinTarget };
+  const rep = { peak: state.peak, durationMs, withinTarget };
   return {
     ...state,
     phase: 'REST', pending: null, peak: 0, startedAt: null,

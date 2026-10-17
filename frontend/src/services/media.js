@@ -57,12 +57,15 @@ export async function saveReferenceMedia({ ownerUid, referenceId, versionId, blo
 }
 
 export async function loadReferenceMedia(path) {
+  // Bundled demonstration clips are static files, not stored blobs.
+  if (path.startsWith('demo:')) return `${import.meta.env.BASE_URL}demo/${path.slice(5)}.mp4`;
   const blob = firebaseEnabled ? await getBlob(ref(storage, path)) : await localRead(path);
   if (!blob) throw new Error('Reference media is unavailable.');
   return URL.createObjectURL(blob);
 }
 
 export async function removeReferenceMedia(path) {
+  if (path.startsWith('demo:')) return;
   if (firebaseEnabled) await deleteObject(ref(storage, path));
   else await localDelete(path);
 }

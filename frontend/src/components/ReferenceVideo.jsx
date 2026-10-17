@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { loadReferenceMedia } from '../services/media';
 
-export default function ReferenceVideo({ mediaPath }) {
+export default function ReferenceVideo({ mediaPath, loop = false, autoPlay = false, controls = true }) {
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
 
@@ -22,5 +22,5 @@ export default function ReferenceVideo({ mediaPath }) {
 
   if (error) return <p className="demo" role="alert">{error}</p>;
   if (!url) return <p className="mut">Loading reference video…</p>;
-  return <video controls playsInline src={url} style={{ width: '100%', borderRadius: 14 }} />;
+  return <video controls={controls} loop={loop} autoPlay={autoPlay} muted={autoPlay} playsInline src={url} style={{ width: '100%', borderRadius: 14 }} />;
 }

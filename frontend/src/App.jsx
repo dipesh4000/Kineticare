@@ -7,6 +7,7 @@ import PatientHome from './patient/Home';
 import PatientPlan from './patient/Plan';
 import PatientPre from './patient/Pre';
 import PatientLive from './patient/Live';
+import PatientWorkout from './patient/Workout';
 import PatientSummary from './patient/Summary';
 import PatientProgress from './patient/Progress';
 import PatientFeedback from './patient/Feedback';
@@ -17,7 +18,6 @@ import ClientOverview from './client/Overview';
 import ClientPatients from './client/Patients';
 import ClientPatientDetail from './client/PatientDetail';
 import ClientAssign from './client/Assign';
-import ClientSendFeedback from './client/SendFeedback';
 import { ClientLibrary, ClientSettings } from './client/LibrarySettings';
 import { useAuth } from './auth/authContext';
 
@@ -39,6 +39,7 @@ export default function App() {
         <Route path="/patient" element={<RoleRoute role="patient"><PatientLayout /></RoleRoute>}>
           <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<PatientHome />} />
+          <Route path="workout" element={<PatientWorkout />} />
           <Route path="plan" element={<PatientPlan />} />
           <Route path="pre" element={<PatientPre />} />
           <Route path="live" element={<PatientLive />} />
@@ -54,7 +55,6 @@ export default function App() {
           <Route path="patients" element={<ClientPatients />} />
           <Route path="patients/:id" element={<ClientPatientDetail />} />
           <Route path="patients/:id/assign" element={<ClientAssign />} />
-          <Route path="patients/:id/feedback" element={<ClientSendFeedback />} />
           <Route path="library" element={<ClientLibrary />} />
           <Route path="settings" element={<ClientSettings />} />
         </Route>

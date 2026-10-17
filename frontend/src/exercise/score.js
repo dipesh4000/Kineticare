@@ -1,5 +1,13 @@
 const clamp = value => Math.max(0, Math.min(1, value));
 
+export function scoreRep(rep, { tempoMinMs = 2000, tempoMaxMs = 5000 } = {}) {
+  const reach = rep.peak < 0.9 ? clamp(rep.peak / 0.9)
+    : rep.peak <= 1.1 ? 1 : clamp(1 - (rep.peak - 1.1) / 0.5);
+  const tempo = rep.durationMs < tempoMinMs ? clamp(rep.durationMs / tempoMinMs)
+    : rep.durationMs <= tempoMaxMs ? 1 : clamp(tempoMaxMs / rep.durationMs);
+  return { score: Math.round(100 * (0.7 * reach + 0.3 * tempo)), reach: +reach.toFixed(2), tempo: +tempo.toFixed(2) };
+}
+
 export function scoreRepetitions(reps, { tempoMinMs = 2000, tempoMaxMs = 5000 } = {}) {
   if (!reps.length) return null;
   const reach = reps.reduce((total, rep) => {

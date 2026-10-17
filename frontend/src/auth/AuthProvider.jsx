@@ -6,7 +6,6 @@ import { AuthContext } from './authContext';
 
 const DEMO_USERS = {
   patient: { uid: 'P-101', email: 'patient@kineticare.demo', role: 'patient', displayName: 'Siyam Ahamed' },
-  patient2: { uid: 'P-102', email: 'patient2@kineticare.demo', role: 'patient', displayName: 'Maya Roy' },
   clinician: { uid: 'C-001', email: 'clinician@kineticare.demo', role: 'clinician', displayName: 'Dr. Sarah Khan' },
 };
 

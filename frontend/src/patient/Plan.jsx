@@ -1,42 +1,51 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecords } from '../records/recordsContext';
-import { saveSessionDraft } from '../session/drafts';
+import { INSTRUCTIONS } from '../data';
+import { startDraft } from '../session/drafts';
+import ReferenceVideo from '../components/ReferenceVideo';
+
+function ExerciseCard({ item, reference, onPractise }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <details className="card" onToggle={event => setOpen(event.currentTarget.open)}>
+      <summary style={{ cursor: 'pointer', listStyle: 'none' }}>
+        <div className="row sp">
+          <h3>{open ? '▾' : '▸'} {item.ex}</h3>
+          <span className="tag">{item.targetReps} reps · {item.targetExcursionDeg}°</span>
+        </div>
+        {item.note && <p className="mut" style={{ margin: '6px 0 0' }}>{item.note}</p>}
+      </summary>
+      {open && (
+        <div style={{ marginTop: 12 }}>
+          {reference
+            ? <div className="vid" style={{ maxWidth: 260, margin: '0 auto' }}><ReferenceVideo mediaPath={reference.mediaPath} /></div>
+            : <p className="demo">No demonstration video is attached to this exercise yet.</p>}
+          {(INSTRUCTIONS[item.ex] ?? []).map(([title, text]) => (
+            <p key={title} style={{ margin: '10px 0' }}><b>{title}:</b> {text}</p>
+          ))}
+          <button className="btn sm" onClick={onPractise}>Practise this exercise</button>
+        </div>
+      )}
+    </details>
+  );
+}
 
 export default function PatientPlan() {
   const nav = useNavigate();
-  const [query, setQuery] = useState('');
-  const { patientId, assignment } = useRecords();
-  const P = assignment(patientId);
-  if (!P) return <div className="card">No active assignment. Contact your clinician if you expected one.</div>;
-  const prepare = (exIdx, all) => {
-    const sessionId = crypto.randomUUID();
-    const draft = { sessionId, assignmentId: P.assignmentId, assignmentVersion: P.v, exIdx, all, done: [], startedAtClient: new Date().toISOString() };
-    saveSessionDraft(patientId, draft);
-    nav('/patient/pre', { state: draft });
-  };
-  const visibleItems = P.items.map((item, index) => ({ item, index })).filter(({ item }) => item.ex.toLowerCase().includes(query.toLowerCase()));
+  const { patientId, assignment, workspace } = useRecords();
+  const plan = assignment(patientId);
+  if (!plan) return <div className="card">No active assignment. Contact your clinician if you expected one.</div>;
   return (
     <>
-      <h1>{P.name}</h1>
-      <p className="mut">By {P.by} · version {P.v}{P.schedule?.weeklyFrequency ? ` · ${P.schedule.weeklyFrequency} times per week` : ''}</p>
-      <label htmlFor="exercise-search">Search assigned exercises</label>
-      <input id="exercise-search" type="text" value={query} onChange={event => setQuery(event.target.value)} placeholder="Squat or arm raise" />
-      <div style={{ marginTop: 12 }} />
-      {visibleItems.map(({ item: x, index: i }) => (
-        <div key={i} className="card">
-          <div className="row sp">
-            <h3>{x.ex}</h3>
-            <span className="tag">Not started</span>
-          </div>
-          <p className="mut">Target: {x.t} seconds{x.note ? ' · ' + x.note : ''}</p>
-          <button className="btn s sm" onClick={() => prepare(i, false)}>Instructions</button>
-        </div>
+      <h1>Assignment</h1>
+      <p className="mut">{plan.name} · by {plan.by} · version {plan.v}{plan.schedule?.weeklyFrequency ? ` · ${plan.schedule.weeklyFrequency} times per week` : ''}</p>
+      {plan.items.map((item, index) => (
+        <ExerciseCard key={item.ex} item={item}
+          reference={workspace.references.find(entry => entry.versionId === item.referenceVersionId)}
+          onPractise={() => nav('/patient/pre', { state: startDraft(plan, patientId, index, false) })} />
       ))}
-      {!visibleItems.length && <div className="card">No assigned exercise matches “{query}”.</div>}
-      <button className="btn" style={{ width: '100%' }} onClick={() => prepare(0, true)}>
-        Start plan
-      </button>
+      <button className="btn" style={{ width: '100%' }} onClick={() => nav('/patient/workout')}>Go to workout</button>
     </>
   );
 }

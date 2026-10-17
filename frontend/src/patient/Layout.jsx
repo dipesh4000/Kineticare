@@ -2,11 +2,11 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Icon from '../components/Icon';
 
 const TABS = [
-  ['home', 'Home'],
-  ['plan', 'Plan'],
-  ['prog', 'Progress'],
-  ['fb', 'Feedback'],
-  ['me', 'Profile'],
+  ['home', 'Home', 'home'],
+  ['workout', 'Workout', 'workout'],
+  ['plan', 'Assignment', 'plan'],
+  ['prog', 'Progress', 'prog'],
+  ['me', 'Info', 'info'],
 ];
 
 const NO_NAV = ['/patient/live', '/patient/pre', '/patient/sum'];
@@ -22,10 +22,10 @@ export default function PatientLayout() {
       <Outlet />
       {!hideNav && (
         <nav className="nav" aria-label="Main">
-          {TABS.map(([key, label]) => (
+          {TABS.map(([key, label, icon]) => (
             <button key={key} className={active === key ? 'on' : ''} aria-label={label}
               onClick={() => nav(`/patient/${key}`)}>
-              <Icon name={key} size={24} />
+              <Icon name={icon} size={24} />
               <span className="label">{label}</span>
             </button>
           ))}

@@ -4,6 +4,8 @@ const paths = {
   prog:   <path d="M3 20h18M6 16v-5M11 16V6M16 16v-8"/>,
   fb:     <path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/>,
   me:     <><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></>,
+  workout: <><circle cx="14" cy="4.5" r="2"/><path d="M5 21l4-8 3 2 3-4M9 13l-2-4 5-2 3 3 3 1"/></>,
+  info:   <><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></>,
   bell:   <path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/>,
   search: <><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></>,
   call:   <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>,

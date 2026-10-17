@@ -16,15 +16,15 @@ export function Ring({ pct, label }) {
 
 export function LineChart({ vals, labs }) {
   if (!vals.length) return <p className="mut">No compatible scored sessions yet.</p>;
-  const W = 300, H = 130, L = 26, n = vals.length;
-  const x = i => L + (W - L - 10) * (n === 1 ? 0.5 : i / (n - 1));
+  const W = 300, H = 130, L = 26, R = 22, n = vals.length;
+  const x = i => L + (W - L - R) * (n === 1 ? 0.5 : i / (n - 1));
   const y = v => 10 + (H - 30) * (1 - v);
   const pts = vals.map((v, i) => `${x(i)},${y(v)}`).join(' ');
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%' }} role="img" aria-label="Score trend">
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', maxWidth: 520, display: 'block' }} role="img" aria-label="Score trend">
       {[0, 0.5, 1].map(g => (
         <g key={g}>
-          <line x1={L} x2={W - 10} y1={y(g)} y2={y(g)} stroke="#8883" />
+          <line x1={L} x2={W - R + 8} y1={y(g)} y2={y(g)} stroke="#8883" />
           <text x="0" y={y(g) + 4} fontSize="10" fill="var(--mut)">{Math.round(g * 100)}</text>
         </g>
       ))}

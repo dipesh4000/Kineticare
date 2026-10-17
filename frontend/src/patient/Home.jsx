@@ -19,6 +19,7 @@ export default function PatientHome() {
   const history = sessions(patientId);
   const messages = feedback(patientId);
   const unread = messages.filter(item => !item.read).length;
+  const reminder = messages.find(item => item.reminder)?.reminder;
   const scored = history.filter(session => Number.isFinite(avg(session.r)));
 
   const contactClinician = () => {
@@ -44,14 +45,19 @@ export default function PatientHome() {
         </div>
       </div>
 
-      <button className="srch" onClick={() => nav('/patient/plan')}><Icon name="search" color="var(--mut)" size={20} /> Search assigned exercises</button>
-      {backend === 'local-demo' && <DemoBanner />}
-
-      <div className="hs">
-        {[['plan', 'Exercises'], ['prog', 'Progress'], ['fb', 'Feedback'], ['me', 'Profile']].map(([key, label]) => (
-          <button key={key} className="tile" onClick={() => nav(`/patient/${key}`)}><Icon name={key} color="var(--pri)" />{label}</button>
-        ))}
+      <div className="card" style={{ background: 'var(--pri2)', marginTop: 16 }}>
+        <span className="mut">Current doctor</span>
+        <h3 style={{ marginTop: 2 }}>{plan?.by ?? 'Not linked yet'}</h3>
       </div>
+      <div className="card" style={{ background: 'var(--pri2)' }}>
+        <span className="mut">Welcome back, {user.displayName.split(' ')[0]}. Today's date</span>
+        <h3 style={{ marginTop: 2 }}>{new Intl.DateTimeFormat('en-GB').format(new Date())}</h3>
+      </div>
+      <div className="card" style={{ background: 'var(--pri2)' }}>
+        <span className="mut">Reminders</span>
+        <p style={{ margin: '2px 0 0' }}>{reminder ?? 'No reminders from your clinician.'}</p>
+      </div>
+      {backend === 'local-demo' && <DemoBanner />}
 
       <h2>Current assignment</h2>
       {draft && <div className="card">
@@ -64,14 +70,15 @@ export default function PatientHome() {
             <div className="thumb"><Icon name="plan" color="var(--pri)" /></div>
             <div><h3 style={{ fontSize: 19 }}>{plan.name}</h3><div className="mut">v{plan.v} · set by {plan.by}</div></div>
           </div>
-          <div className="pill"><span><Icon name="clock" size={18} color="#fff" /> {plan.items.length} exercises · {plan.items.reduce((total, item) => total + item.targetReps, 0)} target reps</span></div>
-          <button className="btn w" onClick={() => nav('/patient/plan')}>Start session</button>
+          <div className="pill"><span><Icon name="clock" size={18} color="#fff" /> {plan.items.filter(item => !item.videoOnly).length} measured exercises · {plan.items.filter(item => !item.videoOnly).reduce((total, item) => total + item.targetReps, 0)} target reps{plan.items.some(item => item.videoOnly) ? ' · 1 video guide' : ''}</span></div>
+          <button className="btn w" onClick={() => nav('/patient/workout')}>Start workout</button>
         </div>
       ) : <div className="card">No active assignment.</div>}
 
       <div className="card">
-        <div className="row sp"><h3>Latest clinician feedback</h3>{unread ? <span className="tag warn">{unread} new</span> : null}</div>
+        <div className="row sp"><h3>Doctor feedback and assignments</h3>{unread ? <span className="tag warn">{unread} new</span> : null}</div>
         <p>{messages[0]?.m ?? 'No feedback yet.'}</p>
+        {plan && <p className="mut">Assigned: {plan.items.map(item => `${item.ex} (${item.targetReps} reps)`).join(', ')}</p>}
         {messages.length > 0 && <button className="btn s sm" onClick={() => nav('/patient/fb')}>Open feedback</button>}
       </div>
 
@@ -83,7 +90,7 @@ export default function PatientHome() {
             <p className="mut">{session.r.length} exercises · score {avg(session.r) == null ? 'unavailable' : Math.round(avg(session.r) * 100)}</p>
             <span className={`tag ${session.status === 'partial' ? 'warn' : 'ok'}`}>{session.status ?? 'completed'}</span>
             <div className="row sp" style={{ marginTop: 10 }}>
-              <button className="btn s sm" onClick={() => nav('/patient/plan')}>Repeat current plan</button>
+              <button className="btn s sm" onClick={() => nav('/patient/workout')}>Repeat current plan</button>
               <button className="call-btn" aria-label="Message clinician" onClick={() => setContactOpen(true)}><Icon name="fb" color="#fff" size={20} /></button>
             </div>
           </div>

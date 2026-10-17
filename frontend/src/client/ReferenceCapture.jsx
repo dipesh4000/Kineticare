@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../auth/authContext';
 import { useRecords } from '../records/recordsContext';
-import { armRaiseAngle, squatKneeAngle } from '../exercise/definitions';
+import { exerciseMeta, isSideExercise, measureAngle, movementSignal } from '../exercise/measure';
 import { calibrateRest } from '../exercise/reference';
 import { removeReferenceMedia, saveReferenceMedia } from '../services/media';
 import usePoseCamera from '../vision/usePoseCamera';
@@ -23,15 +23,9 @@ export default function ReferenceCapture({ exerciseName, onClose }) {
 
   const measure = useCallback(pose => {
     if (!pose) return null;
-    if (exerciseName === 'Squat') {
-      const available = ['left', 'right'].map(side => ({ side, angle: squatKneeAngle(pose.keypoints, side) })).filter(item => Number.isFinite(item.angle));
-      if (!available.length) return null;
-      const selected = available.find(item => item.side === sideRef.current) ?? available[0];
-      if (captureRef.current && !sideRef.current) sideRef.current = selected.side;
-      return selected.angle;
-    }
-    const angles = ['left', 'right'].map(side => armRaiseAngle(pose.keypoints, side)).filter(Number.isFinite);
-    return angles.length === 2 ? (angles[0] + angles[1]) / 2 : null;
+    const result = measureAngle(exerciseName, pose.keypoints, sideRef.current);
+    if (captureRef.current && !sideRef.current) sideRef.current = result.side;
+    return result.angle;
   }, [exerciseName]);
 
   const onPose = useCallback((pose, timestamp) => {
@@ -107,8 +101,8 @@ export default function ReferenceCapture({ exerciseName, onClose }) {
       return;
     }
     const rep = capture.currentRep;
-    const peakAngle = exerciseName === 'Squat' ? Math.min(...rep.values) : Math.max(...rep.values);
-    const excursion = exerciseName === 'Squat' ? capture.rest - peakAngle : peakAngle - capture.rest;
+    const peakAngle = isSideExercise(exerciseName) ? Math.min(...rep.values) : Math.max(...rep.values);
+    const excursion = movementSignal(exerciseName, capture.rest, peakAngle);
     if (rep.values.length < 5 || excursion < 10) return setMessage('That segment did not contain enough visible movement. Continue and end it again.');
     capture.reps.push({ excursionDeg: +excursion.toFixed(1), durationMs: Math.round(performance.now() - rep.startedAt) });
     capture.currentRep = null;
@@ -151,7 +145,7 @@ export default function ReferenceCapture({ exerciseName, onClose }) {
   };
 
   const approve = async () => {
-    const referenceId = exerciseName === 'Squat' ? 'squat' : 'arm-raise';
+    const referenceId = exerciseMeta(exerciseName).key;
     const version = workspace.references.filter(item => item.referenceId === referenceId).length + 1;
     const versionId = crypto.randomUUID();
     let mediaPath;
@@ -159,8 +153,8 @@ export default function ReferenceCapture({ exerciseName, onClose }) {
       mediaPath = await saveReferenceMedia({ ownerUid: user.uid, referenceId, versionId, blob: preview.blob });
       await saveReference({
         referenceId, versionId, version, exerciseName,
-        cameraView: exerciseName === 'Squat' ? 'side' : 'front',
-        ownerUid: user.uid, status: 'approved', measurementVersion: exerciseName === 'Squat' ? 'squat-side-v1' : 'arm-raise-front-v1',
+        cameraView: exerciseMeta(exerciseName).cameraView,
+        ownerUid: user.uid, status: 'approved', measurementVersion: exerciseMeta(exerciseName).measurementVersion,
         estimatorVersion: 'MoveNet SinglePose Lightning', targetExcursionDeg: preview.targetExcursionDeg,
         targetDurationMs: preview.targetDurationMs, qualitySummary: { acceptedReps: 5 }, poseTrace: preview.trace,
         mediaPath, mediaContentType: preview.blob.type, mediaDurationMs: preview.durationMs,
@@ -185,7 +179,7 @@ export default function ReferenceCapture({ exerciseName, onClose }) {
   return (
     <div className="card">
       <div className="row sp"><h2 style={{ margin: 0 }}>Capture {exerciseName}</h2><button className="btn s sm" onClick={cancel}>Close</button></div>
-      <p className="mut">{exerciseName === 'Squat' ? 'Side view: shoulder, hip, knee, and ankle visible.' : 'Front view: both shoulders, elbows, wrists, and hips visible.'}</p>
+      <p className="mut">{exerciseMeta(exerciseName).setup}</p>
       <div className="cam">
         <video ref={videoRef} className="pose-layer" muted playsInline />
         <canvas ref={canvasRef} className="pose-layer" />

@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { createDemoWorkspace } from '../data';
+import { createDemoWorkspace, DEMO_REFERENCES } from '../data';
 import { useAuth } from '../auth/authContext';
 import { RecordsContext } from './recordsContext';
 import { firebaseMutations, subscribeFirebaseWorkspace } from '../services/firebaseRecords';
 
-const STORAGE_KEY = 'kineticare-demo-workspace-v1';
+const STORAGE_KEY = 'kineticare-demo-workspace-v2';
 const emptyWorkspace = () => ({ schemaVersion: 1, patients: [], assignments: {}, assignmentDrafts: {}, sessions: {}, feedback: {}, requests: {}, references: [] });
 
 function loadWorkspace() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? createDemoWorkspace();
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!saved) return createDemoWorkspace();
+    const known = new Set((saved.references ?? []).map(item => item.versionId));
+    return { ...saved, references: [...(saved.references ?? []), ...DEMO_REFERENCES.filter(item => !known.has(item.versionId))] };
   } catch {
     return createDemoWorkspace();
   }

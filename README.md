@@ -1,88 +1,192 @@
-# Kineticare
+<p align="center">
+  <img src="frontend/public/logo.png" width="140" alt="Kineticare official logo">
+</p>
 
-Kineticare is a responsive physiotherapy exercise companion that connects clinician-assigned home exercises with patient practice and clinician review. Clinicians configure exercise plans and review saved sessions; patients follow the plan, exercise with camera-based movement tracking, and receive feedback.
+<h1 align="center">Kineticare</h1>
+<p align="center"><strong>From prescribed movement to meaningful feedback.</strong></p>
+<p align="center">Camera-guided home exercise that keeps patients and clinicians connected between appointments.</p>
 
-> **Project status:** This repository contains an MVP. Its movement measurements and scores are for demonstration and engineering evaluation, not diagnosis or validated clinical guidance. Exercise targets and patient-facing instructions should be reviewed by a qualified clinician before real-world use.
+<p align="center">
+  <a href="#why-kineticare">The idea</a> ·
+  <a href="#explore-the-experience">The experience</a> ·
+  <a href="#how-it-works">The technology</a> ·
+  <a href="#scope-and-next-steps">The roadmap</a> ·
+  <a href="frontend/README.md">Setup & commands</a>
+</p>
 
-## What’s included
+<p align="center">
+  <img src="docs/assets/pose-tracking-demo.svg" width="640" alt="Illustrated arm raise with synchronized pose landmarks and repetition feedback">
+  <br><sub>Illustrated MoveNet workflow · Expand your understanding below</sub>
+</p>
 
-- Separate clinician and patient workflows, with role-based routes.
-- An exercise library currently focused on side-view squats/mini-squats and front-facing bilateral side arm raises.
-- Clinician reference capture, review, approval, and versioned reference media.
-- Patient-specific exercise assignments, targets, notes, and reference demonstrations.
-- Browser camera access and MoveNet pose estimation, with a skeleton overlay, rest calibration, repetition tracking, and movement measurements.
-- Pause/resume, partial-session saving, timing categories, and session summaries.
-- Clinician session review, patient-visible feedback, and patient requests or questions.
-- A local demo workspace for trying the app without Firebase configuration.
+## Why Kineticare?
 
-Patient workout video is processed in the browser and is not uploaded. Approved clinician reference recordings are stored for playback by authorized users.
+An exercise plan is only the start of rehabilitation. At home, patients can forget the demonstration, feel unsure about their movement, or struggle to describe what happened. Between appointments, clinicians have limited visibility into that practice.
 
-## Run locally
+Kineticare connects those moments. A reviewed demonstration becomes an individual assignment; camera-observed movement becomes a concise session report; that report becomes a conversation with the clinician.
 
-Requirements: Node.js/npm and a modern browser. Camera access is available on `localhost`; accessing the camera from another device requires HTTPS.
+The project was built around the Devlympics theme of bridging a gap: the distance between instructions given in a consultation and exercises practiced at home. Its goal is clearer guidance and more useful follow-up. Improvements in adherence, workload, or recovery remain outcomes to evaluate.
 
-```powershell
-cd frontend
-npm.cmd install
-npm.cmd run dev
+## The care loop
+
+| Stage | What happens | What carries forward |
+| --- | --- | --- |
+| Demonstrate | A clinician records and approves an exercise reference | A playable, versioned demonstration |
+| Personalize | The clinician chooses targets, repetitions, schedule, and notes | A patient-specific assignment |
+| Prepare | The patient watches instructions, positions the camera, and calibrates | A stable starting pose |
+| Practice | The app follows supported movement and provides cues | Repetitions, range, tempo, and timing |
+| Review | The patient submits a completed or partial session | A compact report with tracking gaps |
+| Respond | The clinician reviews the record and sends feedback | Guidance the patient can read and question |
+
+## Explore the experience
+
+<details open>
+<summary><strong>Patient · Know what to do and see what happened</strong></summary>
+
+Patients can view their assigned plan, read clinician notes, and play the approved reference before starting. The preparation checklist and stable-rest calibration help establish the required camera view.
+
+During practice, the live screen displays body landmarks, movement cues, repetition progress, and timing. Patients can switch between the camera overlay and skeleton view, use optional spoken cues, pause, resume, or stop early.
+
+The summary explains completed work, range and tempo components, and periods when tracking was unavailable. Recovery drafts support interrupted sessions; history and progress views retain saved work. Feedback, session questions, and help requests keep the next conversation connected to the exercise.
+
+</details>
+
+<details>
+<summary><strong>Clinician · Demonstrate once, personalize, and follow up</strong></summary>
+
+Clinicians capture references inside Kineticare, mark five repetitions, preview the recording, and reject or approve the result. An approved reference provides a demonstration; the patient's target remains an individual choice.
+
+Assignment drafts support reference selection, repetitions, targets, and notes, with a preview before publication. Published assignments preserve their versions so later changes do not rewrite the meaning of earlier sessions.
+
+The dashboard brings together linked patients, session history, incomplete work, and requests. Clinicians can review measurements, mark sessions reviewed, send session-linked feedback, and reply to patient questions.
+
+</details>
+
+<details>
+<summary><strong>Walk through a complete demonstration</strong></summary>
+
+1. Enter the clinician account and capture an approved exercise reference.
+2. Select a patient, draft an assignment, preview it, and publish.
+3. Enter the matching patient account and watch the demonstration.
+4. Complete positioning and calibration, then perform the assigned movement.
+5. Try pause/resume, camera/skeleton switching, and a brief tracking interruption.
+6. Save the session and inspect its measurements and history.
+7. Return as the clinician, review the report, and send feedback.
+8. Return as the patient, read the response, and ask a question.
+
+The browser-local demo provides a clinician and two separate patient accounts. Firebase mode supports shared records across devices.
+
+</details>
+
+## Supported exercises
+
+The MVP focuses on two movements with explicit camera requirements and measurement rules.
+
+| Exercise | Camera view | What the app follows |
+| --- | --- | --- |
+| Squat / mini-squat | Side | Knee-angle excursion and a complete lowering/return cycle |
+| Bilateral side arm raise | Front | Shoulder elevation and a complete raise/return cycle |
+
+Each exercise has its own required landmarks, calibration, movement phases, and cues. The app uses the assigned exercise to select those rules. It does not attempt to classify arbitrary exercises.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A["Camera"] --> B["MoveNet landmarks"]
+    B --> C["Visibility & calibration"]
+    C --> D["Exercise rules"]
+    D --> E["Session report"]
+    E --> F["Clinician feedback"]
 ```
 
-Open the local URL printed by Vite. Without a complete Firebase configuration, the app opens in local demo mode. Demo data is stored in the browser, so it is not a shared or production database.
+MoveNet SinglePose Lightning estimates body landmarks in the browser. Kineticare checks whether the relevant joints are visible, derives exercise-specific angles, and tracks movement phases relative to the patient's calibration and assignment.
 
-## Firebase configuration
+A repetition is counted from a complete configured movement cycle. When tracking becomes unreliable, the app reports that it cannot assess the movement and discards an incomplete cycle rather than joining motion across a gap.
 
-To use Firebase instead of local demo mode:
+<details>
+<summary><strong>Understand the session report</strong></summary>
 
-1. Create a Firebase project and register a web app.
-2. Enable Email/Password Authentication, Cloud Firestore, and Cloud Storage.
-3. Copy `frontend/.env.example` to `frontend/.env.local` and fill in the Firebase web app values.
-4. Provision accounts through a trusted process. The app expects user profile documents at `users/{uid}` with a `role` of `patient` or `clinician`; patient-to-clinician access also requires the configured relationship records.
-5. Configure and deploy Firestore and Storage security rules appropriate to the app’s data model before using real accounts or data.
+| Measurement | Meaning |
+| --- | --- |
+| Repetitions | Completed cycles detected by the configured exercise rules |
+| Active time | Assessed movement time while tracking is usable |
+| Pauses and elapsed time | How the session was spent beyond active movement |
+| Tracking gaps | Time when required landmarks could not be assessed |
+| Range and tempo | Observed movement relative to the assigned target |
+| Prototype score | An explained summary of configured movement criteria |
 
-Only Firebase client configuration belongs in Vite environment variables. **Never put service-account credentials or other Admin SDK secrets in `frontend/.env.local` or browser code.**
+These observations support clinician review. They do not establish diagnosis, treatment effectiveness, or complete movement safety. The README animation is an authored illustration rather than a recording of model inference.
 
-For local Firebase development, set `VITE_USE_FIREBASE_EMULATORS=true` in `.env.local` while the Auth, Firestore, and Storage emulators are running. The app connects to the standard local emulator ports.
+</details>
 
-## Checks
+## What makes the project useful
 
-Run from `frontend/`:
+Kineticare connects the demonstration, individual target, session evidence, and response. A repetition counter alone cannot explain which assignment was followed; a recording alone asks someone to watch the entire session. Here, the reference and assignment versions give the compact report context.
 
-```powershell
-npm.cmd test
-npm.cmd run lint
-npm.cmd run build
-```
+The design also makes incomplete information visible. Partial sessions can be saved, pauses remain distinct from active time, and tracking gaps appear in the report. Patients and clinicians can discuss what was observed without treating every open-camera minute as completed exercise.
 
-The unit tests cover exercise geometry, required-joint visibility, calibration, repetition state transitions, tracking loss, and scoring. A Firestore rules test command is also available:
+## Technology and data
 
-```powershell
-npm.cmd run test:rules
-```
+| Layer | Implementation |
+| --- | --- |
+| Interface | React, Vite, responsive patient and clinician screens |
+| Pose estimation | TensorFlow.js and MoveNet SinglePose Lightning |
+| Movement logic | Exercise-specific geometry, calibration, repetition, and scoring rules |
+| Identity | Firebase Authentication with provisioned roles |
+| Shared records | Cloud Firestore assignments, sessions, feedback, and requests |
+| Reference media | Protected Cloud Storage in Firebase mode |
+| Local demonstration | Browser storage for records and IndexedDB for reference media |
 
-That command requires a configured Firebase emulator environment; Firebase CLI 15 also requires JDK 21 or newer.
+Patient camera frames are processed on the device. Raw patient workout video is not recorded or uploaded by default. Explicitly approved clinician reference clips are stored for authorized playback.
 
-## Project layout
+Roles and clinician-patient relationships are provisioned through a trusted process. Firestore and Storage rules restrict records and reference media to the relevant accounts.
+
+<details>
+<summary><strong>Explore the source structure</strong></summary>
 
 ```text
-frontend/
-  src/
-    auth/       Sign-in and role-based account state
-    client/     Clinician screens and reference capture
-    exercise/   Exercise definitions, calibration, repetition engine, scoring
-    patient/    Patient plan, live session, summary, and progress screens
-    records/    Local and Firebase-backed application records
-    services/   Firebase and reference-media integrations
-    session/    Session draft recovery
-    vision/     Camera, pose estimation, and geometry
-  test/         Exercise logic and Firestore rules tests
-overview.md     Product scope, workflow, limitations, and presentation guidance
-plan.md         Technical implementation plan and roadmap
+frontend/src/
+  auth/        Account and role state
+  client/      Clinician screens and reference capture
+  patient/     Setup, practice, summaries, and feedback
+  exercise/    Exercise definitions, repetition engine, scoring
+  vision/      Camera lifecycle, MoveNet, geometry
+  records/     Shared records and local demo state
+  services/    Firebase and media storage
+  session/     Recoverable workout drafts
+frontend/test/ Logic and security-rule checks
+docs/assets/   README illustration
 ```
 
-## Product and technical notes
+</details>
 
-- [Project overview](./overview.md) describes the users, intended workflow, scope, and product limitations.
-- [Technical implementation plan](./plan.md) records implementation decisions, architecture, and future work.
-- [Frontend README](./frontend/README.md) contains frontend-specific setup and implementation notes.
+## Scope and next steps
 
-The app is not a medical device and does not diagnose conditions, determine recovery, or establish that an exercise was performed safely. Prototype movement scores are explainable summaries of configured measurements, not clinically validated grades.
+The implemented MVP covers the two-exercise workflow, reference capture and playback, versioned assignments, live camera measurements, recoverable sessions, clinician review, feedback, and patient requests.
+
+Release acceptance still includes Firebase deployment, security-rule execution in the configured environment, physical Android/iOS camera trials, and physiotherapist review of targets and cues. Logic checks cover geometry, calibration, movement transitions, tracking loss, and scoring.
+
+Planned extensions include:
+
+- Strengthening the supported exercises using observed device and tracking failures.
+- Adding reviewed clinician video uploads.
+- Expanding the exercise library one tested protocol at a time.
+- Improving accessibility, personalization, reminders, and review efficiency.
+
+Public onboarding, arbitrary exercise recognition, diagnosis, recovery prediction, payments, and native mobile apps sit outside the current MVP.
+
+## Documentation
+
+| Read | For |
+| --- | --- |
+| [Frontend README](frontend/README.md) | Installation, run commands, Firebase setup, and checks |
+| [Project overview](overview.md) | Problem, users, product decisions, and demonstration narrative |
+| [Implementation plan](plan.md) | Architecture, record contracts, permissions, and release gates |
+
+The overview and plan retain the original planning baseline; current behavior is established by the code and verified checks.
+
+---
+
+<p align="center"><strong>Demonstrate. Practice. Understand. Respond.</strong></p>
+

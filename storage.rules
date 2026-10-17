@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+    function clinician() {
+      return signedIn()
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'clinician';
+    }
+
+    match /references/{ownerUid}/{referenceId}/{versionId}/{fileName} {
+      allow read: if signedIn() && (
+        request.auth.uid == ownerUid
+        || firestore.exists(/databases/(default)/documents/patients/$(request.auth.uid)/referenceAccess/$(versionId))
+      );
+      allow create: if clinician()
+        && request.auth.uid == ownerUid
+        && request.resource.size < 50 * 1024 * 1024
+        && request.resource.contentType.matches('video/.*');
+      allow delete: if clinician()
+        && request.auth.uid == ownerUid
+        && !firestore.exists(/databases/(default)/documents/references/$(referenceId)/versions/$(versionId));
+    }
+  }
+}

@@ -1,0 +1,122 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function patient() { return signedIn() && profile().role == 'patient'; }
+    function clinician() { return signedIn() && profile().role == 'clinician'; }
+    function linked(patientUid) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/relationships/$(patientUid))
+        && get(/databases/$(database)/documents/relationships/$(patientUid)).data.active == true
+        && get(/databases/$(database)/documents/relationships/$(patientUid)).data.clinicianUid == request.auth.uid;
+    }
+    function validId(value) { return value is string && value.size() > 0 && value.size() <= 128; }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || (clinician() && linked(uid)));
+      allow write: if false;
+    }
+
+    match /relationships/{patientUid} {
+      allow read: if signedIn() && (request.auth.uid == patientUid || linked(patientUid));
+      allow write: if false;
+    }
+
+    match /references/{referenceId}/versions/{versionId} {
+      allow read: if signedIn() && (
+        resource.data.ownerUid == request.auth.uid
+        || (patient() && exists(/databases/$(database)/documents/patients/$(request.auth.uid)/referenceAccess/$(versionId)))
+      );
+      allow create: if clinician()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.referenceId == referenceId
+        && request.resource.data.versionId == versionId
+        && request.resource.data.exerciseName in ['Squat', 'Side Arm Raise']
+        && request.resource.data.status in ['draft', 'approved'];
+      allow update: if clinician()
+        && resource.data.ownerUid == request.auth.uid
+        && resource.data.status == 'draft'
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.referenceId == resource.data.referenceId
+        && request.resource.data.versionId == resource.data.versionId;
+      allow delete: if clinician() && resource.data.ownerUid == request.auth.uid && resource.data.status == 'draft';
+    }
+
+    match /patients/{patientUid}/assignments/{assignmentId} {
+      allow read: if signedIn() && (request.auth.uid == patientUid || (clinician() && linked(patientUid)));
+      allow create: if clinician() && linked(patientUid)
+        && request.resource.data.patientUid == patientUid
+        && request.resource.data.clinicianUid == request.auth.uid
+        && request.resource.data.items is list
+        && request.resource.data.items.size() > 0
+        && request.resource.data.items.size() <= 10;
+      allow update: if clinician() && linked(patientUid)
+        && resource.data.status == 'draft'
+        && request.resource.data.status == 'draft'
+        && request.resource.data.patientUid == patientUid
+        && request.resource.data.clinicianUid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /patients/{patientUid}/referenceAccess/{versionId} {
+      allow read: if signedIn() && (request.auth.uid == patientUid || (clinician() && linked(patientUid)));
+      allow create: if clinician() && linked(patientUid)
+        && request.resource.data.patientUid == patientUid
+        && request.resource.data.clinicianUid == request.auth.uid
+        && request.resource.data.versionId == versionId;
+      allow update, delete: if false;
+    }
+
+    match /patients/{patientUid}/sessions/{sessionId} {
+      allow read: if signedIn() && (request.auth.uid == patientUid || (clinician() && linked(patientUid)));
+      allow create: if patient() && request.auth.uid == patientUid
+        && request.resource.data.patientUid == patientUid
+        && request.resource.data.sessionId == sessionId
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.exerciseResults is list;
+      allow update: if patient() && request.auth.uid == patientUid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['submittedAt']);
+      allow delete: if false;
+    }
+
+    match /patients/{patientUid}/reviews/{sessionId} {
+      allow read: if signedIn() && (request.auth.uid == patientUid || (clinician() && linked(patientUid)));
+      allow create, update: if clinician() && linked(patientUid)
+        && request.resource.data.patientUid == patientUid
+        && request.resource.data.clinicianUid == request.auth.uid
+        && request.resource.data.sessionId == sessionId;
+      allow delete: if false;
+    }
+
+    match /patients/{patientUid}/feedback/{feedbackId} {
+      allow read: if signedIn() && (request.auth.uid == patientUid || (clinician() && linked(patientUid)));
+      allow create: if clinician() && linked(patientUid)
+        && request.resource.data.patientUid == patientUid
+        && request.resource.data.clinicianUid == request.auth.uid
+        && validId(request.resource.data.sessionId)
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 2000;
+      allow update: if patient() && request.auth.uid == patientUid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt'])
+        && request.resource.data.read == true;
+      allow delete: if false;
+    }
+
+    match /patients/{patientUid}/requests/{requestId} {
+      allow read: if signedIn() && (request.auth.uid == patientUid || (clinician() && linked(patientUid)));
+      allow create: if patient() && request.auth.uid == patientUid
+        && request.resource.data.patientUid == patientUid
+        && request.resource.data.creatorId == patientUid
+        && request.resource.data.kind in ['help', 'question', 'contact']
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 2000;
+      allow update: if clinician() && linked(patientUid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'replies'])
+        && request.resource.data.status in ['open', 'closed'];
+      allow delete: if false;
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useToast, Toast } from './components/Toast';
+import Toast from './components/Toast';
 import Login from './components/Login';
 
 import PatientLayout from './patient/Layout';
@@ -19,20 +19,24 @@ import ClientPatientDetail from './client/PatientDetail';
 import ClientAssign from './client/Assign';
 import ClientSendFeedback from './client/SendFeedback';
 import { ClientLibrary, ClientSettings } from './client/LibrarySettings';
+import { useAuth } from './auth/authContext';
 
-function ToastProvider() {
-  const msg = useToast();
-  return <Toast msg={msg} />;
+function RoleRoute({ role, children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="center"><div className="card">Loading account…</div></div>;
+  if (!user) return <Navigate to="/" replace />;
+  if (user.role !== role) return <Navigate to={user.role === 'patient' ? '/patient/home' : '/client/overview'} replace />;
+  return children;
 }
 
 export default function App() {
   return (
     <BrowserRouter>
-      <ToastProvider />
+      <Toast />
       <Routes>
         <Route path="/" element={<Login />} />
 
-        <Route path="/patient" element={<PatientLayout />}>
+        <Route path="/patient" element={<RoleRoute role="patient"><PatientLayout /></RoleRoute>}>
           <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<PatientHome />} />
           <Route path="plan" element={<PatientPlan />} />
@@ -44,7 +48,7 @@ export default function App() {
           <Route path="me" element={<PatientProfile />} />
         </Route>
 
-        <Route path="/client" element={<ClientLayout />}>
+        <Route path="/client" element={<RoleRoute role="clinician"><ClientLayout /></RoleRoute>}>
           <Route index element={<Navigate to="overview" replace />} />
           <Route path="overview" element={<ClientOverview />} />
           <Route path="patients" element={<ClientPatients />} />

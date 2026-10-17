@@ -1,18 +1,18 @@
-import { useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { subscribeToToast } from './toastBus';
 
-let _show;
-export function useToast() {
+export default function Toast() {
   const [msg, setMsg] = useState('');
-  _show = useCallback(m => {
-    setMsg(m);
-    setTimeout(() => setMsg(''), 2200);
-  }, []);
-  return msg;
-}
+  const timer = useRef();
 
-export const toast = m => _show?.(m);
+  useEffect(() => subscribeToToast(message => {
+    clearTimeout(timer.current);
+    setMsg(message);
+    timer.current = setTimeout(() => setMsg(''), 2200);
+  }), []);
 
-export function Toast({ msg }) {
+  useEffect(() => () => clearTimeout(timer.current), []);
+
   if (!msg) return null;
   return (
     <div role="status" style={{

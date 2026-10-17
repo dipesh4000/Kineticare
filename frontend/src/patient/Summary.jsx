@@ -1,6 +1,8 @@
+import { useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { DATA } from '../data';
-import { DEMO_BANNER } from '../utils';
+import { DemoBanner } from '../utils';
+import { useRecords } from '../records/recordsContext';
+import { clearSessionDraft } from '../session/drafts';
 
 function Bars({ items, valFn, labelFn }) {
   return (
@@ -18,25 +20,58 @@ function Bars({ items, valFn, labelFn }) {
 export default function PatientSummary() {
   const nav = useNavigate();
   const { state } = useLocation();
+  const { patientId, assignment, saveSession } = useRecords();
+  const sessionId = useRef(state?.sessionId ?? crypto.randomUUID());
+  const [saveState, setSaveState] = useState('idle');
   const done = state?.done || [];
+
+  const save = async () => {
+    setSaveState('saving');
+    try {
+      const plan = assignment(patientId);
+      await saveSession(patientId, {
+        schemaVersion: 1,
+        sessionId: sessionId.current,
+        assignmentId: plan?.assignmentId ?? 'demo-assignment',
+        assignmentVersion: plan?.v ?? 1,
+        status: done.length && done.every(item => item.completion !== 'partial') ? 'completed' : 'partial',
+        mode: done.some(item => item.c === 'Replay demo') ? 'replay' : 'live',
+        createdAt: new Date().toISOString(),
+        d: new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date()),
+        r: done,
+        exerciseResults: done,
+      });
+      setSaveState('saved');
+      clearSessionDraft(patientId);
+      nav('/patient/home');
+    } catch {
+      setSaveState('error');
+    }
+  };
 
   return (
     <>
       <h1>Session summary</h1>
-      {DEMO_BANNER}
+      {done.some(x => x.c === 'Replay demo') && <DemoBanner />}
       <div className="card">
         <h3>Time per exercise (s)</h3>
         <Bars items={done} valFn={x => Math.min(100, x.t * 10)} labelFn={x => `${x.ex.split(' ')[0]} ${x.t}`} />
       </div>
       <div className="card">
-        <h3>Score per exercise (0 to 1)</h3>
-        <Bars items={done} valFn={x => x.s * 100} labelFn={x => `${x.ex.split(' ')[0]} ${x.s}`} />
-        <p className="mut">Score is a prototype measure of exercise recognition, not a clinical grade of your form.</p>
+        <h3>Prototype movement score (0 to 100)</h3>
+        <Bars items={done} valFn={x => x.movementScore ?? (x.s ?? 0) * 100} labelFn={x => `${x.ex.split(' ')[0]} ${x.movementScore ?? (x.s == null ? 'Unavailable' : Math.round(x.s * 100))}`} />
+        {done.map(x => x.assessedReps == null ? null : (
+          <p className="mut" key={x.ex}>
+            {x.ex}: {x.withinTargetReps}/{x.assessedReps} assessed reps reached the target
+            {x.scoreComponents ? ` · reach ${Math.round(x.scoreComponents.reach * 100)}% · tempo ${Math.round(x.scoreComponents.tempo * 100)}%` : ''}.
+          </p>
+        ))}
+        <p className="mut">The prototype score combines visible target reach and repetition tempo. It is not a clinical grade. Replay scores are simulated.</p>
       </div>
-      <button className="btn" style={{ width: '100%' }} onClick={() => {
-        DATA.sess.push({ d: 'Today', r: done });
-        nav('/patient/home');
-      }}>Save and finish</button>
+      {saveState === 'error' && <div className="demo" role="alert">Save failed. Your summary is still available; retry when connected.</div>}
+      <button className="btn" style={{ width: '100%' }} disabled={saveState === 'saving' || saveState === 'saved'} onClick={save}>
+        {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : saveState === 'error' ? 'Retry save' : 'Save and finish'}
+      </button>
     </>
   );
 }

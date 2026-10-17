@@ -16,11 +16,13 @@ h1,h2,h3{margin:0}h1{font-size:26px}h2{font-size:18px;margin:20px 0 10px}h3{font
 .btn{background:var(--pri);color:#fff;border:0;border-radius:999px;padding:12px 20px;min-height:44px;cursor:pointer;font-weight:600}
 .btn.s{background:var(--pri2);color:var(--pri)}.btn.w{background:#fff;color:var(--pri)}
 .btn.d{background:var(--bad);color:#fff}.btn.sm{padding:6px 14px;min-height:36px;font-size:14px}
+.btn:disabled{cursor:not-allowed;opacity:.55}
 .btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--pri);outline-offset:2px}
 .tag{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;background:var(--pri2);color:var(--pri)}
 .tag.ok{background:var(--okb);color:var(--ok)}.tag.warn{background:var(--warnb);color:var(--warn)}
 input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{width:100%;padding:11px 14px;border:1px solid #8884;border-radius:14px;background:var(--card)}
 label{display:block;font-size:14px;font-weight:600;margin:12px 0 4px}
+.check-label{font-weight:400;display:flex;gap:8px;align-items:center;margin:8px 0}
 .demo{background:var(--warnb);color:var(--warn);font-size:13px;padding:8px 12px;border-radius:12px;margin-bottom:12px}
 .center{max-width:400px;margin:0 auto;padding:40px 20px}
 .phone{max-width:430px;margin:0 auto;min-height:100vh;background:var(--soft);padding:18px 16px 96px;position:relative}
@@ -52,6 +54,8 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;p
 .wrap{overflow-x:auto}
 .cam{background:#26233d;border-radius:20px;height:300px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .cam .st{position:absolute;top:10px;left:10px}
+.pose-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.cam canvas.pose-layer{z-index:1}.cam .st{z-index:2}
 @keyframes sw{0%,100%{transform:rotate(-25deg)}50%{transform:rotate(25deg)}}
 .arm{transform-box:fill-box;transform-origin:top center;animation:sw 1.6s ease-in-out infinite}
 .paused .arm{animation-play-state:paused}

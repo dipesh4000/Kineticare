@@ -1,37 +1,52 @@
 import { useNavigate } from 'react-router-dom';
-import { DATA } from '../data';
-import { HBar, DEMO_BANNER } from '../utils';
+import { useRecords } from '../records/recordsContext';
+import { DemoBanner } from '../utils';
 
 export default function ClientOverview() {
   const nav = useNavigate();
-  const rev = DATA.pts.filter(x => x.review).length;
+  const { workspace, sessions, requests, backend } = useRecords();
+  const recent = workspace.patients
+    .flatMap(patient => sessions(patient.id).map(session => ({ patient, session })))
+    .sort((a, b) => String(b.session.createdAt ?? b.session.d).localeCompare(String(a.session.createdAt ?? a.session.d)));
+  const needsReview = recent.filter(item => item.session.reviewStatus !== 'reviewed').length;
+  const openRequests = workspace.patients.reduce((total, patient) => total + requests(patient.id).filter(item => item.status === 'open').length, 0);
+
   return (
     <>
       <h1>Overview</h1>
-      {DEMO_BANNER}
+      {backend === 'local-demo' && <DemoBanner />}
       <div className="grid">
-        <div className="card"><div className="stat">{DATA.pts.length}</div>Assigned patients</div>
-        <div className="card"><div className="stat">{rev}</div>Need review</div>
-        <div className="card"><div className="stat">1</div>Overdue plan</div>
-        <div className="card"><div className="stat">1</div>Low-confidence session</div>
+        <div className="card"><div className="stat">{workspace.patients.length}</div>Linked patients</div>
+        <div className="card"><div className="stat">{needsReview}</div>Sessions needing review</div>
+        <div className="card"><div className="stat">{openRequests}</div>Open patient requests</div>
       </div>
-      <h2>Adherence by patient</h2>
-      <div className="card">
-        <HBar rows={DATA.pts.map(x => [x.n, x.adh, x.adh + '%'])} />
-      </div>
+
+      {openRequests > 0 && <>
+        <h2>Patient requests</h2>
+        <div className="card">
+          {workspace.patients.flatMap(patient => requests(patient.id).filter(item => item.status === 'open').map(item => (
+            <div className="row sp" key={item.requestId} style={{ marginBottom: 10 }}>
+              <div><b>{patient.n}</b><div className="mut">{item.kind}: {item.message}</div></div>
+              <button className="btn sm" onClick={() => nav(`/client/patients/${patient.id}`)}>Open</button>
+            </div>
+          )))}
+        </div>
+      </>}
+
       <h2>Recent sessions</h2>
       <div className="card">
         <div className="wrap">
           <table>
             <thead><tr><th>Patient</th><th>Date</th><th>Status</th><th></th></tr></thead>
             <tbody>
-              {DATA.pts.slice(0, 2).map(x => (
-                <tr key={x.id}>
-                  <td>{x.n}</td><td>{x.last}</td>
-                  <td><span className={`tag ${x.review ? 'warn' : 'ok'}`}>{x.review ? 'Needs review' : 'Reviewed'}</span></td>
-                  <td><button className="btn sm" onClick={() => nav('/client/patients/' + x.id)}>Open</button></td>
+              {recent.slice(0, 8).map(({ patient, session }) => (
+                <tr key={`${patient.id}-${session.sessionId ?? session.d}`}>
+                  <td>{patient.n}</td><td>{session.d}</td>
+                  <td><span className={`tag ${session.reviewStatus === 'reviewed' ? 'ok' : 'warn'}`}>{session.reviewStatus === 'reviewed' ? 'Reviewed' : 'Needs review'}</span></td>
+                  <td><button className="btn sm" onClick={() => nav(`/client/patients/${patient.id}`)}>Open</button></td>
                 </tr>
               ))}
+              {!recent.length && <tr><td colSpan="4">No submitted sessions yet.</td></tr>}
             </tbody>
           </table>
         </div>

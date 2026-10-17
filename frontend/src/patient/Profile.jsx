@@ -1,14 +1,19 @@
 import { useNavigate } from 'react-router-dom';
-import { DATA } from '../data';
+import { useAuth } from '../auth/authContext';
+import { useRecords } from '../records/recordsContext';
+import { clearSessionDraft } from '../session/drafts';
 
 export default function PatientProfile() {
   const nav = useNavigate();
+  const { user, signOut } = useAuth();
+  const { patientId, assignment, backend } = useRecords();
+  const plan = assignment(patientId);
   return (
     <>
       <h1>Profile</h1>
       <div className="card">
-        <b>Siyam Ahamed</b>
-        <p className="mut">Male, 27 · Clinician: {DATA.plan.by}</p>
+        <b>{user.displayName}</b>
+        <p className="mut">Patient account · Clinician: {plan?.by ?? 'Not linked'}</p>
       </div>
       <div className="card">
         <h3>Camera permission</h3>
@@ -16,9 +21,11 @@ export default function PatientProfile() {
       </div>
       <div className="card">
         <h3>Privacy</h3>
-        <p className="mut">Prototype notice: this app is a demo and has not been validated in a clinical setting.</p>
+        <p className="mut">Workout video stays on this device. Compact measurements are saved. Approved clinician reference recordings may be streamed when configured.</p>
+        <p className="mut">Storage mode: {backend === 'local-demo' ? 'this browser only' : 'protected Firebase project'}.</p>
+        <p className="mut">Prototype notice: this app has not been validated for clinical use.</p>
       </div>
-      <button className="btn s" onClick={() => nav('/')}>Sign out</button>
+      <button className="btn s" onClick={async () => { clearSessionDraft(patientId); await signOut(); nav('/'); }}>Sign out</button>
     </>
   );
 }

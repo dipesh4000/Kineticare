@@ -1,12 +1,26 @@
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { DATA } from '../data';
-import { toast } from '../components/Toast';
+import { useRecords } from '../records/recordsContext';
+import { toast } from '../components/toastBus';
+import ReferenceVideo from '../components/ReferenceVideo';
 
 export default function PatientPre() {
   const nav = useNavigate();
   const { state } = useLocation();
+  const { patientId, assignment, createRequest, workspace } = useRecords();
+  const [checks, setChecks] = useState([false, false, false]);
   const exIdx = state?.exIdx ?? 0;
-  const x = DATA.plan.items[exIdx];
+  const x = assignment(patientId)?.items[exIdx];
+  if (!x) return <div className="card">This exercise is no longer available in the current assignment.</div>;
+  const reference = workspace.references.find(item => item.versionId === x.referenceVersionId);
+
+  const requestHelp = () => {
+    createRequest(patientId, {
+      requestId: crypto.randomUUID(), kind: 'help', message: `Help requested before ${x.ex}`,
+      creatorId: patientId, createdAt: new Date().toISOString(), status: 'open',
+    });
+    toast('Help request sent to your clinician');
+  };
 
   return (
     <>
@@ -17,23 +31,21 @@ export default function PatientPre() {
         <p className="mut">{x.note || 'No extra precautions set.'}</p>
       </div>
       <div className="card">
-        <h3>Camera setup</h3>
-        <label style={{ fontWeight: 400, display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0' }}>
-          <input type="checkbox" /> Phone is propped about 2 metres away
-        </label>
-        <label style={{ fontWeight: 400, display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0' }}>
-          <input type="checkbox" /> Whole body is visible
-        </label>
-        <label style={{ fontWeight: 400, display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0' }}>
-          <input type="checkbox" /> Room is well lit
-        </label>
-        <p className="mut">The camera is only active during the workout. In this demo no camera is used.</p>
+        <h3>Clinician demonstration</h3>
+        {reference ? <ReferenceVideo mediaPath={reference.mediaPath} /> : <p className="demo">This legacy demo assignment has no approved reference recording. A new published assignment must include one.</p>}
       </div>
-      <button className="btn" style={{ width: '100%', marginBottom: 8 }}
-        onClick={() => nav('/patient/live', { state: { exIdx } })}>
+      <div className="card">
+        <h3>Camera setup</h3>
+        {['Phone is stable about 2 metres away', 'Whole body is visible', 'Room is evenly lit'].map((label, index) => (
+          <label className="check-label" key={label}><input type="checkbox" checked={checks[index]} onChange={event => setChecks(current => current.map((value, itemIndex) => itemIndex === index ? event.target.checked : value))} /> {label}</label>
+        ))}
+        <p className="mut">The camera activates only after you choose Start camera. Workout video stays on this device.</p>
+      </div>
+      <button className="btn" disabled={!checks.every(Boolean)} style={{ width: '100%', marginBottom: 8 }}
+        onClick={() => nav('/patient/live', { state: { ...state, exIdx, all: !!state?.all } })}>
         Begin exercise
       </button>
-      <button className="btn s" style={{ width: '100%' }} onClick={() => toast('Help request sent to your clinician (demo)')}>
+      <button className="btn s" style={{ width: '100%' }} onClick={requestHelp}>
         I need help
       </button>
     </>

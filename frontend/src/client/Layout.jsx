@@ -1,4 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../auth/authContext';
 
 const TABS = [
   ['overview', 'Overview'],
@@ -9,6 +10,7 @@ const TABS = [
 
 export default function ClientLayout() {
   const nav = useNavigate();
+  const { signOut } = useAuth();
   const { pathname } = useLocation();
   const active = TABS.find(([k]) => pathname.includes(`/client/${k}`))?.[0] ?? 'overview';
 
@@ -23,7 +25,7 @@ export default function ClientLayout() {
             {label}
           </button>
         ))}
-        <button style={{ marginTop: 'auto' }} onClick={() => nav('/')}>Sign out</button>
+        <button style={{ marginTop: 'auto' }} onClick={async () => { await signOut(); nav('/'); }}>Sign out</button>
       </nav>
       <main className="main">
         <Outlet />

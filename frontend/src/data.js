@@ -1,7 +1,4 @@
-export const EXERCISES = [
-  'Arm Crossing','Arm Rotation','Body Twist','Hip Rotation',
-  'Body Rotation','Step Jack','Ab Twist','Squat','Swing-Arm Walk'
-];
+export const EXERCISES = ['Squat', 'Side Arm Raise'];
 
 export const DATA = {
   pts: [
@@ -12,9 +9,8 @@ export const DATA = {
   plan: {
     name:'Mobility plan, week 3', v:2, by:'Dr. Sarah Khan',
     items:[
-      { ex:'Arm Rotation', t:60, note:'Slow and controlled.' },
-      { ex:'Squat', t:45, note:'Stop if you feel sharp pain.' },
-      { ex:'Hip Rotation', t:60, note:'' },
+      { ex:'Squat', t:45, targetReps:5, targetExcursionDeg:45, note:'Stop if you feel sharp pain.' },
+      { ex:'Side Arm Raise', t:45, targetReps:5, targetExcursionDeg:75, note:'Slow and controlled.' },
     ]
   },
   sess: [
@@ -27,3 +23,16 @@ export const DATA = {
     { id:'F-1', from:'Dr. Sarah Khan', d:'6 Sep 2026', m:'Good consistency this week. Keep squats shallow for now and rest between exercises.', read:false }
   ]
 };
+
+export function createDemoWorkspace() {
+  return {
+    schemaVersion: 1,
+    patients: structuredClone(DATA.pts),
+    assignments: { 'P-101': structuredClone(DATA.plan) },
+    assignmentDrafts: {},
+    sessions: { 'P-101': structuredClone(DATA.sess) },
+    feedback: { 'P-101': structuredClone(DATA.fb) },
+    requests: { 'P-101': [] },
+    references: [],
+  };
+}

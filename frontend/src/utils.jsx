@@ -1,14 +1,4 @@
-export const avg = r => +(r.reduce((a, x) => a + x.s, 0) / r.length).toFixed(2);
-
-export const exs = ss => {
-  const m = {};
-  ss.forEach(s => s.r.forEach(x => { (m[x.ex] = m[x.ex] || []).push(x); }));
-  return Object.entries(m).map(([k, a]) => [
-    k,
-    a.reduce((t, x) => t + x.s, 0) / a.length,
-    a.reduce((t, x) => t + x.t, 0) / a.length,
-  ]);
-};
+import { avg } from './metrics';
 
 export function Ring({ pct, label }) {
   const r = 42, circ = 2 * Math.PI * r;
@@ -25,6 +15,7 @@ export function Ring({ pct, label }) {
 }
 
 export function LineChart({ vals, labs }) {
+  if (!vals.length) return <p className="mut">No compatible scored sessions yet.</p>;
   const W = 300, H = 130, L = 26, n = vals.length;
   const x = i => L + (W - L - 10) * (n === 1 ? 0.5 : i / (n - 1));
   const y = v => 10 + (H - 30) * (1 - v);
@@ -34,7 +25,7 @@ export function LineChart({ vals, labs }) {
       {[0, 0.5, 1].map(g => (
         <g key={g}>
           <line x1={L} x2={W - 10} y1={y(g)} y2={y(g)} stroke="#8883" />
-          <text x="0" y={y(g) + 4} fontSize="10" fill="var(--mut)">{g}</text>
+          <text x="0" y={y(g) + 4} fontSize="10" fill="var(--mut)">{Math.round(g * 100)}</text>
         </g>
       ))}
       <polygon points={`${x(0)},${y(0)} ${pts} ${x(n - 1)},${y(0)}`} fill="var(--pri2)" opacity=".7" />
@@ -57,7 +48,7 @@ export function HBar({ rows }) {
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>{label}</span><b>{val}</b>
           </div>
-          <div className="prog"><b style={{ width: `${pct}%` }} /></div>
+          <div className="prog"><b style={{ width: `${Math.max(0, Math.min(100, pct ?? 0))}%` }} /></div>
         </div>
       ))}
     </div>
@@ -65,21 +56,25 @@ export function HBar({ rows }) {
 }
 
 export function KPIs({ ss }) {
+  if (!ss.length) return <div className="card">No saved sessions yet.</div>;
   const sc = ss.map(s => avg(s.r));
-  const d = +(sc.at(-1) - sc[0]).toFixed(2);
+  const validScores = sc.filter(Number.isFinite);
+  const d = validScores.length > 1 ? +(validScores.at(-1) - validScores[0]).toFixed(2) : null;
   const tm = Math.round(ss.reduce((a, s) => a + s.r.reduce((b, x) => b + x.t, 0), 0) / 60);
   return (
     <div className="card st4">
       <div><b>{ss.length}</b>Sessions</div>
-      <div><b>{avg(ss.flatMap(s => s.r))}</b>Average score</div>
+      <div><b>{avg(ss.flatMap(s => s.r)) == null ? '—' : Math.round(avg(ss.flatMap(s => s.r)) * 100)}</b>Average score</div>
       <div><b>{tm} min</b>Total time</div>
-      <div><b>{d >= 0 ? '+' : ''}{d}</b>Score change</div>
+      <div><b>{d == null ? '—' : `${d >= 0 ? '+' : ''}${Math.round(d * 100)}`}</b>Score change</div>
     </div>
   );
 }
 
-export const DEMO_BANNER = (
-  <div className="demo">
-    Demo mode: sample data only. Scores are simulated and are not real patient measurements. Prototype, not clinically validated.
-  </div>
-);
+export function DemoBanner() {
+  return (
+    <div className="demo">
+      Demo mode: sample data only. Scores are simulated and are not real patient measurements. Prototype, not clinically validated.
+    </div>
+  );
+}

@@ -1,51 +1,62 @@
-import { useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useToast, Toast } from './components/Toast';
+import Login from './components/Login';
+
+import PatientLayout from './patient/Layout';
+import PatientHome from './patient/Home';
+import PatientPlan from './patient/Plan';
+import PatientPre from './patient/Pre';
+import PatientLive from './patient/Live';
+import PatientSummary from './patient/Summary';
+import PatientProgress from './patient/Progress';
+import PatientFeedback from './patient/Feedback';
+import PatientProfile from './patient/Profile';
+
+import ClientLayout from './client/Layout';
+import ClientOverview from './client/Overview';
+import ClientPatients from './client/Patients';
+import ClientPatientDetail from './client/PatientDetail';
+import ClientAssign from './client/Assign';
+import ClientSendFeedback from './client/SendFeedback';
+import { ClientLibrary, ClientSettings } from './client/LibrarySettings';
+
+function ToastProvider() {
+  const msg = useToast();
+  return <Toast msg={msg} />;
+}
+
 export default function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
-        <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-100 text-3xl">
-          🚀
-        </div>
+    <BrowserRouter>
+      <ToastProvider />
+      <Routes>
+        <Route path="/" element={<Login />} />
 
-        <h1 className="mb-2 text-3xl font-bold text-slate-800">
-          Welcome!
-        </h1>
+        <Route path="/patient" element={<PatientLayout />}>
+          <Route index element={<Navigate to="home" replace />} />
+          <Route path="home" element={<PatientHome />} />
+          <Route path="plan" element={<PatientPlan />} />
+          <Route path="pre" element={<PatientPre />} />
+          <Route path="live" element={<PatientLive />} />
+          <Route path="sum" element={<PatientSummary />} />
+          <Route path="prog" element={<PatientProgress />} />
+          <Route path="fb" element={<PatientFeedback />} />
+          <Route path="me" element={<PatientProfile />} />
+        </Route>
 
-        <p className="mb-6 text-slate-500">
-          A sample React app styled with Tailwind CSS.
-        </p>
+        <Route path="/client" element={<ClientLayout />}>
+          <Route index element={<Navigate to="overview" replace />} />
+          <Route path="overview" element={<ClientOverview />} />
+          <Route path="patients" element={<ClientPatients />} />
+          <Route path="patients/:id" element={<ClientPatientDetail />} />
+          <Route path="patients/:id/assign" element={<ClientAssign />} />
+          <Route path="patients/:id/feedback" element={<ClientSendFeedback />} />
+          <Route path="library" element={<ClientLibrary />} />
+          <Route path="settings" element={<ClientSettings />} />
+        </Route>
 
-        <div className="mb-6 rounded-xl bg-slate-50 p-6 text-center">
-          <p className="mb-2 text-sm font-medium text-slate-500">
-            Current Count
-          </p>
-          <p className="text-5xl font-bold text-blue-600">
-            {count}
-          </p>
-        </div>
-
-        <div className="flex gap-3">
-          <button
-            onClick={() => setCount((c) => c + 1)}
-            className="flex-1 rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-95"
-          >
-            Increment +
-          </button>
-
-          <button
-            onClick={() => setCount(0)}
-            className="rounded-lg border border-slate-200 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-          >
-            Reset
-          </button>
-        </div>
-
-        <p className="mt-6 text-center text-xs text-slate-400">
-          Built with React + Tailwind CSS
-        </p>
-      </div>
-    </div>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

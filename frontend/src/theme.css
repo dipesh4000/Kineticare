@@ -1,0 +1,26 @@
+:root {
+  --pri: #6b5fc0;
+  --pri2: #ebe8f8;
+  --bg: #e6e5ea;
+  --card: #fff;
+  --ink: #1f1d2b;
+  --mut: #6f6d85;
+  --soft: #f4f3f8;
+  --ok: #1f7a4d;
+  --okb: #e1f4ea;
+  --warn: #9a5b00;
+  --warnb: #fdf0d8;
+  --bad: #b3261e;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.45 "Segoe UI", system-ui, sans-serif;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3 { margin: 0; }
+h1 { font-size: 26px; }
+h2 { font-size: 18px; margin: 20px 0 10px; }
+h3 { font-size: 16px; }

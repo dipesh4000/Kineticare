@@ -5,8 +5,8 @@ import { auth, db, firebaseEnabled } from '../services/firebase';
 import { AuthContext } from './authContext';
 
 const DEMO_USERS = {
-  patient: { uid: 'P-101', email: 'patient@kineticare.demo', role: 'patient', displayName: 'Siyam Ahamed' },
-  clinician: { uid: 'C-001', email: 'clinician@kineticare.demo', role: 'clinician', displayName: 'Dr. Sarah Khan' },
+  patient: { uid: 'P-101', email: 'shyam@kineticare.com', role: 'patient', displayName: 'Shyam Yadav' },
+  clinician: { uid: 'C-001', email: 'aditi@kineticare.com', role: 'clinician', displayName: 'Dr. Aditi Singh' },
 };
 
 export function AuthProvider({ children }) {

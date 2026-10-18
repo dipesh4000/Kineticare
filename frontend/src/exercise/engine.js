@@ -11,7 +11,7 @@ export const DEFAULT_REP_CONFIG = {
 
 export function createRepState() {
   return {
-    phase: 'REST', pending: null, peak: 0, startedAt: null,
+    phase: 'REST', pending: null, peak: 0, startedAt: null, peakAt: null,
     attemptedReps: 0, assessedReps: 0, withinTargetReps: 0, rejectedReps: 0, reps: [],
   };
 }
@@ -25,15 +25,21 @@ function pendingTransition(state, transition, timestamp, dwellMs) {
 
 export function advanceRep(previous, sample, config = DEFAULT_REP_CONFIG) {
   const { progress, timestamp, tracked = true } = sample;
-  if (!tracked) return { ...previous, phase: 'REST', pending: null, peak: 0, startedAt: null };
+  if (!tracked) return { ...previous, phase: 'REST', pending: null, peak: 0, startedAt: null, peakAt: null };
   if (!Number.isFinite(progress) || !Number.isFinite(timestamp)) return previous;
 
-  const state = { ...previous, peak: Math.max(previous.peak, progress) };
+  const currentPeak = Math.max(previous.peak, progress);
+  const state = {
+    ...previous,
+    peak: currentPeak,
+    peakAt: progress >= previous.peak ? timestamp : (previous.peakAt || timestamp),
+  };
+
   if (state.phase === 'REST') {
-    if (progress <= config.enterThreshold) return { ...state, pending: null, peak: 0 };
+    if (progress <= config.enterThreshold) return { ...state, pending: null, peak: 0, peakAt: null };
     const transition = pendingTransition(state, 'OUTBOUND', timestamp, config.dwellMs);
     return transition.ready
-      ? { ...state, phase: 'OUTBOUND', pending: null, peak: progress, startedAt: timestamp }
+      ? { ...state, phase: 'OUTBOUND', pending: null, peak: progress, startedAt: timestamp, peakAt: timestamp }
       : { ...state, pending: transition.pending };
   }
 
@@ -52,13 +58,17 @@ export function advanceRep(previous, sample, config = DEFAULT_REP_CONFIG) {
   const durationMs = timestamp - state.startedAt;
   if (state.peak > config.maxPlausible || durationMs < config.minDurationMs) {
     // Tracking glitch or a movement far outside the assigned range: do not count it as a repetition.
-    return { ...state, phase: 'REST', pending: null, peak: 0, startedAt: null, rejectedReps: (state.rejectedReps ?? 0) + 1 };
+    return { ...state, phase: 'REST', pending: null, peak: 0, startedAt: null, peakAt: null, rejectedReps: (state.rejectedReps ?? 0) + 1 };
   }
   const withinTarget = state.peak >= config.targetMin && state.peak <= config.targetMax;
-  const rep = { peak: state.peak, durationMs, withinTarget };
+  const rawOutbound = (state.peakAt || (state.startedAt + Math.round(durationMs * 0.45))) - state.startedAt;
+  const outboundMs = Math.max(150, Math.min(durationMs - 150, Math.round(rawOutbound)));
+  const returnMs = Math.max(150, Math.round(durationMs - outboundMs));
+  const eccentricRatio = outboundMs > 0 ? +(returnMs / outboundMs).toFixed(2) : 1;
+  const rep = { peak: state.peak, durationMs, outboundMs, returnMs, eccentricRatio, withinTarget };
   return {
     ...state,
-    phase: 'REST', pending: null, peak: 0, startedAt: null,
+    phase: 'REST', pending: null, peak: 0, startedAt: null, peakAt: null,
     attemptedReps: state.attemptedReps + 1,
     assessedReps: state.assessedReps + 1,
     withinTargetReps: state.withinTargetReps + Number(withinTarget),

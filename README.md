@@ -130,51 +130,53 @@ The design also makes incomplete information visible. Partial sessions can be sa
 
 | Layer | Implementation |
 | --- | --- |
-| Interface | React, Vite, responsive patient and clinician screens |
-| Pose estimation | TensorFlow.js and MoveNet SinglePose Lightning |
-| Movement logic | Exercise-specific geometry, calibration, repetition, and scoring rules |
-| Identity | Firebase Authentication with provisioned roles |
-| Shared records | Cloud Firestore assignments, sessions, feedback, and requests |
-| Reference media | Protected Cloud Storage in Firebase mode |
-| Local demonstration | Browser storage for records and IndexedDB for reference media |
+| Interface | React, Vite, Tailwind CSS, responsive patient and clinician white-mode UI |
+| Backend & API | Node.js, Express REST API, modular Exercise Registry, Biomechanics Engine |
+| Pose estimation | TensorFlow.js and MoveNet SinglePose Lightning (on-device WebGL) |
+| Movement logic | Exercise-specific geometry, calibration, concentric/eccentric phases, and fatigue scoring |
+| Identity | Firebase Authentication with provisioned roles (Patient: Shyam Yadav, Clinician: Dr. Aditi Singh) |
+| Shared records | Cloud Firestore assignments, sessions, clinical feedback, and requests |
+| Reference media | Protected Cloud Storage in Firebase mode; IndexedDB & local staging fallback |
 
 Patient camera frames are processed on the device. Raw patient workout video is not recorded or uploaded by default. Explicitly approved clinician reference clips are stored for authorized playback.
 
 Roles and clinician-patient relationships are provisioned through a trusted process. Firestore and Storage rules restrict records and reference media to the relevant accounts.
 
 <details>
-<summary><strong>Explore the source structure</strong></summary>
+<summary><strong>Explore the project structure</strong></summary>
 
 ```text
-frontend/src/
-  auth/        Account and role state
-  client/      Clinician screens and reference capture
-  patient/     Setup, practice, summaries, and feedback
-  exercise/    Exercise definitions, repetition engine, scoring
-  vision/      Camera lifecycle, MoveNet, geometry
-  records/     Shared records and local demo state
-  services/    Firebase and media storage
-  session/     Recoverable workout drafts
-frontend/test/ Logic and security-rule checks
-docs/assets/   README illustration
+backend/
+  config/      Server and environment definitions
+  routes/      Express routers: /api/exercises, /api/analytics, /api/reports
+  services/    Exercise registry, biomechanical calculation, SOAP note generation
+  server.js    Production fullstack server
+frontend/
+  src/
+    auth/      Account and role state (Shyam Yadav & Dr. Aditi Singh)
+    client/    Clinician dashboard, patient drilldowns, and reference capture
+    patient/   Setup, live practice, summaries, and recovery progress
+    exercise/  Exercise definitions, repetition engine, scoring
+    vision/    Camera lifecycle, MoveNet, geometry
+    records/   Shared records and local workspace state
+    services/  Backend API client, Firebase, and media storage
+    session/   Recoverable workout drafts
+  test/        Logic and security-rule checks
+docs/assets/   Project illustrations
 ```
 
 </details>
 
 ## Scope and next steps
 
-The implemented MVP covers the two-exercise workflow, reference capture and playback, versioned assignments, live camera measurements, recoverable sessions, clinician review, feedback, and patient requests.
+The implemented fullstack architecture covers the camera-guided workflow, reference capture and playback, versioned assignments, live camera measurements, recoverable sessions, clinician review, SOAP note generation, exercise issue reporting, and patient requests.
 
-Release acceptance still includes Firebase deployment, security-rule execution in the configured environment, physical Android/iOS camera trials, and physiotherapist review of targets and cues. Logic checks cover geometry, calibration, movement transitions, tracking loss, and scoring.
+Planned extensions on the roadmap:
 
-Planned extensions include:
-
-- Strengthening the supported exercises using observed device and tracking failures.
-- Adding reviewed clinician video uploads.
-- Expanding the exercise library one tested protocol at a time.
-- Improving accessibility, personalization, reminders, and review efficiency.
-
-Public onboarding, arbitrary exercise recognition, diagnosis, recovery prediction, payments, and native mobile apps sit outside the current MVP.
+- **Clinician Custom Video Upload (Phase 2)**: Stage 1 preview with local staging is currently accessible in the Exercise Library. Persistent cloud transcoding, adaptive streaming, and multi-tenant video distribution are scheduled for Phase 2.
+- **Dynamic Exercise Expansion**: Developers can push new protocols directly via `backend/services/exerciseRegistry.js` or `POST /api/exercises`.
+- **EHR Integration**: Export structured clinical SOAP notes to FHIR-compliant electronic medical records.
+- **Native Mobile Apps**: Cross-platform mobile wrappers (React Native/Capacitor) building on this responsive web foundation.
 
 ## Documentation
 

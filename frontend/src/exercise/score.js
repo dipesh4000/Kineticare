@@ -26,3 +26,39 @@ export function scoreRepetitions(reps, { tempoMinMs = 2000, tempoMaxMs = 5000 } 
     formulaVersion: 'reach-tempo-v1',
   };
 }
+
+export function scoreRepetitionsDetailed(reps, { targetDeg = 45, tempoMinMs = 2000, tempoMaxMs = 5000 } = {}) {
+  const base = scoreRepetitions(reps, { tempoMinMs, tempoMaxMs });
+  if (!base) return null;
+
+  const count = reps.length;
+  const meanPeak = reps.reduce((sum, r) => sum + r.peak, 0) / count;
+  const meanDurationMs = Math.round(reps.reduce((sum, r) => sum + r.durationMs, 0) / count);
+  const meanConcentricMs = Math.round(reps.reduce((sum, r) => sum + (r.outboundMs || r.durationMs * 0.45), 0) / count);
+  const meanEccentricMs = Math.round(reps.reduce((sum, r) => sum + (r.returnMs || r.durationMs * 0.55), 0) / count);
+  const withinTargetCount = reps.filter(r => r.withinTarget).length;
+
+  let fatigueIndex = 0;
+  if (count >= 4) {
+    const half = Math.floor(count / 2);
+    const firstHalfAvg = reps.slice(0, half).reduce((sum, r) => sum + r.peak, 0) / half;
+    const secondHalfAvg = reps.slice(-half).reduce((sum, r) => sum + r.peak, 0) / half;
+    fatigueIndex = +(((firstHalfAvg - secondHalfAvg) / firstHalfAvg) * 100).toFixed(1);
+  }
+
+  return {
+    ...base,
+    biometrics: {
+      count,
+      targetCompliancePct: Math.round((withinTargetCount / count) * 100),
+      meanPeakDeg: Math.round(meanPeak * targetDeg),
+      targetDeg,
+      meanDurationSec: +(meanDurationMs / 1000).toFixed(1),
+      meanConcentricSec: +(meanConcentricMs / 1000).toFixed(1),
+      meanEccentricSec: +(meanEccentricMs / 1000).toFixed(1),
+      eccentricRatio: meanConcentricMs > 0 ? +(meanEccentricMs / meanConcentricMs).toFixed(2) : 1,
+      fatigueIndex,
+      fatigueDetected: fatigueIndex >= 12,
+    },
+  };
+}

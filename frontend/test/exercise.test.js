@@ -124,4 +124,32 @@ test('rep counter ignores implausible peaks and too-fast glitches', () => {
   const good = run([[0, 0], [0.5, 500], [1, 1500], [1, 1700], [0.6, 2300], [0.6, 2400], [0.1, 3000], [0.1, 3200], [0.1, 3400]]);
   assert.equal(good.attemptedReps, 1);
   assert.equal(good.withinTargetReps, 1);
+  assert.ok(good.reps[0].outboundMs > 0);
+  assert.ok(good.reps[0].returnMs > 0);
+  assert.ok(good.reps[0].eccentricRatio > 0);
 });
+
+test('biomechanical evaluation computes concentric/eccentric phases, ROM deficit, and clinical flags', async () => {
+  const { evaluateExerciseRepetitions, generateSoapNote } = await import('../../backend/services/analytics.js');
+  const reps = [
+    { peak: 1.0, durationMs: 3200, outboundMs: 1400, returnMs: 1800, withinTarget: true },
+    { peak: 0.98, durationMs: 3100, outboundMs: 1300, returnMs: 1800, withinTarget: true },
+    { peak: 0.95, durationMs: 3300, outboundMs: 1400, returnMs: 1900, withinTarget: true },
+    { peak: 0.82, durationMs: 2900, outboundMs: 1300, returnMs: 1600, withinTarget: false },
+    { peak: 0.80, durationMs: 2800, outboundMs: 1200, returnMs: 1600, withinTarget: false },
+  ];
+  const evalResult = evaluateExerciseRepetitions(reps, { ex: 'Squat', targetExcursionDeg: 45, targetReps: 5 });
+  assert.equal(evalResult.scored, true);
+  assert.equal(evalResult.repsCount, 5);
+  assert.ok(evalResult.meanPeakDeg > 0);
+  assert.ok(evalResult.fatigue.indexPct > 0);
+  assert.ok(evalResult.clinicalFlags.length > 0);
+  assert.ok(evalResult.patientTips.length > 0);
+
+  const soap = generateSoapNote({ n: 'John Doe', id: 'P-101' }, { d: '18 Oct 2026', r: [{ ex: 'Squat', reps }] }, { avgScore: 88, exercises: [evalResult], allFlags: evalResult.clinicalFlags });
+  assert.ok(soap.formattedText.includes('[S] SUBJECTIVE'));
+  assert.ok(soap.formattedText.includes('[O] OBJECTIVE'));
+  assert.ok(soap.formattedText.includes('[A] ASSESSMENT'));
+  assert.ok(soap.formattedText.includes('[P] PLAN'));
+});
+

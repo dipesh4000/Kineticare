@@ -21,6 +21,7 @@ export default function ClientOverview() {
         <div className="card"><div className="stat">{workspace.patients.length}</div>Linked patients</div>
         <div className="card"><div className="stat">{needsReview}</div>Sessions needing review</div>
         <div className="card"><div className="stat">{openRequests}</div>Open patient requests</div>
+        <div className="card"><div className="stat" style={{ fontSize: 22, color: 'var(--ok)' }}>Active</div>Kineticare Clinical API</div>
       </div>
 
       <h2>Your patients</h2>

@@ -4,7 +4,7 @@ import { useAuth } from '../auth/authContext';
 import { RecordsContext } from './recordsContext';
 import { firebaseMutations, subscribeFirebaseWorkspace } from '../services/firebaseRecords';
 
-const STORAGE_KEY = 'kineticare-demo-workspace-v2';
+const STORAGE_KEY = 'kineticare-workspace-v3';
 const emptyWorkspace = () => ({ schemaVersion: 1, patients: [], assignments: {}, assignmentDrafts: {}, sessions: {}, feedback: {}, requests: {}, references: [] });
 
 function loadWorkspace() {

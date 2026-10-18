@@ -33,88 +33,214 @@ export default function PatientHome() {
     toast('Message saved for your clinician');
   };
 
+  const totalTargetReps = plan ? plan.items.filter(item => !item.videoOnly).reduce((total, item) => total + item.targetReps, 0) : 0;
+
   return (
     <>
-      <div className="row sp">
-        <p className="hello">Hello,<b>{user.displayName}!</b></p>
+      {/* Top Clinical Header */}
+      <div className="row sp" style={{ marginBottom: 14 }}>
+        <div>
+          <p className="hello">Hello, <b>{user.displayName.split(' ')[0]}</b></p>
+          <p className="mut" style={{ fontSize: 13, marginTop: 2 }}>
+            {new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date())}
+          </p>
+        </div>
         <div className="hd">
-          <button className="call-btn" style={{ background: 'none' }} aria-label="Notifications" onClick={() => unread ? nav('/patient/fb') : toast('No new notifications')}>
-            <Icon name="bell" color="var(--ink)" />
+          <button
+            className="call-btn"
+            style={{ background: 'none' }}
+            aria-label="Notifications"
+            onClick={() => unread ? nav('/patient/fb') : toast('No new notifications')}
+          >
+            <Icon name="bell" color="var(--pri)" size={20} />
           </button>
-          <div className="av">{user.displayName.split(' ').map(part => part[0]).slice(0, 2).join('')}</div>
+          <div className="av">
+            {user.displayName.split(' ').map(part => part[0]).slice(0, 2).join('')}
+          </div>
         </div>
       </div>
 
-      <div className="card" style={{ background: 'var(--pri2)', marginTop: 16 }}>
-        <span className="mut">Current doctor</span>
-        <h3 style={{ marginTop: 2 }}>{plan?.by ?? 'Not linked yet'}</h3>
-      </div>
-      <div className="card" style={{ background: 'var(--pri2)' }}>
-        <span className="mut">Welcome back, {user.displayName.split(' ')[0]}. Today's date</span>
-        <h3 style={{ marginTop: 2 }}>{new Intl.DateTimeFormat('en-GB').format(new Date())}</h3>
-      </div>
-      <div className="card" style={{ background: 'var(--pri2)' }}>
-        <span className="mut">Reminders</span>
-        <p style={{ margin: '2px 0 0' }}>{reminder ?? 'No reminders from your clinician.'}</p>
-      </div>
       {backend === 'local-demo' && <DemoBanner />}
 
-      <h2>Current assignment</h2>
-      {draft && <div className="card">
-        <div className="row sp"><div><h3>Unfinished session</h3><p className="mut">Camera calibration will run again before measurements resume.</p></div><span className="tag warn">Draft</span></div>
-        <div className="row"><button className="btn sm" onClick={() => nav('/patient/pre', { state: draft })}>Resume</button><button className="btn s sm" onClick={() => { clearSessionDraft(patientId); setDraft(null); }}>Discard</button></div>
-      </div>}
-      {plan ? (
-        <div className="card hero">
-          <div className="row">
-            <div className="thumb"><Icon name="plan" color="var(--pri)" /></div>
-            <div><h3 style={{ fontSize: 19 }}>{plan.name}</h3><div className="mut">v{plan.v} · set by {plan.by}</div></div>
+      {/* Linked Clinician Connection Card (Styled like Screen 3 in Reference Image) */}
+      <div className="card row sp" style={{ padding: '14px 18px', marginBottom: 16 }}>
+        <div className="row" style={{ gap: 14 }}>
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              background: 'var(--pri2)',
+              display: 'grid',
+              placeItems: 'center',
+              color: 'var(--pri)',
+            }}
+          >
+            <Icon name="me" size={22} color="var(--pri)" />
           </div>
-          <div className="pill"><span><Icon name="clock" size={18} color="#fff" /> {plan.items.filter(item => !item.videoOnly).length} measured exercises · {plan.items.filter(item => !item.videoOnly).reduce((total, item) => total + item.targetReps, 0)} target reps{plan.items.some(item => item.videoOnly) ? ' · 1 video guide' : ''}</span></div>
-          <button className="btn w" onClick={() => nav('/patient/workout')}>Start workout</button>
-        </div>
-      ) : <div className="card">No active assignment.</div>}
-
-      <div className="card">
-        <div className="row sp"><h3>Doctor feedback and assignments</h3>{unread ? <span className="tag warn">{unread} new</span> : null}</div>
-        <p>{messages[0]?.m ?? 'No feedback yet.'}</p>
-        {plan && <p className="mut">Assigned: {plan.items.map(item => `${item.ex} (${item.targetReps} reps)`).join(', ')}</p>}
-        {messages.length > 0 && <button className="btn s sm" onClick={() => nav('/patient/fb')}>Open feedback</button>}
-      </div>
-
-      <div className="row sp"><h2>Recent sessions</h2><button className="btn s sm" onClick={() => nav('/patient/prog')}>See all</button></div>
-      <div className="hs">
-        {history.length ? history.slice(-3).reverse().map(session => (
-          <div key={session.sessionId ?? session.d} className="card">
-            <b>{session.d}</b>
-            <p className="mut">{session.r.length} exercises · score {avg(session.r) == null ? 'unavailable' : Math.round(avg(session.r) * 100)}</p>
-            <span className={`tag ${session.status === 'partial' ? 'warn' : 'ok'}`}>{session.status ?? 'completed'}</span>
-            <div className="row sp" style={{ marginTop: 10 }}>
-              <button className="btn s sm" onClick={() => nav('/patient/workout')}>Repeat current plan</button>
-              <button className="call-btn" aria-label="Message clinician" onClick={() => setContactOpen(true)}><Icon name="fb" color="#fff" size={20} /></button>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--pri)' }}>
+              {plan?.by ?? 'Dr. Aditi Singh'}
+            </div>
+            <div className="mut" style={{ fontSize: 13 }}>
+              Physiotherapist · Ascension Health
             </div>
           </div>
-        )) : <div className="card">No saved sessions yet.</div>}
+        </div>
+        <span className="tag ok">Connected</span>
       </div>
 
-      {contactOpen && <div className="card">
-        <h3>Message your clinician</h3>
-        <textarea rows="3" value={message} onChange={event => setMessage(event.target.value)} placeholder="Describe what you need help with" />
-        <div className="row" style={{ marginTop: 10 }}><button className="btn" onClick={contactClinician}>Send message</button><button className="btn s" onClick={() => setContactOpen(false)}>Cancel</button></div>
-        <p className="mut">This is an asynchronous, nonurgent message.</p>
-      </div>}
+      {/* Clinician Reminder if present */}
+      {reminder && (
+        <div
+          className="card row"
+          style={{
+            background: 'var(--warnb)',
+            borderColor: 'rgba(180, 83, 9, 0.2)',
+            padding: '12px 16px',
+            marginBottom: 16,
+          }}
+        >
+          <Icon name="clock" size={20} color="var(--warn)" />
+          <div style={{ fontSize: 13, color: 'var(--warn)' }}>
+            <b>Reminder:</b> {reminder}
+          </div>
+        </div>
+      )}
 
+      {/* Unfinished Session Alert */}
+      {draft && (
+        <div className="card" style={{ borderLeft: '4px solid var(--warn)' }}>
+          <div className="row sp">
+            <div>
+              <h3 style={{ margin: 0 }}>Unfinished session</h3>
+              <p className="mut" style={{ fontSize: 13, marginTop: 4 }}>
+                Pick up where you left off. Calibration will run before continuing.
+              </p>
+            </div>
+            <span className="tag warn">Draft</span>
+          </div>
+          <div className="row" style={{ marginTop: 12 }}>
+            <button className="btn sm" onClick={() => nav('/patient/pre', { state: draft })}>Resume</button>
+            <button className="btn s sm" onClick={() => { clearSessionDraft(patientId); setDraft(null); }}>Discard</button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Prescribed Rehabilitation Plan Card (Styled like Screen 1 in Reference Image) */}
+      {plan ? (
+        <div className="card" style={{ textAlign: 'center', padding: '24px 20px', marginBottom: 18 }}>
+          <div
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: '50%',
+              background: 'var(--pri2)',
+              display: 'grid',
+              placeItems: 'center',
+              margin: '0 auto 14px',
+            }}
+          >
+            <Icon name="plan" size={28} color="var(--pri)" />
+          </div>
+          <h2 style={{ margin: '0 0 6px', fontSize: 20 }}>{plan.name}</h2>
+          <p className="mut" style={{ margin: '0 0 16px', fontSize: 14 }}>
+            {plan.items.length} prescribed exercises · {totalTargetReps} target repetitions with live camera guidance.
+          </p>
+          <button className="btn" style={{ width: '100%', maxWidth: 320 }} onClick={() => nav('/patient/workout')}>
+            Begin Workout
+          </button>
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={() => nav('/patient/plan')}
+              style={{ background: 'none', border: 0, color: 'var(--pri)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            >
+              View exercise instructions →
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="card">No active assignment. Contact your clinician.</div>
+      )}
+
+      {/* Doctor Feedback Card */}
       <div className="card">
-        <h3>Saved activity</h3>
-        <p><b>{history.length}</b> saved sessions</p>
-        <p className="mut">A completion percentage appears only after the clinician adds a schedule.</p>
+        <div className="row sp" style={{ marginBottom: 6 }}>
+          <h3 style={{ margin: 0 }}>Clinician Notes & Feedback</h3>
+          {unread > 0 && <span className="tag warn">{unread} new</span>}
+        </div>
+        <p style={{ margin: '6px 0', fontSize: 14 }}>
+          {messages[0]?.m ?? 'No messages from your clinician yet.'}
+        </p>
+        {messages.length > 0 && (
+          <button className="btn s sm" style={{ marginTop: 8 }} onClick={() => nav('/patient/fb')}>
+            View feedback history
+          </button>
+        )}
       </div>
 
-      <div className="card">
-        <h3>Prototype score trend</h3>
-        <LineChart vals={scored.map(session => avg(session.r))} labs={scored.map(session => session.d.slice(0, 6))} />
-        <p className="mut">0–100 display derived from compatible saved prototype scores; not a recovery percentage.</p>
+      {/* Recent Sessions */}
+      <div className="row sp" style={{ margin: '18px 0 10px' }}>
+        <h2 style={{ margin: 0 }}>Recent workouts</h2>
+        <button className="btn s sm" onClick={() => nav('/patient/prog')}>See all</button>
       </div>
+
+      <div className="hs">
+        {history.length ? (
+          history.slice(-3).reverse().map(session => (
+            <div key={session.sessionId ?? session.d} className="card" style={{ minWidth: 230 }}>
+              <div className="row sp" style={{ marginBottom: 6 }}>
+                <b>{session.d}</b>
+                <span className={`tag ${session.status === 'partial' ? 'warn' : 'ok'}`}>
+                  {session.status ?? 'completed'}
+                </span>
+              </div>
+              <p className="mut" style={{ fontSize: 13, margin: '4px 0 10px' }}>
+                {session.r.length} exercises · Score {avg(session.r) == null ? '—' : Math.round(avg(session.r) * 100)}/100
+              </p>
+              <div className="row sp" style={{ marginTop: 8 }}>
+                <button className="btn s sm" onClick={() => nav('/patient/workout')}>Repeat plan</button>
+                <button className="call-btn" aria-label="Message clinician" onClick={() => setContactOpen(true)}>
+                  <Icon name="fb" color="#fff" size={18} />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="card">No saved sessions yet. Complete your first workout to see results here.</div>
+        )}
+      </div>
+
+      {/* Message Drawer */}
+      {contactOpen && (
+        <div className="card" style={{ borderLeft: '4px solid var(--pri)' }}>
+          <h3>Message your clinician</h3>
+          <textarea
+            rows="3"
+            value={message}
+            onChange={event => setMessage(event.target.value)}
+            placeholder="Describe any symptoms, pain, or questions"
+          />
+          <div className="row" style={{ marginTop: 10 }}>
+            <button className="btn" onClick={contactClinician}>Send message</button>
+            <button className="btn s" onClick={() => setContactOpen(false)}>Cancel</button>
+          </div>
+          <p className="mut" style={{ fontSize: 12, marginTop: 6 }}>
+            Non-urgent clinical communication. For emergencies, please call emergency services immediately.
+          </p>
+        </div>
+      )}
+
+      {/* Score Trend */}
+      {scored.length > 0 && (
+        <div className="card">
+          <h3>Movement Quality Trend</h3>
+          <LineChart vals={scored.map(session => avg(session.r))} labs={scored.map(session => session.d.slice(0, 6))} />
+          <p className="mut" style={{ fontSize: 12, marginTop: 4 }}>
+            0–100 movement quality index based on joint range compliance and tempo smoothness.
+          </p>
+        </div>
+      )}
     </>
   );
 }

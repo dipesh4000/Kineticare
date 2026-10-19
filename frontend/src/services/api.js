@@ -5,9 +5,11 @@
  */
 import { evaluateExerciseRepetitions, generateSoapNote } from '../../../backend/services/analytics.js';
 
+const API_BASE = (import.meta.env?.VITE_API_BASE_URL || '').replace(/\/$/, '');
+
 export async function evaluateSessionServer(session, plan) {
   try {
-    const res = await fetch('/api/analytics/evaluate-session', {
+    const res = await fetch(`${API_BASE}/api/analytics/evaluate-session`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session, plan }),
@@ -61,7 +63,7 @@ export async function evaluateSessionServer(session, plan) {
 
 export async function generateSoapNoteServer(patient, session, plan) {
   try {
-    const res = await fetch('/api/clinical/soap-note', {
+    const res = await fetch(`${API_BASE}/api/clinical/soap-note`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ patient, session, plan }),
@@ -79,7 +81,7 @@ export async function generateSoapNoteServer(patient, session, plan) {
 
 export async function reportExerciseIssue(reportData) {
   try {
-    const res = await fetch('/api/reports/exercise', {
+    const res = await fetch(`${API_BASE}/api/reports/exercise`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(reportData),

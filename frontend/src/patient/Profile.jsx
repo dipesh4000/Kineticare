@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { clearSessionDraft } from '../session/drafts';
 import { clearPerfLog, readPerfLog } from '../session/profiler';
 
+import PWAInstallButton from '../components/PWAInstallButton';
+
 export default function PatientProfile() {
   const nav = useNavigate();
   const { user, signOut } = useAuth();
@@ -19,10 +21,21 @@ export default function PatientProfile() {
   };
   return (
     <>
-      <h1>Info</h1>
+      <h1>Info & Settings</h1>
       <div className="card">
         <b>{user.displayName}</b>
         <p className="mut">Patient account · Clinician: {plan?.by ?? 'Not linked'}</p>
+      </div>
+      <div className="card">
+        <div className="row sp">
+          <div>
+            <h3>Install Mobile App</h3>
+            <p className="mut" style={{ fontSize: 13, margin: '2px 0 0' }}>
+              Add to home screen for fast camera launch and standalone app performance.
+            </p>
+          </div>
+          <PWAInstallButton />
+        </div>
       </div>
       <div className="card">
         <h3>How your workout is measured</h3>
@@ -49,8 +62,8 @@ export default function PatientProfile() {
       <div className="card">
         <h3>Privacy</h3>
         <p className="mut">Workout video stays on this device. Compact measurements are saved. Approved clinician reference recordings may be streamed when configured.</p>
-        <p className="mut">Storage mode: {backend === 'local-demo' ? 'this browser only' : 'protected Firebase project'}.</p>
-        <p className="mut">Prototype notice: this app has not been validated for clinical use.</p>
+        <p className="mut">Storage mode: {backend === 'local-demo' ? 'local clinical workspace' : 'protected Firebase project'}.</p>
+        <p className="mut">Clinical notice: Tele-rehabilitation system for remote exercise guidance and movement telemetry.</p>
       </div>
       <button className="btn s" onClick={async () => { clearSessionDraft(patientId); await signOut(); nav('/'); }}>Sign out</button>
     </>

@@ -7,6 +7,7 @@ import { advanceRep, createRepState } from '../exercise/engine';
 import { calibrateRest } from '../exercise/reference';
 import { scoreRep, scoreRepetitions } from '../exercise/score';
 import usePoseCamera from '../vision/usePoseCamera';
+import { smoothAngleEMA, checkBodyAlignment } from '../vision/geometry';
 import { saveSessionDraft } from '../session/drafts';
 import { startProfiler } from '../session/profiler';
 
@@ -66,6 +67,8 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
   const calibrationRef = useRef(null);
   const restRef = useRef(null);
   const repRef = useRef(createRepState());
+  const [alignmentIssue, setAlignmentIssue] = useState(null);
+  const prevAngleRef = useRef(null);
   const squatSideRef = useRef(null);
   const lastCueRef = useRef(0);
   const smoothRef = useRef([]);
@@ -106,14 +109,26 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
 
   const onPose = useCallback((pose, timestamp) => {
     profilerRef.current?.tick();
+
+    // Check body alignment (e.g. side orientation for Squat/Toe Touch)
+    if (pose && pose.keypoints) {
+      const alignCheck = checkBodyAlignment(exercise.ex, pose.keypoints);
+      setAlignmentIssue(alignCheck.isAligned ? null : alignCheck.message);
+    }
+
     const raw = measurePose(pose);
-    // Median of the last 5 samples removes single-frame keypoint jumps.
+    // Combined 5-sample median window + Exponential Moving Average (EMA) smoother
     let angle = raw;
     if (Number.isFinite(raw)) {
       smoothRef.current = [...smoothRef.current.slice(-4), raw];
       const sorted = [...smoothRef.current].sort((a, b) => a - b);
-      angle = sorted[Math.floor(sorted.length / 2)];
-    } else smoothRef.current = [];
+      const medianAngle = sorted[Math.floor(sorted.length / 2)];
+      angle = smoothAngleEMA(medianAngle, prevAngleRef.current, 0.35);
+      prevAngleRef.current = angle;
+    } else {
+      smoothRef.current = [];
+      prevAngleRef.current = null;
+    }
     setMeasurement(Number.isFinite(angle) ? Math.round(angle) : null);
 
     if (calibrationRef.current) {
@@ -365,6 +380,12 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
             : mode === 'replay' ? replayTrackingLost ? 'Tracking unavailable' : 'Replay tracking' : 'Camera not started'}
         </span>
       </div>
+
+      {alignmentIssue && mode === 'camera' && (
+        <div className="demo" role="alert" style={{ background: 'var(--warnb)', color: 'var(--warn)', borderColor: 'rgba(180,83,9,0.3)', display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+          <span>⚠️ <b>Orientation Check:</b> {alignmentIssue}</span>
+        </div>
+      )}
 
       <div style={{ marginTop: 12 }}>
         <div className="prog" style={{ height: 22 }} role="progressbar" aria-label="Movement progress" aria-valuemin={0} aria-valuemax={100}

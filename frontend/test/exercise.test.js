@@ -153,3 +153,44 @@ test('biomechanical evaluation computes concentric/eccentric phases, ROM deficit
   assert.ok(soap.formattedText.includes('[P] PLAN'));
 });
 
+test('smoothAngleEMA suppresses high-frequency jitter and sudden spikes', async () => {
+  const { smoothAngleEMA } = await import('../src/vision/geometry.js');
+  assert.equal(smoothAngleEMA(null, 50), null);
+  assert.equal(smoothAngleEMA(50, null), 50);
+
+  // Smooth transition with alpha = 0.35
+  const smoothed = smoothAngleEMA(60, 50, 0.35);
+  assert.equal(smoothed, 53.5);
+
+  // Large jump clamping
+  const clamped = smoothAngleEMA(150, 50, 0.5);
+  // delta 100 > 45, clamped to 50 + 45 = 95, 0.5 * 95 + 0.5 * 50 = 72.5
+  assert.equal(clamped, 72.5);
+});
+
+test('checkBodyAlignment flags front-facing stance during side-view squat', async () => {
+  const { checkBodyAlignment } = await import('../src/vision/geometry.js');
+  // Wide shoulders relative to torso in front view
+  const frontPose = [
+    { name: 'left_shoulder', x: 200, y: 100, score: 0.9 },
+    { name: 'right_shoulder', x: 320, y: 100, score: 0.9 },
+    { name: 'left_hip', x: 220, y: 250, score: 0.9 },
+    { name: 'right_hip', x: 300, y: 250, score: 0.9 },
+  ];
+  const check = checkBodyAlignment('Squat', frontPose);
+  assert.equal(check.isAligned, false);
+  assert.equal(check.orientation, 'front');
+  assert.ok(check.message.includes('turn side-on'));
+
+  // Side view where shoulders are closely aligned
+  const sidePose = [
+    { name: 'left_shoulder', x: 250, y: 100, score: 0.9 },
+    { name: 'right_shoulder', x: 265, y: 100, score: 0.9 },
+    { name: 'left_hip', x: 245, y: 250, score: 0.9 },
+    { name: 'right_hip', x: 255, y: 250, score: 0.9 },
+  ];
+  const sideCheck = checkBodyAlignment('Squat', sidePose);
+  assert.equal(sideCheck.isAligned, true);
+  assert.equal(sideCheck.orientation, 'side');
+});
+

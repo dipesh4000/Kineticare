@@ -64,9 +64,9 @@ export default function Login() {
 
       {!firebaseEnabled && (
         <div className="card" style={{ padding: '20px', textAlign: 'center', marginBottom: 16 }}>
-          <h3 style={{ margin: '0 0 6px' }}>Choose your workspace</h3>
+          <h3 style={{ margin: '0 0 6px' }}>Select Clinical Portal</h3>
           <p className="mut" style={{ fontSize: 13, marginBottom: 16 }}>
-            Select an account to explore the patient workout or doctor dashboard.
+            Quick sign-in to explore the patient therapy app or attending clinician dashboard.
           </p>
           <button
             type="button"
@@ -74,7 +74,7 @@ export default function Login() {
             style={{ width: '100%', marginBottom: 10 }}
             onClick={() => enterDemo('patient')}
           >
-            Enter Patient Portal (Shyam)
+            Enter Patient Portal (Shyam Yadav)
           </button>
           <button
             type="button"
@@ -82,7 +82,7 @@ export default function Login() {
             style={{ width: '100%' }}
             onClick={() => enterDemo('clinician')}
           >
-            Enter Clinician Portal (Dr. Aditi)
+            Enter Clinician Portal (Dr. Aditi Singh)
           </button>
         </div>
       )}

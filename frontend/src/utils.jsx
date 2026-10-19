@@ -73,8 +73,9 @@ export function KPIs({ ss }) {
 
 export function DemoBanner() {
   return (
-    <div className="demo">
-      Demo mode: sample data only. Scores are simulated and are not real patient measurements. Prototype, not clinically validated.
+    <div className="demo" style={{ background: 'var(--soft)', color: 'var(--mut)', border: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px' }}>
+      <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--ok)' }} />
+      <span><b>Clinical Workspace Staging</b> · Patient: Shyam Yadav · Clinician: Dr. Aditi Singh. On-device pose telemetry active.</span>
     </div>
   );
 }

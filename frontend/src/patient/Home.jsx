@@ -7,6 +7,7 @@ import { LineChart, DemoBanner } from '../utils';
 import { toast } from '../components/toastBus';
 import Icon from '../components/Icon';
 import { clearSessionDraft, loadSessionDraft } from '../session/drafts';
+import PWAInstallButton from '../components/PWAInstallButton';
 
 export default function PatientHome() {
   const nav = useNavigate();
@@ -45,7 +46,8 @@ export default function PatientHome() {
             {new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date())}
           </p>
         </div>
-        <div className="hd">
+        <div className="hd" style={{ gap: 8 }}>
+          <PWAInstallButton />
           <button
             className="call-btn"
             style={{ background: 'none' }}

@@ -1,12 +1,48 @@
 # Kineticare Technical Implementation Plan
 
-Version: 1.1 | Date: 17 October 2026 | Status: planned implementation with frontend and reference-demo audit
+Version: 1.2 | Updated: 22 October 2026 | Status: UI refresh implemented; deployment preparation reviewed; cloud and device release checks pending
+
+## Current implementation status — 22 October 2026
+
+This status update supersedes older descriptions of the current UI and deployment setup below. Sections 3 and 23–26 preserve the original migration plan and the 17 October audit as historical context; they are not a fresh audit of today's code. Unverified acceptance gates remain open.
+
+### Completed in the UI and deployment preparation pass
+
+- Refreshed patient and clinician portals and sign-in with softer cards, clearer hierarchy, navigation icons, branded banners, and patient care shortcuts.
+- Adopted a VS Code-style blue primary (`#007ACC`), deeper blue interaction states, pale blue selections, warm off-white backgrounds, dark slate text, and restrained sage, amber, and lavender accents.
+- Recoloured the existing logo blue while preserving its design. The built-in Imagegen edit is saved as `frontend/public/logo-blue.png`; the original teal asset is retained. Updated brand headers, banners, report previews, favicon references, manifest colours, and the existing app icon palette.
+- Added branded exercise-schedule and selected-session analysis previews. Doctors can open Schedule PDF and Analysis PDF from a patient record; patients can export their plan. Saving uses the browser's Print / Save as PDF destination rather than a direct PDF download.
+- Removed the install-app button from the patient home screen at the user's request. Installation guidance elsewhere is outside this change.
+- Rewrote `DEPLOYMENT.md` against the active code: Firebase provides shared authentication/records/media; the Neon/Drizzle scaffold is not connected to active API routes.
+- Added root `vercel.json` for the static frontend build and SPA deep links. Corrected Firebase Hosting's public directory to `frontend/dist` and clarified environment-file placement and build-time variables in `.env.example`.
+- Documented Vercel static-demo deployment, a same-origin Node full-stack prototype, Firebase account provisioning, and deployment limitations. No cloud deployment has been performed. The user manages deployment and all Git operations.
+
+### Verified locally
+
+- Production build and lint passed; all 19 existing exercise/patient-flow unit tests passed during the blue-theme pass.
+- Patient and clinician screens were checked in the browser, including the blue logo and primary colour; no horizontal overflow was observed in the checked patient layout.
+- Schedule and analysis previews were checked. Changing the doctor's selected session changed the exported date and results. The native PDF save and multipage output still need target-browser verification.
+- The built Express server passed a local smoke check for `/api/health`, `/patient/home`, `/client/overview`, and the blue logo asset.
+- The subsequent home-screen install-button removal passed targeted ESLint verification.
+- Firestore emulator tests, Storage access checks, cloud deployment, and the full real-device/cross-account acceptance walkthrough were not completed in this pass.
+
+### Next work and release gates
+
+1. Publish a demo using the corrected `DEPLOYMENT.md` when the user is ready. Confirm HTTPS, direct-route refresh, logo assets, camera permissions, and both portals on the deployed hostname.
+2. For shared accounts, configure all six Firebase web values, provision the first clinician, deploy restrictive rules, and verify invitation acceptance, reference playback, records, and feedback across separate accounts/devices. Check the clinician collection-group query and any required indexes.
+3. Before real patient use, authenticate/authorize Express routes, persist exercise reports and runtime registry updates, and fix fabricated fallback score/consistency values when valid measurements are absent. The static frontend's report fallback currently does not persist a report.
+4. Run Firestore rule tests and linked/unlinked-account checks; verify Storage rules and reference-media CORS. Local build success does not establish cloud access correctness.
+5. Validate native Print / Save as PDF output in target browsers and test live exercise setup, tracking loss, draft recovery, and session saving on real devices.
+6. Continue the agreed UX direction: simplify patient setup/live/summary around one clear action, improve tablet layouts, and make clinician review easier to scan. The completed palette refresh does not mean those workflow changes have shipped.
+7. Treat Android packaging and offline support as later work. The manifest exists, but no service worker is registered; do not promise offline operation or guaranteed installation. Avoid unverified compliance claims.
+
+See `DEPLOYMENT.md` for exact hosting settings, environment variables, commands, and the unchecked release checklist.
 
 ## 1. Objective and release contract
 
 Build a responsive MVP in the existing React frontend. A clinician captures an exercise reference inside Kineticare, approves it, assigns a patient-specific target, and receives a real camera-measured patient session. Feedback must return to the patient. Complete this loop with squat first, then side arm raise. Use provisioned test accounts and team members for the demonstration. Work by acceptance gates rather than a fixed hackathon-hour budget.
 
-This file specifies future work; creating it does not mean the integrations or tests exist. `overview.md` explains the product and presentation story. No Git operations are part of this plan; the user manages Git.
+This file combines the implementation plan with the dated status update above. Older planned requirements are not evidence that an integration or acceptance test is complete. `overview.md` explains the product and presentation story. No Git operations are part of this plan; the user manages Git.
 
 ## 2. Confirmed scope and working defaults
 
@@ -34,7 +70,7 @@ Squat starts with a side-view knee-angle measurement because it gives a directly
 
 ## 3. Starting code and migration
 
-The inspected app lives at `Kineticare/frontend` relative to this file. It has React Router routes and patient/clinician components under `src/patient`, `src/client`, and `src/components`. `src/data.js` holds mutable demo fixtures. `src/patient/Live.jsx` renders an animated SVG, fixed eight-second exercise duration, and random scores. `Pre.jsx` provides manual setup checkboxes. `Summary.jsx` appends session results to in-memory fixture data.
+Historical starting point (17 October audit): the app now lives at `frontend/` relative to this file. At the original audit it had React Router routes and patient/clinician components under `src/patient`, `src/client`, and `src/components`; `src/data.js` held mutable demo fixtures. `src/patient/Live.jsx` rendered an animated SVG, fixed eight-second exercise duration, and random scores. `Pre.jsx` provided manual setup checkboxes. `Summary.jsx` appended session results to in-memory fixture data. These descriptions are the migration baseline, not today's implementation status.
 
 Reuse these screens and styles. Do not replace the app with another scaffold or maintain a second implementation in the standalone `kineticare(demo` folder. Do not delete existing user work. Move fixture data behind a clearly labeled replay/demo path while real screens use authenticated persisted data.
 
@@ -75,7 +111,7 @@ Keep React, Vite, React Router, and existing CSS. Add Firebase's web SDK and the
 Create modules only when a real responsibility needs them. Proposed organization:
 
 ```text
-Kineticare/frontend/
+frontend/
   src/
     App.jsx                     existing route shell
     patient/                    existing views, wired to real data

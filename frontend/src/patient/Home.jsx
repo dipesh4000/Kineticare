@@ -7,7 +7,6 @@ import { LineChart, DemoBanner } from '../utils';
 import { toast } from '../components/toastBus';
 import Icon from '../components/Icon';
 import { clearSessionDraft, loadSessionDraft } from '../session/drafts';
-import PWAInstallButton from '../components/PWAInstallButton';
 import { workoutStreak } from '../patientFlow';
 
 export default function PatientHome() {
@@ -43,13 +42,12 @@ export default function PatientHome() {
       {/* Top Clinical Header */}
       <div className="row sp" style={{ marginBottom: 14 }}>
         <div>
-          <p className="hello">Hello, <b>{user.displayName.split(' ')[0]}</b></p>
+          <p className="hello">Good to see you, <b>{user.displayName.split(' ')[0]} <span className="greeting-spark" aria-hidden="true">✦</span></b></p>
           <p className="mut" style={{ fontSize: 13, marginTop: 2 }}>
             {new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date())}
           </p>
         </div>
         <div className="hd" style={{ gap: 8 }}>
-          <PWAInstallButton />
           <button
             className="call-btn"
             style={{ background: 'none' }}
@@ -65,11 +63,23 @@ export default function PatientHome() {
       </div>
 
       {backend === 'local-demo' && <DemoBanner />}
-      <div className="card">
-        <h3>{streak.current} day workout streak</h3>
-        <p className="mut">Best: {streak.best} days · {streak.practicedToday ? 'Workout completed today.' : 'Complete a live workout to count today.'}</p>
-        <p className="mut">Completed camera sessions count once per day. Partial workouts and replays do not count. Follow your clinician’s rest schedule.</p>
+      <section className="recovery-banner">
+        <div className="eyebrow">YOUR EVERYDAY, A LITTLE STRONGER</div>
+        <h2>Small steps.<br /><em>Stronger you.</em></h2>
+        <p>Your care plan, your pace.<br />Let’s make room for movement.</p>
+        <button className="btn sm" onClick={() => nav(plan ? '/patient/workout' : '/patient/plan')}>{plan ? 'Start today’s workout' : 'View your care plan'} <span aria-hidden="true">↗</span></button>
+        <img src="/logo-blue.png" alt="" className="recovery-art" />
+      </section>
+      <div className="quick-actions" aria-label="Your care shortcuts">
+        {[['plan', 'My plan', '/patient/plan'], ['prog', 'Progress', '/patient/prog'], ['fb', 'Feedback', '/patient/fb']].map(([icon, label, path]) =>
+          <button key={path} onClick={() => nav(path)}><span><Icon name={icon} size={22} /></span>{label}</button>)}
+        <button onClick={() => setContactOpen(true)}><span><Icon name="call" size={22} /></span>Contact</button>
       </div>
+      <div className="recovery-stats">
+        <div className="card"><span className="eyebrow">STAYING CONSISTENT</span><b>{streak.current}<small> day streak</small></b><p className="mut">Best: {streak.best} days · {streak.practicedToday ? 'Done for today' : 'One step at a time'}</p></div>
+        <button className="card" onClick={() => nav('/patient/prog')}><span className="eyebrow">YOUR JOURNEY</span><b>{history.filter(session => session.status === 'completed' && session.mode === 'live').length}<small> workouts</small></b><p className="mut">View your progress <span aria-hidden="true">↗</span></p></button>
+      </div>
+      <p className="mut rest-note">Completed live workouts count toward your streak. Follow your clinician’s rest schedule.</p>
 
       {/* Linked Clinician Connection Card (Styled like Screen 3 in Reference Image) */}
       <div className="card row sp" style={{ padding: '14px 18px', marginBottom: 16 }}>
@@ -138,7 +148,7 @@ export default function PatientHome() {
 
       {/* Main Prescribed Rehabilitation Plan Card (Styled like Screen 1 in Reference Image) */}
       {plan ? (
-        <div className="card" style={{ textAlign: 'center', padding: '24px 20px', marginBottom: 18 }}>
+        <div className="card prescribed-plan" style={{ textAlign: 'center', padding: '24px 20px', marginBottom: 18 }}>
           <div
             style={{
               width: 58,

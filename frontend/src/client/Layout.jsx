@@ -1,11 +1,13 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/authContext';
+import Brand from '../components/Brand';
+import Icon from '../components/Icon';
 
 const TABS = [
-  ['overview', 'Overview'],
-  ['patients', 'Patients'],
-  ['library', 'Exercise library'],
-  ['settings', 'Settings'],
+  ['overview', 'Overview', 'home'],
+  ['patients', 'Patients', 'me'],
+  ['library', 'Exercise library', 'workout'],
+  ['settings', 'Settings', 'settings'],
 ];
 
 export default function ClientLayout() {
@@ -17,16 +19,11 @@ export default function ClientLayout() {
   return (
     <div className="app">
       <nav className="side" aria-label="Main navigation">
-        <div className="brand" style={{ fontWeight: 800, color: 'var(--pri)', fontSize: 20, padding: '6px 14px 12px', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: 'var(--ok)' }} />
-          Kineticare
-        </div>
-        <div style={{ padding: '0 14px 18px', fontSize: 12, color: 'var(--mut)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
-          Clinician Portal
-        </div>
-        {TABS.map(([key, label]) => (
-          <button key={key} className={active === key ? 'on' : ''} onClick={() => nav(`/client/${key}`)}>
-            {label}
+        <Brand subtitle="Clinician workspace" />
+        <div className="side-caption">WORKSPACE</div>
+        {TABS.map(([key, label, icon]) => (
+          <button key={key} className={active === key ? 'on' : ''} aria-current={active === key ? 'page' : undefined} onClick={() => nav(`/client/${key}`)}>
+            <Icon name={icon} size={19} />{label}
           </button>
         ))}
         <div style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid var(--card-border)' }}>
@@ -37,6 +34,7 @@ export default function ClientLayout() {
         </div>
       </nav>
       <main className="main">
+        <div className="workspace-bar"><span>YOUR CARE WORKSPACE</span><span>{new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date())}</span></div>
         <Outlet />
       </main>
     </div>

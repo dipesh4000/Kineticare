@@ -1,225 +1,203 @@
-# Kineticare Production Deployment & Distribution Guide
+# Kineticare Web Deployment Guide
 
-Comprehensive, step-by-step guide for deploying the Kineticare fullstack tele-rehabilitation platform to production, setting up Neon serverless PostgreSQL with Drizzle ORM, deploying the backend to Vercel, and packaging the frontend into an installable Android APK.
+Reviewed against this checkout on October 22, 2026. Run commands from the directory containing the root `package.json`, `firebase.json`, `frontend/`, and `backend/`.
 
----
+## Choose the deployment you need
 
-## Architecture Overview
-
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            MOBILE CLIENT (APK / PWA)                        │
-│                                                                             │
-│   ┌─────────────────────┐   ┌──────────────────────┐   ┌────────────────┐   │
-│   │ WebGL Camera Stream │──▶ MoveNet Lightning     ──▶│ Temporal EMA   │   │
-│   │ (On-Device 30fps)   │   │ Pose Estimation      │   │ Smoothing &    │   │
-│   └─────────────────────┘   └──────────────────────┘   │ Side-Profile   │   │
-│                                                        │ Alignment      │   │
-│                                                        └───────┬────────┘   │
-│                                                                │            │
-│   ┌─────────────────────┐   ┌──────────────────────┐           ▼            │
-│   │ Patient / Clinician │◀──  Repetition Engine &  ◀──────────┘            │
-│   │ UI Views & Prompts  │   │ Biomechanical Metrics│                        │
-│   └──────────┬──────────┘   └──────────────────────┘                        │
-└──────────────┼──────────────────────────────────────────────────────────────┘
-               │
-               │ HTTPS JSON API (/api/*)
-               │ Configured via VITE_API_BASE_URL
-               ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    BACKEND SERVER (Vercel / Node.js)                        │
-│                                                                             │
-│   ┌───────────────────┐    ┌────────────────────┐    ┌──────────────────┐   │
-│   │ /api/exercises    │    │ /api/analytics     │    │ /api/reports     │   │
-│   │ Dynamic Registry  │    │ SOAP Notes & ROM   │    │ Issue Logging &  │   │
-│   └─────────┬─────────┘    └─────────┬──────────┘    │ Video Staging    │   │
-│             │                        │               └────────┬─────────┘   │
-│             └────────────────┬───────┴────────────────────────┘             │
-│                              ▼                                              │
-│                 ┌──────────────────────────┐                                │
-│                 │ Drizzle ORM Data Access  │                                │
-│                 └────────────┬─────────────┘                                │
-└──────────────────────────────┼──────────────────────────────────────────────┘
-                               ▼
-               ┌─────────────────────────────┐
-               │    NEON POSTGRESQL CLOUD    │
-               │  - users                    │
-               │  - assignments & plans      │
-               │  - exercise_catalog         │
-               │  - exercise_sessions        │
-               │  - clinical_reports         │
-               └─────────────────────────────┘
-```
-
----
-
-## 1. Prerequisites
-
-- **Node.js**: v18.0.0 or higher
-- **Neon Cloud Account**: Free account at [neon.tech](https://neon.tech)
-- **Vercel Account**: [vercel.com](https://vercel.com) (or any Node.js hosting platform like Render, Railway, or Fly.io)
-- **Google Play Developer Account** (optional, only if publishing to Google Play Store)
-
----
-
-## 2. Step 1: Online Database Setup (Neon PostgreSQL)
-
-Kineticare uses **Neon serverless PostgreSQL** managed through **Drizzle ORM** for scalable, zero-maintenance relational persistence.
-
-1. **Create a Neon Project**:
-   - Log into [console.neon.tech](https://console.neon.tech).
-   - Click **Create Project** and choose a name (e.g., `kineticare-prod`).
-   - Select your preferred cloud region (e.g., AWS `us-east-2` or `eu-central-1`).
-2. **Obtain Connection String**:
-   - Copy the connection string from the Neon dashboard. It looks like:
-     ```text
-     postgresql://neondb_owner:npg_AbCdEf12345@ep-cool-fog-12345.us-east-2.aws.neon.tech/neondb?sslmode=require
-     ```
-3. **Database Schema & Tables**:
-   - The Drizzle schema is located at `backend/db/schema.js`.
-   - The tables include:
-     - `users`: Patient and clinician identities (Dipesh, Dr. Aditi Yadav).
-     - `relationships`: Links patients to attending clinicians.
-     - `exercises`: Biomechanical degree thresholds, camera angles, and instructions.
-     - `assignments`: Prescribed exercise sets, reps, and targets.
-     - `sessions`: Completed reps, ROM compliance, and fatigue curves.
-     - `clinical_reports`: Flagged exercise issues, pain reports, and contraindications.
-
----
-
-## 3. Step 2: Backend Deployment (Vercel)
-
-The backend Express application is pre-configured for Vercel Serverless Functions via `backend/vercel.json`.
-
-1. **Option A: Deploy via GitHub (Recommended)**:
-   - Push your repository to GitHub.
-   - Go to [vercel.com/new](https://vercel.com/new) and import the repository.
-   - Set **Root Directory** to `./` (root) or `./backend`.
-   - In **Environment Variables**, add:
-     - `DATABASE_URL`: Your Neon PostgreSQL connection string.
-     - `NODE_ENV`: `production`
-   - Click **Deploy**.
-   - Your backend API will be available at:
-     ```text
-     https://<your-project>.vercel.app/api/health
-     ```
-
-2. **Option B: Deploy via Vercel CLI**:
-   ```bash
-   npm install -g vercel
-   vercel login
-   vercel --prod
-   ```
-
-3. **Verify Backend Health**:
-   ```bash
-   curl https://<your-backend>.vercel.app/api/health
-   ```
-   Expected response:
-   ```json
-   {
-     "status": "ok",
-     "service": "Kineticare Tele-Rehabilitation Engine",
-     "version": "2.1.0",
-     "capabilities": [
-       "pose_telemetry_analysis",
-       "clinical_metrics_computation",
-       "fatigue_detection",
-       "eccentric_phase_timing",
-       "soap_note_generation",
-       "exercise_catalog_management",
-       "clinical_issue_reporting"
-     ]
-   }
-   ```
-
----
-
-## 4. Step 3: Frontend Deployment
-
-The frontend is a Vite React Single Page Application that can be deployed to any static host (Vercel, Netlify, Cloudflare Pages, Firebase Hosting, or GitHub Pages).
-
-1. **Configure Production Backend URL**:
-   - In `frontend/`, create a file named `.env.production`:
-     ```env
-     VITE_API_BASE_URL=https://<your-backend>.vercel.app
-     ```
-2. **Build the Production Bundle**:
-   ```bash
-   npm run build --workspace=frontend
-   ```
-   The compiled assets will be placed in `frontend/dist/`.
-3. **Deploy Static Assets**:
-   - If using Vercel, create a second project for the frontend pointing to `frontend/dist`.
-   - If using Cloudflare Pages / Netlify: Set build command to `npm run build --workspace=frontend` and publish directory to `frontend/dist`.
-
----
-
-## 5. Step 4: Packaging and Publishing the Android APK
-
-Kineticare includes a Web App Manifest (`frontend/public/manifest.json`), high-resolution icons, and responsive mobile viewport controls, allowing you to generate an installable Android APK in minutes without rewriting code.
-
-### Method A: PWABuilder (Recommended & Easiest)
-
-1. Open [pwabuilder.com](https://www.pwabuilder.com).
-2. Enter your deployed frontend HTTPS URL (e.g., `https://kineticare-app.vercel.app`).
-3. Click **Start**. PWABuilder will audit your PWA manifest, service worker, and icons.
-4. Click **Package for Stores** > **Android**.
-5. Configure your package options:
-   - **Package ID**: `com.kineticare.app`
-   - **App Name**: `Kineticare`
-   - **Launcher Name**: `Kineticare`
-   - **Signing Key**: Select *New (generate my own)* for first-time builds.
-6. Click **Download APK**.
-   - You will receive a `.zip` containing:
-     - `app-release-signed.apk` (can be directly sideloaded onto Android devices).
-     - `app-release-bundle.aab` (ready to upload to the Google Play Console).
-
-### Method B: Google Bubblewrap CLI (Advanced Developers)
-
-```bash
-# Install Bubblewrap CLI
-npm install -g @bubblewrap/cli
-
-# Initialize project from your live manifest
-bubblewrap init --manifest https://<your-frontend-domain>/manifest.json
-
-# Build the release APK and Android App Bundle (AAB)
-bubblewrap build
-```
-
----
-
-## 6. How the APK Communicates with Your Backend
-
-1. When the patient opens the installed APK on their smartphone, the app boots instantly in full-screen standalone mode.
-2. The smartphone's GPU executes MoveNet SinglePose Lightning locally at 30+ FPS through WebGL.
-3. When the user completes a session or a clinician flags an exercise, the app dispatches HTTPS requests directly to your Vercel backend URL defined by `VITE_API_BASE_URL`:
-   - `POST https://your-backend.vercel.app/api/analytics/evaluate-session`
-   - `POST https://your-backend.vercel.app/api/reports/exercise`
-   - `GET  https://your-backend.vercel.app/api/exercises`
-4. The Vercel backend reads and writes relational records directly to your Neon PostgreSQL database.
-
----
-
-## 7. Environment Variables Reference
-
-| Variable | Scope | Description | Example |
+| Goal | Hosting | Accounts and records | API |
 | --- | --- | --- | --- |
-| `DATABASE_URL` | Backend | Neon PostgreSQL connection string with SSL | `postgresql://user:pass@ep-name.us-east-2.aws.neon.tech/neondb?sslmode=require` |
-| `PORT` | Backend | Port for Node server (defaults to 3000) | `3000` |
-| `NODE_ENV` | Backend | Node runtime environment | `production` |
-| `VITE_API_BASE_URL` | Frontend | Target backend API URL for the APK/client | `https://your-backend.vercel.app` |
-| `VITE_FIREBASE_API_KEY` | Optional | Firebase API Key (if using Firebase mode) | `AIzaSy...` |
+| Public UI / hackathon demo | Vercel static site (Section 2) | Browser-local demo, or Firebase after setup | No Express server; analytics and SOAP use the existing browser fallback |
+| Full-stack prototype | Render Node web service (Section 3) | Firebase after setup, otherwise browser-local demo | Express and the frontend share one origin |
+| Real patient use | Not release-ready yet | Firebase rules and account provisioning must be verified | Resolve the concrete limitations in Section 7 first |
 
----
+**Recommended for sharing the current UI:** use the Vercel demo route. For the complete prototype with its API endpoints, use the single-service Node route. Neither route requires Neon.
 
-## 8. Pre-Release Checklist
+The active architecture is:
 
-- [x] All 14 automated unit and biomechanical test suites passing (`npm test`).
-- [x] Linter passing with zero warnings (`npm run lint`).
-- [x] On-device pose detection running with Exponential Moving Average (EMA) smoothing.
-- [x] Body alignment validation active for side-view exercises (Squat, Toe Touch).
-- [x] PWA Manifest and high-resolution icons verified at `/manifest.json`.
-- [x] In-app install button (`PWAInstallButton`) mounted and responsive across Android and iOS.
-- [x] Zero camera frames uploaded across the network (HIPAA/GDPR compliance).
+- React/Vite frontend with on-device pose processing.
+- Without all six Firebase configuration values: demo identities, browser-local records, and IndexedDB reference videos. Different devices do not share this data.
+- With all six values: Firebase Authentication, Firestore records, and Firebase Storage reference videos.
+- Express API for analytics, SOAP generation, an exercise registry, and in-memory exercise reports.
+
+`backend/db/` contains a Neon/Drizzle scaffold, but active API routes do not import it and its database dependencies are not installed. Setting `DATABASE_URL` does not enable persistent records. The previous deployment guide's Neon instructions did not match the running application.
+
+## 1. Build and verify locally
+
+Use **Node.js 22.12 or newer in the Node 22 line**, or a newer supported LTS release. The installed Vite package requires Node `^20.19.0 || >=22.12.0`; Node 18 is insufficient.
+
+```powershell
+npm ci
+npm run lint
+npm test
+npm run build
+```
+
+The build output is `frontend/dist`. The existing unit suite currently contains 19 tests. Run checks yourself before each release; a checked box in documentation is not evidence of a new successful run.
+
+To test the built frontend and API together:
+
+```powershell
+npm start
+```
+
+Open `http://localhost:3000`. If another process uses that port, stop it or set a different `PORT` before starting. `npm start` runs `backend/server.js`, which serves both `/api/*` and `frontend/dist`, including the SPA fallback for deep links.
+
+`npm run dev` runs Vite with a development-only `/api` middleware. `npm run preview` previews static assets only; it is not a production API server.
+
+## 2. Vercel: publish the web UI / demo
+
+The root `vercel.json` configures a static build and SPA routing. It does **not** deploy Express.
+
+1. Import the repository in the Vercel dashboard yourself.
+2. Set **Root Directory** to the application directory containing the root `package.json` and `vercel.json`. If this application sits inside another repository directory, select that directory. Do not select `frontend/dist` or `backend`.
+3. Use the following project settings (also supplied by the root configuration):
+
+   | Setting | Value |
+   | --- | --- |
+   | Framework preset | Other |
+   | Install command | `npm ci` |
+   | Build command | `npm run build` |
+   | Output directory | `frontend/dist` |
+   | Node version | 22.x, at least 22.12 |
+
+   Keeping the application root includes the `backend/services` modules imported by the frontend and the API modules loaded by `frontend/vite.config.js` during the build.
+
+4. For a UI demo, leave **all six** `VITE_FIREBASE_*` values blank. This intentionally shows the labelled demo login.
+5. Leave `VITE_API_BASE_URL` blank. Set `VITE_USE_FIREBASE_EMULATORS=false` if defining it.
+6. Deploy, then run Section 6's browser checks on the HTTPS address.
+
+On this static deployment, `/api/*` is not an API endpoint. Browser-side analytics and SOAP generation fall back to the calculations already bundled with the frontend. The exercise-issue report fallback returns a success-shaped response but does **not** persist a report. Do not demonstrate that as durable submission.
+
+For shared accounts on Vercel, complete Section 4, configure all six Firebase values in the deployment environment, and rebuild. Firebase-backed records work independently of Express; the static API limitations above remain.
+
+Vite reads `VITE_*` variables at **build time**. After changing them in the dashboard, redeploy. Never put database passwords, service-account keys, or other server secrets in a `VITE_*` variable.
+
+See [Vercel's Vite SPA guidance](https://vercel.com/docs/frameworks/frontend/vite) and [rewrite configuration](https://vercel.com/docs/routing/rewrites).
+
+## 3. Full-stack prototype: one Node web service
+
+A single Node service avoids introducing cross-origin API requests. For example, create a **Web Service** on Render with these settings:
+
+| Setting | Value |
+| --- | --- |
+| Root directory | Application directory containing the root `package.json` |
+| Runtime | Node |
+| Node version | 22.x, at least 22.12, or a newer supported LTS |
+| Build command | `npm ci --include=dev && npm run build` |
+| Start command | `npm start` |
+| Health check | `/api/health` |
+| Environment | `NODE_ENV=production`, `HOST=0.0.0.0` |
+| API base | Leave `VITE_API_BASE_URL` blank |
+
+Allow the host to supply `PORT`; `backend/config/index.js` reads it. Build-time dependencies are needed to compile Vite, so do not omit dev dependencies during the build. Set the Firebase variables before building if using shared accounts.
+
+After deployment, open `/api/health` on the same HTTPS domain. It should return JSON with `status: "ok"`, service `Kineticare Tele-Rehabilitation Engine`, and version `2.1.0`.
+
+Do not configure a separate API domain without implementing and testing CORS first. The Express app currently has no cross-origin middleware. The old `backend/vercel.json` is a separate legacy backend configuration, not the root static-site deployment path described above; it has not been verified as a full-stack Vercel deployment.
+
+See [Render's Node/Express deployment guide](https://render.com/docs/deploy-node-express-app).
+
+## 4. Firebase: shared accounts, records, and reference media
+
+Skip this section only for a browser-local demo.
+
+### Configure the project
+
+1. Create a Firebase project and register a Web App.
+2. Enable Authentication's **Email/Password** provider.
+3. Create Cloud Firestore and a Storage bucket; confirm the project's billing requirements in the Firebase console.
+4. Add your deployed hostname under Authentication's authorized domains and configure email verification/reset templates for that environment.
+5. Supply **all six** variables below in the hosting provider's build environment. For local builds, copy `.env.example` to `frontend/.env.local` and fill them there. Vite's root is `frontend/`; a root `.env` is not loaded automatically by this configuration.
+
+```dotenv
+VITE_FIREBASE_API_KEY=<web-app-api-key>
+VITE_FIREBASE_APP_ID=<web-app-app-id>
+VITE_FIREBASE_AUTH_DOMAIN=<project>.firebaseapp.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=<sender-id>
+VITE_FIREBASE_PROJECT_ID=<project-id>
+VITE_FIREBASE_STORAGE_BUCKET=<actual-bucket-name-from-web-app-config>
+VITE_USE_FIREBASE_EMULATORS=false
+VITE_API_BASE_URL=
+```
+
+The frontend enables Firebase only when **every** configuration value is present. Partial configuration leaves the application in demo mode. These Firebase web configuration values identify the app; Firestore/Storage rules enforce access. Do not replace them with an Admin SDK private key.
+
+### Publish rules and indexes yourself
+
+The Firebase CLI is already a frontend dev dependency. From the application root:
+
+```powershell
+npx firebase login
+npx firebase deploy --project <project-id> --only firestore:rules,firestore:indexes,storage
+```
+
+Keep the checked-in restrictive rules; do not enable Firestore or Storage test mode for a deployed app. `firestore.indexes.json` currently declares no custom indexes. The clinician uses a collection-group `versions` query filtered by `ownerUid`; verify that query after deployment and create any index requested by Firestore, then record the resulting configuration in this file. Index deployment alone does not verify query authorization.
+
+The media loader uses Firebase Storage `getBlob`. Configure bucket CORS for your **actual frontend HTTPS origin** with GET access so clinician reference media can load. CORS does not replace Storage rules. See [Firebase's direct-download/CORS instructions](https://firebase.google.com/docs/storage/web/download-files#cors_configuration).
+
+### Provision the first clinician
+
+The app has no public clinician registration screen. Use the trusted Firebase console to:
+
+1. Create an Email/Password Authentication user for the clinician.
+2. Copy that account's UID.
+3. Create a Firestore document at `users/<that-uid>` with string fields:
+
+```json
+{
+  "email": "doctor@example.com",
+  "displayName": "Dr. Example",
+  "role": "clinician"
+}
+```
+
+Use the real account email. Do not create a demo UID such as `C-001` for an unrelated Auth account. The client cannot grant itself the clinician role under the rules.
+
+The clinician signs in and creates a patient invitation by email. The patient opens the site, chooses the invited-patient account option, creates an account with that exact email, verifies the email, and signs in again. Invitation creation does **not** send an invitation email; share the site address separately. Acceptance creates the patient profile and clinician relationship transactionally.
+
+In Firebase mode there are no seeded shared patients or reference records. The clinician needs to record/approve a reference before publishing an assignment that requires one. Verify media playback from a separate patient account/device.
+
+### Firebase Hosting alternative
+
+If you choose Firebase Hosting for the static frontend instead of Vercel, the checked-in `firebase.json` now points to `frontend/dist` and rewrites app routes to `/index.html`.
+
+```powershell
+npm run build
+npx firebase deploy --project <project-id> --only hosting
+```
+
+This deploys static files, not Express. Section 2's static API limitations still apply. See [Firebase Hosting configuration](https://firebase.google.com/docs/hosting/full-config).
+
+## 5. PWA and Android packaging come after web validation
+
+The web manifest and blue icons are included. There is **no registered service worker or offline app-shell cache**, so do not promise offline operation or a guaranteed install prompt. Pose-model loading also needs to be tested on the target network/device. Browser install availability varies.
+
+Validate the deployed manifest and real icon dimensions before Android packaging. Use PWABuilder only after the HTTPS site works on a real phone. A store-ready TWA additionally needs signing and Digital Asset Links for the actual hostname; the presence of a manifest alone does not make an APK/AAB release-ready. Keep signing keys private. Android packaging is not required to publish the web app.
+
+## 6. Post-deployment checks
+
+Leave these unchecked until you actually verify them on the deployed environment:
+
+- [ ] Open the HTTPS site and confirm the blue logo, primary buttons, and mobile navigation.
+- [ ] Refresh `/patient/home` and `/client/overview` directly; these must load the app and perform the normal auth redirect rather than return a host 404.
+- [ ] Confirm demo login appears only for an intentional demo build; shared-account builds must show credential sign-in.
+- [ ] In Firebase mode, verify clinician login, invitation acceptance, and patient login on separate devices.
+- [ ] Record/approve a reference, publish an exercise plan, and play that reference as the linked patient.
+- [ ] Complete camera setup and a session on a real phone over HTTPS; check framing, tracking loss, pause/resume, and saved results.
+- [ ] Verify a patient cannot read another patient's records and an unrelated clinician cannot access them.
+- [ ] On a Node deployment, confirm `/api/health` returns JSON and check analytics/SOAP requests in the network panel.
+- [ ] Export an exercise schedule and the selected session analysis using the browser's **Print / Save as PDF** destination. Check multipage output and patient/session details. This feature is not a one-click PDF download and native print support must be checked in the target browser.
+- [ ] Confirm invite/referral text, copy, and placeholders are appropriate for the audience.
+- [ ] Run `npm run test:rules --workspace=frontend` with the required Java runtime and Firestore emulator available before shared-record release. This suite is separate from the 19 unit tests; it does not test Storage rules.
+
+## 7. Concrete limitations before real patient use
+
+A demo can be published, but the current build should not be described as ready for clinical production:
+
+- **Unauthenticated Express API:** the API does not validate Firebase ID tokens or enforce clinician/patient relationships. `GET /api/reports/exercise` exposes its process's reports, and write routes accept callers without authentication. Add server-side authorization before entering real patient information into these endpoints.
+- **Nonpersistent reports and registry changes:** exercise reports and runtime exercise registrations live in process memory and can disappear on restart or across server instances. The frontend's offline report fallback does not persist its returned report either.
+- **Missing-score fallback:** analytics fallback paths still contain default score/consistency values when no valid repetitions are available. Fix this before using the output for clinical decisions; missing measurements must remain unavailable.
+- **Security-rule verification:** run the Firestore rule suite, verify Storage access and the clinician collection-group query, and test linked/unlinked accounts in the actual Firebase project.
+- **Privacy scope:** patient live camera processing occurs in the browser; approved clinician reference recordings can be uploaded. This is not evidence of HIPAA/GDPR compliance. Do not make unverified compliance claims.
+
+This review verifies source configuration and local checks, not a live cloud release, cloud permissions, billing settings, or a completed native PDF save. No deployment is performed by this guide.

@@ -1,4 +1,6 @@
 const paths = {
+  download: <><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" /></>,
+  settings: <><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></>,
   home:   <path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>,
   plan:   <><rect x="5" y="4" width="14" height="17" rx="3"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/></>,
   prog:   <path d="M3 20h18M6 16v-5M11 16V6M16 16v-8"/>,

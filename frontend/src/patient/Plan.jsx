@@ -4,6 +4,7 @@ import { useRecords } from '../records/recordsContext';
 import { INSTRUCTIONS } from '../data';
 import { startDraft } from '../session/drafts';
 import ReferenceVideo from '../components/ReferenceVideo';
+import ExportPdf from '../components/ExportPdf';
 
 function ExerciseCard({ item, reference, onPractise }) {
   const [open, setOpen] = useState(false);
@@ -38,7 +39,7 @@ export default function PatientPlan() {
   if (!plan) return <div className="card">No active assignment. Contact your clinician if you expected one.</div>;
   return (
     <>
-      <h1>Assignment</h1>
+      <div className="row sp"><h1>Your exercise plan</h1><ExportPdf patient={workspace.patients.find(patient => patient.id === patientId)} plan={plan} /></div>
       <p className="mut">{plan.name} · by {plan.by} · version {plan.v}{plan.schedule?.weeklyFrequency ? ` · ${plan.schedule.weeklyFrequency} times per week` : ''}</p>
       {plan.items.map((item, index) => (
         <ExerciseCard key={item.ex} item={item}

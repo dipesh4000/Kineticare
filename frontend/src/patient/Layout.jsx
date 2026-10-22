@@ -1,5 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Icon from '../components/Icon';
+import Brand from '../components/Brand';
 
 const TABS = [
   ['home', 'Home', 'home'],
@@ -19,6 +20,7 @@ export default function PatientLayout() {
 
   return (
     <div className="phone">
+      {!hideNav && <header className="patient-brand"><Brand subtitle="Your recovery companion" /><span className="brand-caption">PATIENT PORTAL</span></header>}
       <Outlet />
       {!hideNav && (
         <nav className="nav" aria-label="Main navigation">
@@ -29,6 +31,7 @@ export default function PatientLayout() {
                 key={key}
                 className={isOn ? 'on' : ''}
                 aria-label={label}
+                aria-current={isOn ? 'page' : undefined}
                 onClick={() => nav(`/patient/${key}`)}
               >
                 <Icon name={icon} size={22} color={isOn ? 'var(--pri)' : 'var(--mut)'} />

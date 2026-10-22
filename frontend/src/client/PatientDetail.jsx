@@ -8,6 +8,7 @@ import ScoreTimeCharts from '../components/ExerciseCharts';
 import { toast } from '../components/toastBus';
 import { evaluateSessionServer, generateSoapNoteServer, reportExerciseIssue } from '../services/api';
 import { workoutStreak } from '../patientFlow';
+import ExportPdf from '../components/ExportPdf';
 
 export default function ClientPatientDetail() {
   const nav = useNavigate();
@@ -121,6 +122,8 @@ export default function ClientPatientDetail() {
       <p className="mut">{patient.email} · Current streak: {workoutStreak(history).current} days · Best: {workoutStreak(history).best} days</p>
       <div className="row" style={{ margin: '10px 0', flexWrap: 'wrap' }}>
         <button className="btn" onClick={() => nav(`/client/patients/${id}/assign`)}>Edit assignment</button>
+        {plan && <ExportPdf patient={patient} plan={plan} label="Schedule PDF" />}
+        {chosen && <ExportPdf patient={patient} plan={plan} session={chosen} label="Analysis PDF" />}
       </div>
 
       {chosen ? (

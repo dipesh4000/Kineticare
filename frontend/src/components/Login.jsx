@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/authContext';
 import { toast } from './toastBus';
-import Icon from './Icon';
+import Brand from './Brand';
 import { WORKSPACE_KEY } from '../patientFlow';
 
 export default function Login() {
@@ -57,25 +57,12 @@ export default function Login() {
 
   return (
     <div className="center">
-      {/* Centered Medical Emblem */}
-      <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <div
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: '50%',
-            background: 'var(--pri2)',
-            display: 'grid',
-            placeItems: 'center',
-            margin: '0 auto 12px',
-          }}
-        >
-          <Icon name="plan" size={32} color="var(--pri)" />
-        </div>
-        <h1 style={{ color: 'var(--pri)', fontSize: 26, marginBottom: 6 }}>Kineticare</h1>
-        <p className="mut" style={{ fontSize: 14, margin: 0 }}>
-          Camera-guided physical therapy connecting patients and clinicians.
-        </p>
+      <div className="login-intro">
+        <Brand subtitle="Rehabilitation, reimagined" />
+        <span className="eyebrow">A little movement. A better tomorrow.</span>
+        <h1>Your recovery,<br /><em>one step at a time.</em></h1>
+        <p className="mut">Guided movement at home. Connected care with your clinician. A healthier you, every day.</p>
+        <div className="login-features"><span>Camera-guided exercise</span><span>Personal care plans</span><span>Progress insights</span></div>
       </div>
 
       {!firebaseEnabled && (
@@ -159,7 +146,7 @@ export default function Login() {
 
       <div style={{ textAlign: 'center', marginTop: 16 }}>
         <p className="mut" style={{ fontSize: 12 }}>
-          🔒 HIPAA/GDPR Privacy: Patient camera frames are computed on-device via WebGL and never uploaded or stored.
+          Camera processing happens on your device. Your live camera frames are not uploaded or stored.
         </p>
       </div>
     </div>

@@ -15,7 +15,7 @@ Comprehensive architectural plan for deploying Kineticare to production with a N
 
 ### 1. Overview & Core Concept
 
-- **What It Does**: Kineticare provides on-device, camera-guided tele-rehabilitation for physical therapy patients (Shyam Yadav) and attending clinicians (Dr. Aditi Singh). The app runs real-time MoveNet pose tracking on-device with zero camera video uploads, while synchronizing assignments, structured clinical metrics, session reports, and exercise protocols through a centralized backend API.
+- **What It Does**: Kineticare provides on-device, camera-guided tele-rehabilitation for physical therapy patients (Dipesh) and attending clinicians (Dr. Aditi Yadav). The app runs real-time MoveNet pose tracking on-device with zero camera video uploads, while synchronizing assignments, structured clinical metrics, session reports, and exercise protocols through a centralized backend API.
 - **Target Audience / Persona**:
   - *Patients*: Individuals recovering from orthopedic, musculoskeletal, or joint conditions performing prescribed home exercises with immediate biomechanical form feedback.
   - *Clinicians / Physical Therapists*: Doctors and physiotherapists managing patient caseloads, assigning custom targets, reviewing session evidence, and generating clinical SOAP notes.

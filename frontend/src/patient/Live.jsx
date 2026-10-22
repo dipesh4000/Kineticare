@@ -35,11 +35,13 @@ function Skeleton({ paused }) {
 }
 
 export default function PatientLive() {
+  const nav = useNavigate();
   const { state } = useLocation();
   const { patientId, assignment } = useRecords();
   const exIdx = state?.exIdx ?? 0;
   const plan = assignment(patientId);
   if (!plan?.items[exIdx]) return <div className="card">The assigned exercise is unavailable. Return to your plan.</div>;
+  if (state?.assignmentVersion != null && state.assignmentVersion !== plan.v) return <div className="card">Your clinician updated this plan. <button className="btn" onClick={() => nav('/patient/workout')}>Open current workout</button></div>;
   return <LiveSession key={exIdx} state={state} exIdx={exIdx} plan={plan} exercise={plan.items[exIdx]} patientId={patientId} />;
 }
 
@@ -212,7 +214,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
     const completed = [...completedRef.current, result];
     saveSessionDraft(patientId, { ...state, exIdx, done: completed, sessionId: state?.sessionId });
     const nextIdx = plan.items.findIndex((item, index) => index > exIdx && !item.videoOnly);
-    if (state?.all && nextIdx !== -1) {
+    if (state?.all && nextIdx !== -1 && result.completion !== 'partial') {
       nav('/patient/live', { state: { ...state, exIdx: nextIdx, done: completed, all: true } });
     } else {
       nav('/patient/sum', { state: { ...state, done: completed } });
@@ -341,7 +343,8 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       attemptedReps: repState.attemptedReps,
       assessedReps: repState.assessedReps,
       withinTargetReps: repState.withinTargetReps,
-      completion,
+      completion: completion === 'completed' && repState.assessedReps >= exercise.targetReps ? 'completed' : 'partial',
+      mode: 'live',
       c: score ? 'Camera measured' : 'Unable to score',
     });
   };

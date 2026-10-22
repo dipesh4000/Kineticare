@@ -24,7 +24,7 @@ export default function PatientProfile() {
       <h1>Info & Settings</h1>
       <div className="card">
         <b>{user.displayName}</b>
-        <p className="mut">Patient account · Clinician: {plan?.by ?? 'Not linked'}</p>
+        <p className="mut">Patient account · Clinician: {plan?.by ?? user.clinicianName ?? 'Not linked'}</p>
       </div>
       <div className="card">
         <div className="row sp">

@@ -201,9 +201,9 @@ export function evaluateExerciseRepetitions(reps = [], exerciseMeta = {}) {
  * Generates an automated SOAP progress note for Clinicians and EHR integration.
  */
 export function generateSoapNote(patient = {}, session = {}, evaluation = {}) {
-  const patientName = patient.n || patient.displayName || 'Shyam Yadav';
+  const patientName = patient.n || patient.displayName || 'Dipesh';
   const patientId = patient.id || patient.patientUid || 'P-101';
-  const clinicianName = patient.clinicianName || 'Dr. Aditi Singh';
+  const clinicianName = patient.clinicianName || 'Dr. Aditi Yadav';
   const dateStr = session.d || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const results = session.r || session.exerciseResults || [];
 

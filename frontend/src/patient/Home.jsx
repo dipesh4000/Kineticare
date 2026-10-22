@@ -8,6 +8,7 @@ import { toast } from '../components/toastBus';
 import Icon from '../components/Icon';
 import { clearSessionDraft, loadSessionDraft } from '../session/drafts';
 import PWAInstallButton from '../components/PWAInstallButton';
+import { workoutStreak } from '../patientFlow';
 
 export default function PatientHome() {
   const nav = useNavigate();
@@ -18,10 +19,11 @@ export default function PatientHome() {
   const [draft, setDraft] = useState(() => loadSessionDraft(patientId));
   const plan = assignment(patientId);
   const history = sessions(patientId);
+  const streak = workoutStreak(history);
   const messages = feedback(patientId);
   const unread = messages.filter(item => !item.read).length;
   const reminder = messages.find(item => item.reminder)?.reminder;
-  const scored = history.filter(session => Number.isFinite(avg(session.r)));
+  const scored = history.filter(session => session.mode !== 'replay' && Number.isFinite(avg(session.r)));
 
   const contactClinician = () => {
     if (!message.trim()) return toast('Write a message first');
@@ -63,6 +65,11 @@ export default function PatientHome() {
       </div>
 
       {backend === 'local-demo' && <DemoBanner />}
+      <div className="card">
+        <h3>{streak.current} day workout streak</h3>
+        <p className="mut">Best: {streak.best} days · {streak.practicedToday ? 'Workout completed today.' : 'Complete a live workout to count today.'}</p>
+        <p className="mut">Completed camera sessions count once per day. Partial workouts and replays do not count. Follow your clinician’s rest schedule.</p>
+      </div>
 
       {/* Linked Clinician Connection Card (Styled like Screen 3 in Reference Image) */}
       <div className="card row sp" style={{ padding: '14px 18px', marginBottom: 16 }}>
@@ -82,14 +89,14 @@ export default function PatientHome() {
           </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--pri)' }}>
-              {plan?.by ?? 'Dr. Aditi Singh'}
+              {plan?.by ?? user.clinicianName ?? 'No clinician linked'}
             </div>
             <div className="mut" style={{ fontSize: 13 }}>
-              Physiotherapist · Ascension Health
+              Your rehabilitation clinician
             </div>
           </div>
         </div>
-        <span className="tag ok">Connected</span>
+        <span className={`tag ${plan || user.clinicianName ? 'ok' : 'warn'}`}>{plan || user.clinicianName ? 'Linked' : 'Awaiting assignment'}</span>
       </div>
 
       {/* Clinician Reminder if present */}
@@ -193,8 +200,8 @@ export default function PatientHome() {
             <div key={session.sessionId ?? session.d} className="card" style={{ minWidth: 230 }}>
               <div className="row sp" style={{ marginBottom: 6 }}>
                 <b>{session.d}</b>
-                <span className={`tag ${session.status === 'partial' ? 'warn' : 'ok'}`}>
-                  {session.status ?? 'completed'}
+                <span className={`tag ${session.status === 'partial' || session.mode === 'replay' ? 'warn' : 'ok'}`}>
+                  {session.mode === 'replay' ? 'Replay · ' : ''}{session.status ?? 'completed'}
                 </span>
               </div>
               <p className="mut" style={{ fontSize: 13, margin: '4px 0 10px' }}>

@@ -1,4 +1,4 @@
-export const avg = rows => {
+export const avg = (rows = []) => {
   const scored = rows.filter(row => Number.isFinite(row.s));
   return scored.length
   ? +(scored.reduce((total, row) => total + row.s, 0) / scored.length).toFixed(2)
@@ -78,7 +78,8 @@ export const calcExerciseBiometrics = (result, planItem = {}) => {
 export const calcLongitudinalTrends = (sessions = []) => {
   if (!sessions.length) return null;
 
-  const chron = sessions.slice(); // oldest to newest
+  const chron = sessions.filter(session => session.mode !== 'replay');
+  if (!chron.length) return null;
   const totalActiveSec = chron.reduce((total, s) => total + (s.r || []).reduce((sub, r) => sub + (r.t || 0), 0), 0);
   const totalRepsCompleted = chron.reduce((total, s) => total + (s.r || []).reduce((sub, r) => sub + (r.attemptedReps || r.reps?.length || 0), 0), 0);
 
@@ -100,7 +101,7 @@ export const calcLongitudinalTrends = (sessions = []) => {
   });
 
   return {
-    sessionCount: sessions.length,
+    sessionCount: chron.length,
     totalActiveMinutes: Math.round(totalActiveSec / 60),
     totalRepsCompleted,
     exerciseTrends,

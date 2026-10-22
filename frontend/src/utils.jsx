@@ -56,7 +56,7 @@ export function HBar({ rows }) {
 }
 
 export function KPIs({ ss }) {
-  if (!ss.length) return <div className="card">No saved sessions yet.</div>;
+  if (!ss.length) return <div className="card">No measured sessions yet.</div>;
   const sc = ss.map(s => avg(s.r));
   const validScores = sc.filter(Number.isFinite);
   const d = validScores.length > 1 ? +(validScores.at(-1) - validScores[0]).toFixed(2) : null;
@@ -75,7 +75,7 @@ export function DemoBanner() {
   return (
     <div className="demo" style={{ background: 'var(--soft)', color: 'var(--mut)', border: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px' }}>
       <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--ok)' }} />
-      <span><b>Clinical Workspace Staging</b> · Patient: Shyam Yadav · Clinician: Dr. Aditi Singh. On-device pose telemetry active.</span>
+      <span><b>Demo workspace</b> · Records stay in this browser. Replay workouts use simulated movement.</span>
     </div>
   );
 }

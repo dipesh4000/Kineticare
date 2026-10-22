@@ -41,8 +41,8 @@ export async function getDb() {
 function createLocalMockDb() {
   const store = {
     users: [
-      { id: 'P-101', email: 'shyam@kineticare.com', role: 'patient', displayName: 'Shyam Yadav', metadata: { age: 27, gender: 'Male' }, createdAt: new Date() },
-      { id: 'C-001', email: 'aditi@kineticare.com', role: 'clinician', displayName: 'Dr. Aditi Singh', metadata: { specialty: 'Physiotherapist' }, createdAt: new Date() },
+      { id: 'P-101', email: 'shyam@kineticare.com', role: 'patient', displayName: 'Dipesh', metadata: { age: 27, gender: 'Male' }, createdAt: new Date() },
+      { id: 'C-001', email: 'aditi@kineticare.com', role: 'clinician', displayName: 'Dr. Aditi Yadav', metadata: { specialty: 'Physiotherapist' }, createdAt: new Date() },
     ],
     exercises: [],
     assignments: [],

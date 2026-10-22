@@ -11,8 +11,10 @@ export default function PatientPre() {
   const { patientId, assignment, createRequest, workspace } = useRecords();
   const [checks, setChecks] = useState([false, false, false]);
   const exIdx = state?.exIdx ?? 0;
-  const x = assignment(patientId)?.items[exIdx];
+  const plan = assignment(patientId);
+  const x = plan?.items[exIdx];
   if (!x) return <div className="card">This exercise is no longer available in the current assignment.</div>;
+  if (state?.assignmentVersion != null && state.assignmentVersion !== plan.v) return <div className="card">Your clinician updated this plan. <button className="btn" onClick={() => nav('/patient/workout')}>Open current workout</button></div>;
   const reference = workspace.references.find(item => item.versionId === x.referenceVersionId);
 
   if (x.videoOnly) {

@@ -35,12 +35,12 @@ export const DEMO_REFERENCES = [
 
 export const DATA = {
   pts: [
-    { id:'P-101', n:'Shyam Yadav', a:'Male, 27', last:'7 Sep 2026', adh:67, review:true },
+    { id:'P-101', n:'Dipesh', a:'Male, 27', last:'7 Sep 2026', adh:67, review:true },
     { id:'P-102', n:'Maya Roy', a:'Female, 41', last:'5 Sep 2026', adh:100, review:false },
     { id:'P-103', n:'Arun Das', a:'Male, 58', last:'No sessions yet', adh:0, review:false },
   ],
   plan: {
-    name:'Mobility plan, week 3', v:2, by:'Dr. Aditi Singh',
+    name:'Mobility plan, week 3', v:2, by:'Dr. Aditi Yadav',
     items:[
       { ex:'Squat', t:45, targetReps:5, targetExcursionDeg:45, note:'Stop if you feel sharp pain.',
         referenceId:'demo-squat', referenceVersionId:'demo-squat-v1', referencePath:'references/demo-squat/versions/demo-squat-v1' },
@@ -56,7 +56,7 @@ export const DATA = {
     { d:'5 Sep 2026',  r:[{ex:'Squat',t:45,s:.76,c:'High'},{ex:'Side Arm Raise',t:60,s:.82,c:'High'}] },
   ],
   fb: [
-    { id:'F-1', from:'Dr. Aditi Singh', d:'6 Sep 2026', m:'Good consistency this week. Keep squats shallow for now and rest between exercises.', read:false }
+    { id:'F-1', from:'Dr. Aditi Yadav', d:'6 Sep 2026', m:'Good consistency this week. Keep squats shallow for now and rest between exercises.', read:false }
   ]
 };
 

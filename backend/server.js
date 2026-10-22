@@ -16,7 +16,7 @@ app.use('/api', apiApp);
 const distPath = path.resolve(__dirname, '../frontend/dist');
 app.use(express.static(distPath));
 
-app.get('*', (req, res, next) => {
+app.get('/{*path}', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   res.sendFile(path.join(distPath, 'index.html'), err => {
     if (err) {

@@ -11,14 +11,14 @@ Comprehensive, step-by-step guide for deploying the Kineticare fullstack tele-re
 │                            MOBILE CLIENT (APK / PWA)                        │
 │                                                                             │
 │   ┌─────────────────────┐   ┌──────────────────────┐   ┌────────────────┐   │
-│   │ WebGL Camera Stream │──▶│ MoveNet Lightning    │──▶│ Temporal EMA   │   │
+│   │ WebGL Camera Stream │──▶ MoveNet Lightning     ──▶│ Temporal EMA   │   │
 │   │ (On-Device 30fps)   │   │ Pose Estimation      │   │ Smoothing &    │   │
 │   └─────────────────────┘   └──────────────────────┘   │ Side-Profile   │   │
 │                                                        │ Alignment      │   │
 │                                                        └───────┬────────┘   │
 │                                                                │            │
 │   ┌─────────────────────┐   ┌──────────────────────┐           ▼            │
-│   │ Patient / Clinician │◀──│ Repetition Engine &  │◀──────────┘            │
+│   │ Patient / Clinician │◀──  Repetition Engine &  ◀──────────┘            │
 │   │ UI Views & Prompts  │   │ Biomechanical Metrics│                        │
 │   └──────────┬──────────┘   └──────────────────────┘                        │
 └──────────────┼──────────────────────────────────────────────────────────────┘
@@ -78,7 +78,7 @@ Kineticare uses **Neon serverless PostgreSQL** managed through **Drizzle ORM** f
 3. **Database Schema & Tables**:
    - The Drizzle schema is located at `backend/db/schema.js`.
    - The tables include:
-     - `users`: Patient and clinician identities (Shyam Yadav, Dr. Aditi Singh).
+     - `users`: Patient and clinician identities (Dipesh, Dr. Aditi Yadav).
      - `relationships`: Links patients to attending clinicians.
      - `exercises`: Biomechanical degree thresholds, camera angles, and instructions.
      - `assignments`: Prescribed exercise sets, reps, and targets.

@@ -6,6 +6,7 @@ import { clearSessionDraft } from '../session/drafts';
 import ScoreTimeCharts from '../components/ExerciseCharts';
 import { calcExerciseBiometrics } from '../metrics';
 import { evaluateSessionServer } from '../services/api';
+import { sessionMode } from '../patientFlow';
 
 const mean = values => (values.length ? values.reduce((total, value) => total + value, 0) / values.length : 0);
 const scoreOf = result => (result.movementScore != null ? result.movementScore / 100 : result.s);
@@ -52,10 +53,10 @@ export default function PatientSummary() {
       await saveSession(patientId, {
         schemaVersion: 1,
         sessionId: sessionId.current,
-        assignmentId: plan?.assignmentId ?? 'demo-assignment',
-        assignmentVersion: plan?.v ?? 1,
+        assignmentId: state?.assignmentId ?? plan?.assignmentId ?? 'demo-assignment',
+        assignmentVersion: state?.assignmentVersion ?? plan?.v ?? 1,
         status: done.length && done.every(item => item.completion !== 'partial') ? 'completed' : 'partial',
-        mode: done.some(item => item.c === 'Replay demo') ? 'replay' : 'live',
+        mode: sessionMode(done),
         createdAt: new Date().toISOString(),
         d: new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date()),
         r: done,
@@ -72,7 +73,7 @@ export default function PatientSummary() {
   return (
     <>
       <h1>Workout summary</h1>
-      {done.some(x => x.c === 'Replay demo') && <DemoBanner />}
+      {sessionMode(done) === 'replay' && <DemoBanner />}
       {done.length === 0 && <div className="card">Nothing to summarise yet. Finish an exercise first.</div>}
 
       {done.length > 0 && (

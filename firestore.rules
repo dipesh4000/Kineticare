@@ -12,15 +12,59 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/relationships/$(patientUid)).data.clinicianUid == request.auth.uid;
     }
     function validId(value) { return value is string && value.size() > 0 && value.size() <= 128; }
+    function verifiedEmail() { return signedIn() && request.auth.token.email_verified == true; }
+    function invitation() {
+      return get(/databases/$(database)/documents/patientInvites/$(request.auth.token.email.lower())).data;
+    }
+    function claimingInvite(uid) {
+      return verifiedEmail() && request.auth.uid == uid
+        && invitation().status == 'pending'
+        && getAfter(/databases/$(database)/documents/patientInvites/$(request.auth.token.email.lower())).data.status == 'accepted'
+        && getAfter(/databases/$(database)/documents/patientInvites/$(request.auth.token.email.lower())).data.patientUid == uid;
+    }
+
+    match /patientInvites/{email} {
+      allow read: if (verifiedEmail() && request.auth.token.email.lower() == email)
+        || (clinician() && resource.data.clinicianUid == request.auth.uid);
+      allow create: if clinician()
+        && request.resource.data.keys().hasOnly(['email', 'displayName', 'clinicianUid', 'clinicianName', 'status', 'createdAt'])
+        && request.resource.data.email == email && email.size() <= 254
+        && request.resource.data.clinicianUid == request.auth.uid
+        && request.resource.data.clinicianName == profile().displayName
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0 && request.resource.data.displayName.size() <= 100
+        && request.resource.data.status == 'pending';
+      allow update: if verifiedEmail() && request.auth.token.email.lower() == email
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'patientUid'])
+        && request.resource.data.status == 'accepted'
+        && request.resource.data.patientUid == request.auth.uid
+        && !exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'patient'
+        && getAfter(/databases/$(database)/documents/relationships/$(request.auth.uid)).data.clinicianUid == resource.data.clinicianUid;
+      allow delete: if false;
+    }
 
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || (clinician() && linked(uid)));
-      allow write: if false;
+      allow create: if claimingInvite(uid)
+        && request.resource.data.keys().hasOnly(['email', 'displayName', 'role', 'clinicianUid', 'clinicianName'])
+        && request.resource.data.role == 'patient'
+        && request.resource.data.email == request.auth.token.email.lower()
+        && request.resource.data.displayName == invitation().displayName
+        && request.resource.data.clinicianUid == invitation().clinicianUid
+        && request.resource.data.clinicianName == invitation().clinicianName;
+      allow update, delete: if false;
     }
 
     match /relationships/{patientUid} {
-      allow read: if signedIn() && (request.auth.uid == patientUid || linked(patientUid));
-      allow write: if false;
+      allow read: if signedIn() && (request.auth.uid == patientUid
+        || (clinician() && resource.data.clinicianUid == request.auth.uid));
+      allow create: if claimingInvite(patientUid)
+        && request.resource.data.keys().hasOnly(['clinicianUid', 'active'])
+        && request.resource.data.clinicianUid == invitation().clinicianUid
+        && request.resource.data.active == true;
+      allow update, delete: if false;
     }
 
     match /references/{referenceId}/versions/{versionId} {
@@ -32,7 +76,7 @@ service cloud.firestore {
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.referenceId == referenceId
         && request.resource.data.versionId == versionId
-        && request.resource.data.exerciseName in ['Squat', 'Side Arm Raise']
+        && request.resource.data.exerciseName in ['Squat', 'Side Arm Raise', 'Toe Touch']
         && request.resource.data.status in ['draft', 'approved'];
       allow update: if clinician()
         && resource.data.ownerUid == request.auth.uid
@@ -65,7 +109,12 @@ service cloud.firestore {
         && request.resource.data.patientUid == patientUid
         && request.resource.data.clinicianUid == request.auth.uid
         && request.resource.data.versionId == versionId;
-      allow update, delete: if false;
+      allow update: if clinician() && linked(patientUid)
+        && request.resource.data.patientUid == patientUid
+        && request.resource.data.clinicianUid == request.auth.uid
+        && request.resource.data.versionId == versionId
+        && request.resource.data.referenceId == resource.data.referenceId;
+      allow delete: if false;
     }
 
     match /patients/{patientUid}/sessions/{sessionId} {

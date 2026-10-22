@@ -96,13 +96,13 @@ The project bridges the distance between instructions given in a clinical consul
 
 ## Explore the Experience
 
-### Patient Portal (Shyam Yadav)
+### Patient Portal (Dipesh)
 - **Guided Exercise Plans**: View assigned daily routines, review attending clinician instructions, and watch approved reference videos.
 - **Robust Camera Experience**: Automatic distance and side-profile alignment checks ensure accurate planar joint angles before practice begins.
 - **Live Form Guidance**: Real-time angle telemetry with Exponential Moving Average (EMA) jitter suppression, visual progress rings, and optional spoken coaching.
 - **Recovery & Gaps**: Interrupted sessions save as resumable drafts; incomplete cycles or occlusions are reported transparently.
 
-### Clinician Portal (Dr. Aditi Singh)
+### Clinician Portal (Dr. Aditi Yadav)
 - **Caseload Dashboard**: Review patient compliance, range of motion (ROM) progression, and sessions requiring clinical review.
 - **Exercise Reporting Workflow**: Flag protocol concerns, patient discomfort, tracking occlusion, or contraindications directly from the Exercise Library (`POST /api/reports/exercise`).
 - **Demonstration Video Staging**: Preview and stage custom clinician demonstration recordings.
@@ -166,7 +166,7 @@ backend/
 frontend/
   public/      PWA manifest.json, brand icons, video demonstration assets
   src/
-    auth/      Authentication context (Shyam Yadav & Dr. Aditi Singh)
+    auth/      Authentication context (Dipesh & Dr. Aditi Yadav)
     client/    Clinician dashboard, patient drilldowns, and reference capture
     components/PWAInstallButton, exercise telemetry charts, video player
     patient/   Setup, live practice with EMA smoother, summaries, and recovery progress

@@ -2,14 +2,14 @@ import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { assertFails, assertSucceeds, initializeTestEnvironment } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
 
 let environment;
 
 before(async () => {
   environment = await initializeTestEnvironment({
     projectId: 'demo-kineticare',
-    firestore: { rules: await readFile(new URL('../../../firestore.rules', import.meta.url), 'utf8') },
+    firestore: { rules: await readFile(new URL('../../firestore.rules', import.meta.url), 'utf8') },
   });
   await environment.withSecurityRulesDisabled(async context => {
     const database = context.firestore();
@@ -87,4 +87,42 @@ test('Firestore rules require explicit reference access and protect roles', asyn
   await assertFails(getDoc(doc(patientB, 'references/squat/versions/V-1')));
   await assertFails(updateDoc(doc(patientA, 'users/P-A'), { role: 'clinician' }));
   assert.ok(true);
+});
+
+test('only clinicians can invite; only the verified email owner can join atomically', async () => {
+  const clinician = environment.authenticatedContext('C-1').firestore();
+  const email = 'new@example.com';
+  const invite = { email, displayName: 'New Patient', clinicianUid: 'C-1', clinicianName: 'Clinician One', status: 'pending' };
+  const verified = environment.authenticatedContext('P-NEW', { email, email_verified: true }).firestore();
+  const unverified = environment.authenticatedContext('P-NEW', { email, email_verified: false }).firestore();
+  const stranger = environment.authenticatedContext('P-OTHER', { email: 'other@example.com', email_verified: true }).firestore();
+  await assertFails(setDoc(doc(stranger, 'patientInvites', email), invite));
+  await assertSucceeds(setDoc(doc(clinician, 'patientInvites', email), invite));
+  await assertSucceeds(getDocs(query(collection(clinician, 'patientInvites'), where('clinicianUid', '==', 'C-1'))));
+  await assertFails(getDoc(doc(unverified, 'patientInvites', email)));
+  await assertFails(getDoc(doc(stranger, 'patientInvites', email)));
+  await assertSucceeds(getDoc(doc(verified, 'patientInvites', email)));
+  const profile = { email, displayName: invite.displayName, role: 'patient', clinicianUid: 'C-1', clinicianName: invite.clinicianName };
+  await assertFails(setDoc(doc(verified, 'users/P-NEW'), profile));
+  const claim = (database, role = 'patient') => {
+    const batch = writeBatch(database);
+    batch.set(doc(database, 'users/P-NEW'), { ...profile, role });
+    batch.set(doc(database, 'relationships/P-NEW'), { clinicianUid: 'C-1', active: true });
+    batch.update(doc(database, 'patientInvites', email), { status: 'accepted', patientUid: 'P-NEW' });
+    return batch.commit();
+  };
+  await assertFails(claim(unverified));
+  await assertFails(claim(verified, 'clinician'));
+  await assertSucceeds(claim(verified));
+  await assertSucceeds(getDoc(doc(clinician, 'users/P-NEW')));
+  await assertSucceeds(getDocs(query(collection(clinician, 'relationships'), where('clinicianUid', '==', 'C-1'))));
+  await assertFails(getDocs(query(collection(environment.authenticatedContext('C-2').firestore(), 'relationships'), where('clinicianUid', '==', 'C-1'))));
+  await assertFails(setDoc(doc(environment.authenticatedContext('C-2').firestore(), 'patientInvites', email), invite));
+  await assertFails(updateDoc(doc(verified, 'relationships/P-NEW'), { clinicianUid: 'C-2' }));
+});
+
+test('publishing another assignment can refresh reference access for the same linked patient', async () => {
+  const clinician = environment.authenticatedContext('C-1').firestore();
+  await assertSucceeds(updateDoc(doc(clinician, 'patients/P-A/referenceAccess/V-1'), { assignmentVersion: 2 }));
+  await assertFails(updateDoc(doc(environment.authenticatedContext('C-2').firestore(), 'patients/P-A/referenceAccess/V-1'), { assignmentVersion: 3 }));
 });

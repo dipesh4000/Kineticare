@@ -79,7 +79,7 @@ analyticsRouter.post('/soap-note', (req, res) => {
     const allFlags = exerciseEvaluations.flatMap(e => (e.clinicalFlags || []).map(f => ({ ...f, exercise: e.exName })));
 
     const soapResult = generateSoapNote(
-      patient || { n: 'Shyam Yadav', id: 'P-101', clinicianName: 'Dr. Aditi Singh' },
+      patient || { n: 'Dipesh', id: 'P-101', clinicianName: 'Dr. Aditi Yadav' },
       session,
       { avgScore, exercises: exerciseEvaluations, allFlags }
     );

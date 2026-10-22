@@ -5,7 +5,7 @@ import {
 import { db } from './firebase';
 
 const emptyWorkspace = () => ({
-  schemaVersion: 1, patients: [], assignments: {}, assignmentDrafts: {}, sessions: {}, feedback: {}, requests: {}, references: [],
+  schemaVersion: 1, patients: [], invites: [], assignments: {}, assignmentDrafts: {}, sessions: {}, feedback: {}, requests: {}, references: [],
 });
 
 const value = snapshot => {
@@ -36,14 +36,14 @@ export function subscribeFirebaseWorkspace(user, onChange, onError) {
       if (!snapshot.exists()) return;
       const profile = value(snapshot);
       workspace.patients = [...workspace.patients.filter(item => item.id !== patientId), {
-        id: patientId, n: profile.displayName, a: profile.summary ?? 'Patient',
+        id: patientId, n: profile.displayName, email: profile.email, a: profile.summary ?? 'Patient',
       }];
       emit();
     }, onError));
     own.push(onSnapshot(collection(db, 'patients', patientId, 'assignments'), snapshot => {
       const assignments = snapshot.docs.map(value);
-      workspace.assignmentDrafts[patientId] = assignments.find(item => item.status === 'draft') ?? null;
       workspace.assignments[patientId] = assignments.filter(item => item.status === 'published').sort((a, b) => b.v - a.v)[0] ?? null;
+      workspace.assignmentDrafts[patientId] = assignments.find(item => item.status === 'draft' && item.v > (workspace.assignments[patientId]?.v ?? 0)) ?? null;
       if (user.role === 'patient') {
         referenceSubscriptions.forEach(unsubscribe => unsubscribe());
         referenceSubscriptions = [];
@@ -83,10 +83,15 @@ export function subscribeFirebaseWorkspace(user, onChange, onError) {
     workspace.patients = [{ id: user.uid, n: user.displayName, a: user.summary ?? 'Patient' }];
     subscriptions.push(...subscribePatient(user.uid));
   } else {
+    subscriptions.push(onSnapshot(query(collection(db, 'patientInvites'), where('clinicianUid', '==', user.uid)), snapshot => {
+      workspace.invites = snapshot.docs.map(value).filter(invite => invite.status === 'pending');
+      emit();
+    }, onError));
     subscriptions.push(onSnapshot(query(collection(db, 'relationships'), where('clinicianUid', '==', user.uid)), snapshot => {
       patientSubscriptions.forEach(unsubscribe => unsubscribe());
       patientSubscriptions = [];
       workspace.patients = [];
+      for (const key of ['assignments', 'assignmentDrafts', 'sessions', 'feedback', 'requests']) workspace[key] = {};
       snapshot.docs.filter(relationship => relationship.data().active === true).forEach(relationship => patientSubscriptions.push(...subscribePatient(relationship.id)));
       emit();
     }, onError));
@@ -95,6 +100,8 @@ export function subscribeFirebaseWorkspace(user, onChange, onError) {
       emit();
     }, onError));
   }
+
+  emit();
 
   return () => {
     subscriptions.forEach(unsubscribe => unsubscribe());
@@ -109,7 +116,7 @@ export const firebaseMutations = {
   async publishAssignment(patientId, assignment) {
     const batch = writeBatch(db);
     batch.set(doc(db, 'patients', patientId, 'assignments', `${assignment.assignmentId}-v${assignment.v}`), { ...assignment, createdAt: serverTimestamp() });
-    assignment.items.forEach(item => {
+    assignment.items.filter(item => item.referenceId && item.referenceVersionId).forEach(item => {
       batch.set(doc(db, 'patients', patientId, 'referenceAccess', item.referenceVersionId), {
         patientUid: patientId,
         clinicianUid: assignment.clinicianUid,

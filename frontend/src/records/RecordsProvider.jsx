@@ -3,8 +3,10 @@ import { createDemoWorkspace, DEMO_REFERENCES } from '../data';
 import { useAuth } from '../auth/authContext';
 import { RecordsContext } from './recordsContext';
 import { firebaseMutations, subscribeFirebaseWorkspace } from '../services/firebaseRecords';
+import { invitePatient } from '../services/onboarding';
+import { patientEmail, WORKSPACE_KEY } from '../patientFlow';
 
-const STORAGE_KEY = 'kineticare-workspace-v3';
+const STORAGE_KEY = WORKSPACE_KEY;
 const emptyWorkspace = () => ({ schemaVersion: 1, patients: [], assignments: {}, assignmentDrafts: {}, sessions: {}, feedback: {}, requests: {}, references: [] });
 
 function loadWorkspace() {
@@ -48,6 +50,17 @@ export default function RecordsProvider({ children }) {
     error,
     backend: firebaseEnabled ? 'firebase' : 'local-demo',
     patientId: user?.role === 'patient' ? user.uid : null,
+    async addPatient(name, address) {
+      if (user?.role !== 'clinician') throw new Error('Only clinicians can add patients.');
+      const email = patientEmail(address);
+      if (!name.trim() || name.trim().length > 100) throw new Error('Enter a patient name (up to 100 characters).');
+      if (workspace.patients.some(patient => patient.email === email)
+        || workspace.invites?.some(invite => invite.email === email)) throw new Error('This email has already been added.');
+      if (firebaseEnabled) return invitePatient(user, name, email);
+      const patient = { id: crypto.randomUUID(), n: name.trim(), email, a: 'Patient', clinicianName: user.displayName };
+      update(current => ({ ...current, patients: [...current.patients, patient] }));
+      return patient.id;
+    },
     assignment(patientId) {
       return workspace.assignments[patientId] ?? null;
     },

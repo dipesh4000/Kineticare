@@ -17,7 +17,7 @@ reportsRouter.post('/exercise', (req, res) => {
       reportId: crypto.randomUUID(),
       exercise,
       patientId: patientId || 'P-101',
-      reportedBy: reportedBy || 'Dr. Aditi Singh',
+      reportedBy: reportedBy || 'Dr. Aditi Yadav',
       reason, // e.g., 'Knee discomfort / pain', 'Tracking distortion / occlusion', 'Target angle too deep'
       notes: notes || '',
       severity: severity || 'medium', // low, medium, high

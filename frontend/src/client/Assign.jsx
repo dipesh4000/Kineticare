@@ -39,7 +39,7 @@ export default function ClientAssign() {
   const build = status => ({
     assignmentId: current?.assignmentId ?? crypto.randomUUID(),
     name: planName.trim() || 'Plan',
-    v: status === 'published' ? (current?.v ?? 0) + 1 : current?.v ?? 1,
+    v: (current?.v ?? 0) + 1,
     by: user.displayName,
     clinicianUid: user.uid,
     patientUid: id,
@@ -50,7 +50,7 @@ export default function ClientAssign() {
       const reference = workspace.references.find(candidate => candidate.versionId === item.referenceVersionId);
       return Object.fromEntries(Object.entries({
         ...item,
-        referenceId: reference?.referenceId,
+        referenceId: reference?.referenceId ?? null,
         referencePath: reference ? `references/${reference.referenceId}/versions/${reference.versionId}` : null,
       }).filter(([key]) => key !== 'checked'));
     }),
@@ -69,6 +69,7 @@ export default function ClientAssign() {
   };
 
   const saveDraft = async () => {
+    if (!items.some(item => item.checked)) return toast('Select at least one exercise.');
     try {
       await saveAssignmentDraft(id, build('draft'));
       toast('Assignment draft saved');

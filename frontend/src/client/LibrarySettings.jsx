@@ -38,7 +38,7 @@ export function ClientLibrary() {
         reason: reportReason,
         severity: reportSeverity,
         notes: reportNotes,
-        reportedBy: user?.displayName || 'Dr. Aditi Singh',
+        reportedBy: user?.displayName || 'Dr. Aditi Yadav',
       });
       toast(`Report for ${reportingEx} submitted successfully`);
       setReportingEx(null);

@@ -7,6 +7,7 @@ import { LineChart, KPIs } from '../utils';
 import ScoreTimeCharts from '../components/ExerciseCharts';
 import { toast } from '../components/toastBus';
 import { evaluateSessionServer, generateSoapNoteServer, reportExerciseIssue } from '../services/api';
+import { workoutStreak } from '../patientFlow';
 
 export default function ClientPatientDetail() {
   const nav = useNavigate();
@@ -29,7 +30,7 @@ export default function ClientPatientDetail() {
   const plan = assignment(id);
   const history = sessions(id);
   const patientRequests = requests(id);
-  const scored = history.filter(session => Number.isFinite(avg(session.r)));
+  const scored = history.filter(session => session.mode !== 'replay' && Number.isFinite(avg(session.r)));
   const chosen = history.find(session => (session.sessionId ?? session.d) === selected) ?? history.at(-1);
 
   // Evaluate chosen session with clinical analytics engine
@@ -117,6 +118,7 @@ export default function ClientPatientDetail() {
       <h1 style={{ marginTop: 12 }}>
         Patient: {patient.n} <span className="mut">{patient.id} · {patient.a}</span>
       </h1>
+      <p className="mut">{patient.email} · Current streak: {workoutStreak(history).current} days · Best: {workoutStreak(history).best} days</p>
       <div className="row" style={{ margin: '10px 0', flexWrap: 'wrap' }}>
         <button className="btn" onClick={() => nav(`/client/patients/${id}/assign`)}>Edit assignment</button>
       </div>
@@ -334,7 +336,7 @@ export default function ClientPatientDetail() {
         )) : <p className="mut">No requests.</p>}
       </div>
 
-      <KPIs ss={history} />
+      <KPIs ss={history.filter(session => session.mode !== 'replay')} />
 
       {/* Longitudinal Recovery Trajectory */}
       {trends && Object.keys(trends.exerciseTrends).length > 0 && (

@@ -2,28 +2,32 @@ import { useRecords } from '../records/recordsContext';
 import { avg, calcLongitudinalTrends } from '../metrics';
 import { LineChart, KPIs, DemoBanner } from '../utils';
 import ScoreTimeCharts from '../components/ExerciseCharts';
+import { workoutStreak } from '../patientFlow';
 
 export default function PatientProgress() {
   const { patientId, sessions, assignment, backend } = useRecords();
   const history = sessions(patientId);
+  const streak = workoutStreak(history);
   const plan = assignment(patientId);
-  const scored = history.filter(session => Number.isFinite(avg(session.r)));
+  const measured = history.filter(session => session.mode !== 'replay');
+  const scored = measured.filter(session => Number.isFinite(avg(session.r)));
   const trends = calcLongitudinalTrends(history);
 
   return (
     <>
       <h1>Progress & Recovery</h1>
       {backend === 'local-demo' && <DemoBanner />}
+      <div className="card"><h3>{streak.current} day streak · Best {streak.best} days</h3><p className="mut">One completed live workout per calendar day. Partial sessions and replays are excluded; follow prescribed rest days.</p></div>
 
-      <KPIs ss={history} />
+      <KPIs ss={measured} />
 
       {/* Recovery Highlights */}
       {trends && (
         <div className="card st4">
           <div><b>{trends.totalRepsCompleted}</b>Total Reps</div>
           <div><b>{trends.totalActiveMinutes}m</b>Rehab Active Time</div>
-          <div><b>{history.length}</b>Completed Sessions</div>
-          <div><b>{plan?.items?.length || 3}</b>Active Exercises</div>
+          <div><b>{history.filter(session => session.status === 'completed' && session.mode !== 'replay').length}</b>Completed Sessions</div>
+          <div><b>{plan?.items?.length ?? 0}</b>Active Exercises</div>
         </div>
       )}
 
@@ -72,7 +76,7 @@ export default function PatientProgress() {
         <p className="mut">0–100 movement quality index based on range compliance and tempo smoothness.</p>
       </div>
 
-      <ScoreTimeCharts results={history.flatMap(session => session.r || [])} scoreTitle="Average score for each exercise" timeTitle="Average time in seconds for each exercise" />
+      <ScoreTimeCharts results={measured.flatMap(session => session.r || [])} scoreTitle="Average score for each exercise" timeTitle="Average time in seconds for each exercise" />
 
       <div className="card">
         <h3>Rehabilitation Adherence</h3>
@@ -85,7 +89,7 @@ export default function PatientProgress() {
         <div key={session.sessionId ?? session.d} className="card">
           <div className="row sp">
             <b>{session.d}</b>
-            <span className={`tag ${session.status === 'partial' ? 'warn' : 'ok'}`}>{session.status ?? 'completed'}</span>
+              <span className={`tag ${session.status === 'partial' || session.mode === 'replay' ? 'warn' : 'ok'}`}>{session.mode === 'replay' ? 'Replay · ' : ''}{session.status ?? 'completed'}</span>
           </div>
           <p className="mut" style={{ margin: '6px 0 0' }}>
             {(session.r || []).map(result => `${result.ex}: ${result.t || 0}s`).join(' · ')}

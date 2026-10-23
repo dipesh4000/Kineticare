@@ -6,6 +6,8 @@ import { avg } from '../metrics';
 import { LineChart, DemoBanner } from '../utils';
 import { toast } from '../components/toastBus';
 import Icon from '../components/Icon';
+import WeeklyActivity from '../components/WeeklyActivity';
+import MovementArt from '../components/MovementArt';
 import { clearSessionDraft, loadSessionDraft } from '../session/drafts';
 import { workoutStreak } from '../patientFlow';
 
@@ -63,12 +65,9 @@ export default function PatientHome() {
       </div>
 
       {backend === 'local-demo' && <DemoBanner />}
-      <section className="recovery-banner">
-        <div className="eyebrow">YOUR EVERYDAY, A LITTLE STRONGER</div>
-        <h2>Small steps.<br /><em>Stronger you.</em></h2>
-        <p>Your care plan, your pace.<br />Let’s make room for movement.</p>
-        <button className="btn sm" onClick={() => nav(plan ? '/patient/workout' : '/patient/plan')}>{plan ? 'Start today’s workout' : 'View your care plan'} <span aria-hidden="true">↗</span></button>
-        <img src="/logo-blue.png" alt="" className="recovery-art" />
+      <section className="daily-focus">
+        <div className="focus-copy"><span className="tag">YOUR DAILY MOVEMENT</span><h2>A little stronger.<br />Every day.</h2><p>{plan ? `${plan.items.length} exercises, at your own pace.` : 'Your next step starts with a care plan.'}</p><button className="btn w" onClick={() => nav(plan ? '/patient/workout' : '/patient/plan')}>{plan ? 'Let’s move' : 'My care plan'} <span aria-hidden="true">↗</span></button></div>
+        <MovementArt exercise={plan?.items[0]?.ex} />
       </section>
       <div className="quick-actions" aria-label="Your care shortcuts">
         {[['plan', 'My plan', '/patient/plan'], ['prog', 'Progress', '/patient/prog'], ['fb', 'Feedback', '/patient/fb']].map(([icon, label, path]) =>
@@ -96,6 +95,7 @@ export default function PatientHome() {
         </div>
       )}
 
+      <WeeklyActivity sessions={history} />
       <div className="recovery-stats">
         <div className="card"><span className="eyebrow">STAYING CONSISTENT</span><b>{streak.current}<small> day streak</small></b><p className="mut">Best: {streak.best} days · {streak.practicedToday ? 'Done for today' : 'One step at a time'}</p></div>
         <button className="card" onClick={() => nav('/patient/prog')}><span className="eyebrow">YOUR JOURNEY</span><b>{history.filter(session => session.status === 'completed' && session.mode === 'live').length}<small> workouts</small></b><p className="mut">View your progress <span aria-hidden="true">↗</span></p></button>
@@ -167,41 +167,16 @@ export default function PatientHome() {
         </div>
       )}
 
-      {/* Main Prescribed Rehabilitation Plan Card (Styled like Screen 1 in Reference Image) */}
-      {plan ? (
-        <div className="card prescribed-plan" style={{ textAlign: 'center', padding: '24px 20px', marginBottom: 18 }}>
-          <div
-            style={{
-              width: 58,
-              height: 58,
-              borderRadius: '50%',
-              background: 'var(--pri2)',
-              display: 'grid',
-              placeItems: 'center',
-              margin: '0 auto 14px',
-            }}
-          >
-            <Icon name="plan" size={28} color="var(--pri)" />
-          </div>
-          <h2 style={{ margin: '0 0 6px', fontSize: 20 }}>{plan.name}</h2>
-          <p className="mut" style={{ margin: '0 0 16px', fontSize: 14 }}>
-            {plan.items.length} prescribed exercises · {totalTargetReps} target repetitions with live camera guidance.
-          </p>
-          <button className="btn" style={{ width: '100%', maxWidth: 320 }} onClick={() => nav('/patient/workout')}>
-            Begin Workout
-          </button>
-          <div style={{ marginTop: 12 }}>
-            <button
-              onClick={() => nav('/patient/plan')}
-              style={{ background: 'none', border: 0, color: 'var(--pri)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-            >
-              View exercise instructions →
-            </button>
-          </div>
+      <div className="section-heading"><div><span className="eyebrow">PRESCRIBED FOR YOU</span><h2>Your movement plan</h2></div><button className="text-action" onClick={() => nav('/patient/plan')}>View plan ↗</button></div>
+      {plan ? <>
+        <div className="exercise-preview-grid">
+          {plan.items.map((item, index) => <button className="exercise-preview" key={`${item.ex}-${index}`} onClick={() => nav('/patient/workout')}>
+            <div className="exercise-visual"><span className="exercise-number">{String(index + 1).padStart(2, '0')}</span><MovementArt exercise={item.ex} /><span className="exercise-arrow" aria-hidden="true">↗</span></div>
+            <div className="exercise-caption"><b>{item.ex}</b><span>{item.targetReps} reps · {item.videoOnly ? 'Guided video' : 'Camera guided'}</span></div>
+          </button>)}
         </div>
-      ) : (
-        <div className="card">No active assignment. Contact your clinician.</div>
-      )}
+        <p className="mut plan-footnote">{totalTargetReps} target repetitions · {plan.name}</p>
+      </> : <div className="card">No active assignment. Contact your clinician.</div>}
 
       {/* Doctor Feedback Card */}
       <div className="card">

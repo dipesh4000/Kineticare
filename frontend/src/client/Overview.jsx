@@ -3,6 +3,8 @@ import { useRecords } from '../records/recordsContext';
 import { DemoBanner } from '../utils';
 import { useAuth } from '../auth/authContext';
 import Icon from '../components/Icon';
+import WeeklyActivity from '../components/WeeklyActivity';
+import MovementArt from '../components/MovementArt';
 
 export default function ClientOverview() {
   const nav = useNavigate();
@@ -17,7 +19,10 @@ export default function ClientOverview() {
   return (
     <>
       <div className="page-heading"><div><p className="eyebrow">CARE THAT KEEPS MOVING</p><h1>Welcome back, {user.displayName}</h1><p className="mut">A clearer picture of your patients. A little more progress, together.</p></div><button className="btn" onClick={() => nav('/client/patients')}><Icon name="me" size={18} />Manage patients</button></div>
-      <section className="clinician-banner"><div><span className="eyebrow">CONNECTED REHABILITATION</span><h2>Better movement.<br /><em>More meaningful care.</em></h2><p>Review progress, fine-tune exercise plans, and help your patients take their next step.</p><button className="btn sm" onClick={() => nav('/client/library')}>Explore exercise library <span aria-hidden="true">↗</span></button></div><img src="/logo-blue.png" alt="" /></section>
+      <div className="overview-lead">
+        <section className="care-priority"><div className="section-label"><span>YOUR PRACTICE, AT A GLANCE</span><Icon name="prog" /></div><h2>Good care starts<br />with a clear picture.</h2><p>{needsReview ? `${needsReview} sessions are ready for your review.` : 'You’re up to date on submitted sessions.'} {openRequests ? `${openRequests} patient requests are waiting.` : 'Keep your patients moving forward.'}</p><button className="btn w" onClick={() => nav('/client/patients')}>Review your patients <span aria-hidden="true">↗</span></button><MovementArt /></section>
+        <WeeklyActivity sessions={recent.map(item => item.session)} compact />
+      </div>
       {backend === 'local-demo' && <DemoBanner />}
       <div className="grid overview-stats">
         <div className="card"><span className="stat-icon"><Icon name="me" /></span><div className="stat">{workspace.patients.length}</div>Linked patients</div>
@@ -26,13 +31,14 @@ export default function ClientOverview() {
         <div className="card"><div className="stat" style={{ fontSize: 22, color: 'var(--ok)' }}>Active</div>Workspace status</div>
       </div>
 
-      <h2>Your patients</h2>
-      <div className="card">
+      <div className="dashboard-columns"><section>
+      <div className="section-heading"><h2>Your patients <span className="count-badge">{workspace.patients.length}</span></h2><button className="text-action" onClick={() => nav('/client/patients')}>View all ↗</button></div>
+      <div className="card patient-roster">
         {workspace.patients.map(patient => {
           const latest = sessions(patient.id).at(-1);
           const pending = sessions(patient.id).filter(session => session.reviewStatus !== 'reviewed').length;
           return (
-            <div className="row sp" key={patient.id} style={{ padding: '10px 0', borderBottom: '1px solid #8883' }}>
+            <div className="row sp roster-row" key={patient.id}>
               <div className="row"><div className="av">{patient.n.split(' ').map(part => part[0]).slice(0, 2).join('')}</div><div><b>{patient.n}</b><div className="mut">{patient.a} · last session {latest?.d ?? 'none yet'}</div></div></div>
               <span>{pending > 0 && <span className="tag warn">{pending} to review</span>}{' '}<button className="btn sm" onClick={() => nav(`/client/patients/${patient.id}`)}>Open</button></span>
             </div>
@@ -40,6 +46,12 @@ export default function ClientOverview() {
         })}
       </div>
 
+      </section><section className="review-column">
+      <div className="section-heading"><h2>Next to review</h2><span className="tag">{needsReview} pending</span></div>
+      <div className="card review-queue">
+        {recent.filter(item => item.session.reviewStatus !== 'reviewed').slice(0, 3).map(({ patient, session }) => <button className="review-item" key={`${patient.id}-${session.sessionId ?? session.d}`} onClick={() => nav(`/client/patients/${patient.id}`)}><span className="review-dot" /><span><b>{patient.n}</b><small>{session.d} · {session.status ?? 'Submitted session'}</small></span><span aria-hidden="true">↗</span></button>)}
+        {!needsReview && <div className="queue-empty"><Icon name="prog" size={28} /><h3>All caught up</h3><p className="mut">Submitted sessions will appear here when they need your attention.</p></div>}
+      </div>
       {openRequests > 0 && <>
         <h2>Patient requests</h2>
         <div className="card">
@@ -51,6 +63,8 @@ export default function ClientOverview() {
           )))}
         </div>
       </>}
+      <button className="library-shortcut" onClick={() => nav('/client/library')}><span className="shortcut-icon"><Icon name="workout" size={24} /></span><span><b>Your exercise studio</b><small>References, movements & care plans</small></span><span aria-hidden="true">↗</span></button>
+      </section></div>
 
       <h2>Recent sessions</h2>
       <div className="card">

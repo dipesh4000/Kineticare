@@ -32,51 +32,21 @@ The project bridges the distance between instructions given in a clinical consul
 
 ---
 
+## Use Case
+
+Kineticare supports rehabilitation exercises at home between clinician appointments. Clinicians onboard patients, assign exercise plans and reference demonstrations, then review session results and send feedback. Patients follow their plan, use camera guidance to track repetitions and movement quality, monitor progress, and message their clinician.
+
 ## System Architecture
 
+- **Frontend:** A React single-page app with separate patient and clinician routes. TensorFlow.js runs MoveNet in the browser through WebGL; exercise rules turn pose landmarks into repetitions, range-of-motion metrics, and feedback. Live camera frames stay on the device.
+- **Records and authentication:** Demo mode stores records in browser localStorage and reference media in IndexedDB. With Firebase configured, Firebase Authentication handles sign-in, Firestore synchronizes clinical records, and Cloud Storage stores clinician reference recordings.
+- **Backend:** A Node.js/Express API serves exercise catalog, session analytics, SOAP-note generation, and exercise issue-reporting endpoints under `/api`. The frontend can use `VITE_API_BASE_URL` for a separate API host and falls back to shared local analytics when the API is unavailable. Express can also serve the built frontend.
+
 ```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            MOBILE CLIENT (APK / PWA)                        │
-│                                                                             │
-│   ┌─────────────────────┐   ┌──────────────────────┐   ┌────────────────┐   │
-│   │ WebGL Camera Stream │──▶│ MoveNet Lightning    │──▶│ Temporal EMA   │   │
-│   │ (On-Device 30fps)   │   │ Pose Estimation      │   │ Smoothing &    │   │
-│   └─────────────────────┘   └──────────────────────┘   │ Side-Profile   │   │
-│                                                        │ Alignment      │   │
-│                                                        └───────┬────────┘   │
-│                                                                │            │
-│   ┌─────────────────────┐   ┌──────────────────────┐           ▼            │
-│   │ Patient / Clinician │◀──│ Repetition Engine &  │◀──────────┘            │
-│   │ UI Views & Prompts  │   │ Biomechanical Metrics│                        │
-│   └──────────┬──────────┘   └──────────────────────┘                        │
-└──────────────┼──────────────────────────────────────────────────────────────┘
-               │
-               │ HTTPS JSON API (/api/*)
-               │ Configured via VITE_API_BASE_URL
-               ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    BACKEND SERVER (Vercel / Node.js)                        │
-│                                                                             │
-│   ┌───────────────────┐    ┌────────────────────┐    ┌──────────────────┐   │
-│   │ /api/exercises    │    │ /api/analytics     │    │ /api/reports     │   │
-│   │ Dynamic Registry  │    │ SOAP Notes & ROM   │    │ Issue Logging &  │   │
-│   └─────────┬─────────┘    └─────────┬──────────┘    │ Video Staging    │   │
-│             │                        │               └────────┬─────────┘   │
-│             └────────────────┬───────┴────────────────────────┘             │
-│                              ▼                                              │
-│                 ┌──────────────────────────┐                                │
-│                 │ Drizzle ORM Data Access  │                                │
-│                 └────────────┬─────────────┘                                │
-└──────────────────────────────┼──────────────────────────────────────────────┘
-                               ▼
-               ┌─────────────────────────────┐
-               │    NEON POSTGRESQL CLOUD    │
-               │  - users (Shyam & Dr. Aditi)│
-               │  - assignments & plans      │
-               │  - exercise_catalog         │
-               │  - exercise_sessions        │
-               │  - clinical_reports         │
-               └─────────────────────────────┘
+Camera → MoveNet (browser/WebGL) → Exercise engine → Patient / clinician UI
+                                                        ├─ Demo: localStorage + IndexedDB
+                                                        ├─ Connected: Firebase Auth + Firestore + Storage
+                                                        └─ Express /api: catalog, analytics, SOAP, reports
 ```
 
 ---
@@ -140,16 +110,21 @@ flowchart LR
 
 ---
 
-## Technology Stack
+## Technology Stack and Dependencies
 
-| Layer | Technology | Purpose |
-| --- | --- | --- |
-| **Client UI** | React 19, Vite, Tailwind CSS | Responsive patient & clinician white-mode interface |
-| **Mobile PWA** | Web App Manifest, Service Worker | Installable APK via PWABuilder / Bubblewrap TWA |
-| **Pose Estimation** | TensorFlow.js, MoveNet Lightning | 30+ FPS on-device computer vision (WebGL) |
-| **Backend API** | Node.js, Express REST API | Exercise catalog, session evaluation, and issue logging |
-| **Database** | Neon Cloud PostgreSQL + Drizzle ORM | Scalable serverless relational database |
-| **Security & Privacy** | On-device processing | Zero video uploads across network (HIPAA-friendly) |
+| Dependency | Purpose |
+| --- | --- |
+| React 19, React DOM, React Router 7 | Patient and clinician interfaces and routing |
+| TensorFlow.js 4, pose-detection 2, WebGL backend | On-device MoveNet pose estimation |
+| Firebase 13 | Authentication, Firestore records, and reference media storage |
+| Express 5 on Node.js | REST API and production static-file serving |
+| Vite 8, React Vite plugin, Tailwind CSS 4 | Development server, builds, and styling |
+| ESLint 10, Node test runner | Linting and exercise/patient-flow checks |
+| Firebase CLI and rules-unit-testing | Firestore emulator security-rule tests |
+
+Use Node.js and npm to install dependencies with `npm install`. Run `npm run dev` for the frontend, `npm run build` to build it, and `npm start` for Express. Checks are available through `npm test` and `npm run lint`.
+
+The `backend/db/` directory contains Neon PostgreSQL/Drizzle scaffolding, but its packages are not declared in the current manifests and the API routes do not use it. Current application records use the browser demo workspace or Firebase.
 
 ---
 
@@ -188,11 +163,11 @@ For the complete, step-by-step deployment instructions, refer to **[DEPLOYMENT.m
 
 ### Summary:
 
-1. **Database Setup (Neon PostgreSQL)**:
-   - Create a free database on [neon.tech](https://neon.tech) and copy your `DATABASE_URL`.
-   - The Drizzle ORM schema in `backend/db/schema.js` manages all tables with automatic local fallback.
+1. **Connected Records (Firebase)**:
+   - Configure the frontend's `VITE_FIREBASE_*` variables for Authentication, Firestore, and Cloud Storage, and deploy the repository's security rules.
+   - Without Firebase configuration, the app uses browser-local demo records. Neon/Drizzle scaffolding requires additional dependencies and API integration before use.
 2. **Backend Deployment (Vercel)**:
-   - Deploy `backend/` to Vercel with environment variable `DATABASE_URL`.
+   - Deploy `backend/` to Vercel for the Express API.
    - Pre-configured `backend/vercel.json` serves the API at `https://your-backend.vercel.app/api/*`.
 3. **Frontend & Mobile APK**:
    - Set `VITE_API_BASE_URL=https://your-backend.vercel.app` in `frontend/.env.production`.

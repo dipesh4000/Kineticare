@@ -42,7 +42,7 @@ export default function PatientHome() {
       {/* Top Clinical Header */}
       <div className="row sp" style={{ marginBottom: 14 }}>
         <div>
-          <p className="hello">Good to see you, <b>{user.displayName.split(' ')[0]} <span className="greeting-spark" aria-hidden="true">✦</span></b></p>
+          <p className="hello">Good to see you, <b>{user.displayName.split(' ')[0]}</b></p>
           <p className="mut" style={{ fontSize: 13, marginTop: 2 }}>
             {new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date())}
           </p>
@@ -73,8 +73,29 @@ export default function PatientHome() {
       <div className="quick-actions" aria-label="Your care shortcuts">
         {[['plan', 'My plan', '/patient/plan'], ['prog', 'Progress', '/patient/prog'], ['fb', 'Feedback', '/patient/fb']].map(([icon, label, path]) =>
           <button key={path} onClick={() => nav(path)}><span><Icon name={icon} size={22} /></span>{label}</button>)}
-        <button onClick={() => setContactOpen(true)}><span><Icon name="call" size={22} /></span>Contact</button>
+        <button aria-expanded={contactOpen} aria-controls="contact-message" onClick={() => setContactOpen(open => !open)}><span><Icon name="call" size={22} /></span>Contact</button>
       </div>
+      {/* Message Drawer */}
+      {contactOpen && (
+        <div id="contact-message" className="card" style={{ borderLeft: '4px solid var(--pri)' }}>
+          <h3 id="contact-message-label">Message your clinician</h3>
+          <textarea
+            aria-labelledby="contact-message-label"
+            rows="3"
+            value={message}
+            onChange={event => setMessage(event.target.value)}
+            placeholder="Describe any symptoms, pain, or questions"
+          />
+          <div className="row" style={{ marginTop: 10 }}>
+            <button className="btn" onClick={contactClinician}>Send message</button>
+            <button className="btn s" onClick={() => setContactOpen(false)}>Cancel</button>
+          </div>
+          <p className="mut" style={{ fontSize: 12, marginTop: 6 }}>
+            Non-urgent clinical communication. For emergencies, please call emergency services immediately.
+          </p>
+        </div>
+      )}
+
       <div className="recovery-stats">
         <div className="card"><span className="eyebrow">STAYING CONSISTENT</span><b>{streak.current}<small> day streak</small></b><p className="mut">Best: {streak.best} days · {streak.practicedToday ? 'Done for today' : 'One step at a time'}</p></div>
         <button className="card" onClick={() => nav('/patient/prog')}><span className="eyebrow">YOUR JOURNEY</span><b>{history.filter(session => session.status === 'completed' && session.mode === 'live').length}<small> workouts</small></b><p className="mut">View your progress <span aria-hidden="true">↗</span></p></button>
@@ -229,26 +250,6 @@ export default function PatientHome() {
           <div className="card">No saved sessions yet. Complete your first workout to see results here.</div>
         )}
       </div>
-
-      {/* Message Drawer */}
-      {contactOpen && (
-        <div className="card" style={{ borderLeft: '4px solid var(--pri)' }}>
-          <h3>Message your clinician</h3>
-          <textarea
-            rows="3"
-            value={message}
-            onChange={event => setMessage(event.target.value)}
-            placeholder="Describe any symptoms, pain, or questions"
-          />
-          <div className="row" style={{ marginTop: 10 }}>
-            <button className="btn" onClick={contactClinician}>Send message</button>
-            <button className="btn s" onClick={() => setContactOpen(false)}>Cancel</button>
-          </div>
-          <p className="mut" style={{ fontSize: 12, marginTop: 6 }}>
-            Non-urgent clinical communication. For emergencies, please call emergency services immediately.
-          </p>
-        </div>
-      )}
 
       {/* Score Trend */}
       {scored.length > 0 && (

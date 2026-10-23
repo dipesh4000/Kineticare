@@ -450,6 +450,7 @@ th { font-weight: 600; color: var(--mut); font-size: 13px; text-transform: upper
 .quick-actions button:nth-child(2) > span { background: #f8f0e0; color: #976a30; }
 .quick-actions button:nth-child(3) > span { background: #edf0f8; color: #687a9b; }
 .quick-actions button:hover > span { background: #dcecf9; }
+.quick-actions button[aria-expanded="true"] > span { background: var(--pri-dark); color: #fff; }
 .recovery-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .recovery-stats .card { margin: 0; padding: 16px 14px; text-align: left; background: #edf3ec; }
 .recovery-stats .card:nth-child(2) { background: #f4f0e8; cursor: pointer; }

@@ -54,3 +54,7 @@ Deploy Express and the built frontend under the same HTTPS origin. Keep Privy se
 
 The user manages all Git operations.
 
+
+## Knowledge-grounded chat and animation previews
+
+Clinicians can open Exercise Library to ask Gemini with retrieved textbook evidence, inspect source citations and render a labelled mini-squat engineering preview as a downloadable video. The supplied extraction prompt is included verbatim as a system instruction, followed by runtime instructions. Other variations remain text-only until compatible reviewed motions exist. This feature does not approve exercises or enable patient assignment. See [setup, endpoints and verification](docs/GEMINI_KNOWLEDGE_ANIMATION.md).

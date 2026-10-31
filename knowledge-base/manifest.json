@@ -119,15 +119,19 @@
       22
     ],
     "clinical_review": "pending",
-    "animation_assets": "not_created",
-    "gemini_connection": "context-and-contract-only; no external API call"
+    "animation_assets": "Approved assets absent; separate pending-review Three.js mini-squat engineering preview supports local video export.",
+    "gemini_connection": "Clinician-only Node runtime implemented; live gemini-3.8-flash response and Atlas connectivity verified. Authenticated UI flow still requires user login."
   },
   "integration_paths": {
     "context_cli": "../scripts/query_knowledge_base.py",
     "gemini_system_prompt": "generation/gemini-system-instructions.md",
     "generation_schema": "schemas/generation-plan.schema.json",
     "exercise_schema": "schemas/exercise.schema.json",
-    "motion_registry": "animation/motion-registry.json"
+    "motion_registry": "animation/motion-registry.json",
+    "node_context_service": "../backend/services/exerciseKnowledge.js",
+    "node_chat_endpoint": "../backend/routes/knowledgeChat.js",
+    "supplied_system_prompt": "generation/user-system-prompt.md",
+    "runtime_guide": "../docs/GEMINI_KNOWLEDGE_ANIMATION.md"
   },
   "extraction_strategy": "Exercise-first vertical slices; original chapter hierarchy retained. Full chapter coverage remains pending."
 }

@@ -118,3 +118,12 @@ test('missing provider configuration never calls Gemini or a database', async ()
     assert.equal(result.status, 503);
   });
 });
+
+test('production authentication rejects anonymous requests before provider or database access', async () => {
+  const router = createKnowledgeChatRouter({ database: async () => { throw new Error('Must not connect'); }, generate: async () => { throw new Error('Must not generate'); }, env });
+  await serve(router, async base => {
+    assert.equal((await fetch(base + '/catalog')).status, 401);
+    assert.equal((await fetch(base)).status, 401);
+    assert.equal((await fetch(base, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'mini squat', consent: true }) })).status, 401);
+  });
+});

@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-31",
+  "gemini_live_verification": {
+    "status": "passed",
+    "model": "gemini-3.8-flash",
+    "thinking_level": "LOW",
+    "exercise_id": "EX-KU-000001",
+    "claims": 4,
+    "plan_status": "needs_review",
+    "retrieved_citations_validated": true
+  },
+  "atlas_connectivity": "passed",
+  "browser_video_export": {
+    "status": "passed",
+    "width": 960,
+    "height": 600,
+    "decoded_frames": 156,
+    "format": "webm",
+    "scope": "Illustrative mini-squat engineering preview; clinical review pending"
+  },
+  "authenticated_live_ui_flow": "not_verified_requires_user_login",
+  "approved_motion_generation": "blocked_no_reviewed_motion_assets",
+  "checks": {
+    "frontend_tests": 22,
+    "backend_tests": 12,
+    "knowledge_tests": 26,
+    "frontend_lint": "passed",
+    "production_build": "passed"
+  }
+}

@@ -20,5 +20,11 @@ Use [current Privy / Atlas / Gemini configuration](docs/PRIVY_ATLAS_SETUP.md). F
 
 The root deployment uses the serverless API entry without starting a listening server. `backend/vercel.json` is an older standalone backend configuration and is not used by this root deployment. The local launcher remains for development.
 
+## Android app installation
+
+On the deployed HTTPS site, Android visitors see an install card before login. Tapping **Install App** opens the browser's installation dialog when available; otherwise the card explains Chrome's **Add to home screen / Install app** menu. The browser requires a user tap and controls when native installation is available. Closing the card hides it for the current tab session, and installed standalone launches hide it automatically. The patient profile install button also uses the same browser event.
+
+The app installs as a PWA with a home-screen icon and standalone window. It requires an internet connection for exercises and account services. The service worker provides a basic offline message and does not cache account data or API responses. To verify, open the deployed site in Android Chrome outside an in-app browser, tap Install App, confirm installation, and launch Kineticare from the home screen. Native installation must be checked on the deployed HTTPS origin; the development server does not register the service worker.
+
 Live email and cloud checks need configured credentials. Real-patient release also needs clinical validation, privacy/retention decisions, dependency review, backups and deployment security verification.
 

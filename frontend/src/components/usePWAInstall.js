@@ -1,56 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
+import { getInstallSnapshot, installApp, subscribeToInstall } from './pwaInstall';
 
 export function usePWAInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isInstalled, setIsInstalled] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return Boolean(
-      window.matchMedia?.('(display-mode: standalone)').matches ||
-      window.navigator?.standalone
-    );
-  });
-  const [isIOS] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    return /iphone|ipad|ipod/.test(userAgent);
-  });
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = e => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-      setDeferredPrompt(null);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
-
-  const install = async () => {
-    if (!deferredPrompt) return false;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setIsInstalled(true);
-      setDeferredPrompt(null);
-      return true;
-    }
-    return false;
-  };
+  const { prompt, installed } = useSyncExternalStore(subscribeToInstall, getInstallSnapshot, getInstallSnapshot);
+  const userAgent = typeof window === 'undefined' ? '' : window.navigator.userAgent;
 
   return {
-    isInstallable: !!deferredPrompt,
-    isInstalled,
-    isIOS,
-    install,
+    isInstallable: Boolean(prompt),
+    isInstalled: installed,
+    isIOS: /iphone|ipad|ipod/i.test(userAgent),
+    isAndroid: /android/i.test(userAgent),
+    install: installApp,
   };
 }

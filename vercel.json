@@ -4,6 +4,12 @@
   "buildCommand": "npm run build",
   "installCommand": "npm ci --include=dev --include=optional",
   "outputDirectory": "frontend/dist",
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    }
+  ],
   "functions": {
     "api/index.js": {
       "maxDuration": 60,

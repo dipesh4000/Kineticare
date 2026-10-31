@@ -1,5 +1,4 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 
 const root = new URL('../../knowledge-base/', import.meta.url);
@@ -102,4 +101,3 @@ export function providerSchema(value = generationSchema) {
   return Object.fromEntries(Object.entries(value).filter(([key]) => allowed.has(key)).map(([key, child]) => [key, key === 'properties' ? Object.fromEntries(Object.entries(child).map(([name, definition]) => [name, providerSchema(definition)])) : typeof child === 'object' ? providerSchema(child) : child]));
 }
 
-export const knowledgeRootPath = fileURLToPath(root);

@@ -1,0 +1,98 @@
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+
+# Logs and debugging
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs and compiled files
+dist/
+build/
+out/
+target/
+coverage/
+*.class
+*.o
+*.so
+*.dll
+*.exe
+
+# Temporary files and caches
+tmp/
+temp/
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.svelte-kit/
+__pycache__/
+*.py[cod]
+
+# Python virtual environments
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Package manager files (optional exclusions)
+# Uncomment if you intentionally don't want to track these
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Test and coverage artifacts
+.nyc_output/
+htmlcov/
+
+# Local databases
+*.sqlite
+*.sqlite3
+*.db
+
+# Backup files
+*.bak
+*.old
+*.orig
+
+# OS and filesystem artifacts
+.Trash-*
+.fseventsd
+.Spotlight-V100
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Local configuration
+*.local

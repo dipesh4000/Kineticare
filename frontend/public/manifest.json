@@ -1,0 +1,32 @@
+{
+  "id": "/",
+  "name": "Kineticare Physical Therapy",
+  "short_name": "Kineticare",
+  "description": "Camera-guided home exercise connecting patients and clinicians between appointments with real-time pose tracking.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F7F8F5",
+  "theme_color": "#007ACC",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-blue.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

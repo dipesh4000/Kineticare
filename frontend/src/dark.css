@@ -1,0 +1,31 @@
+/* Theme controls and the dark variant of the wellness palette. */
+.portal-tools { display: flex; align-items: center; gap: 18px; }
+.theme-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-width: 42px; min-height: 42px; padding: 10px 12px; border: 1px solid var(--card-border); border-radius: 11px; background: var(--card); color: var(--ink-secondary); cursor: pointer; font-size: 11px; transition: background 180ms ease, color 180ms ease, transform 180ms ease; }
+.theme-toggle:hover { color: var(--pri); background: var(--pri2); }
+.theme-toggle:active { transform: scale(.96); }
+.portal-tools .theme-toggle span { display: none; }
+.login-page { position: relative; }
+.login-theme { position: absolute; top: 0; right: 32px; z-index: 2; }
+:root[data-theme=dark] {
+  --bg: #16151b; --card: #211f28; --soft: #2b2833; --card-border: #37333f;
+  --ink: #f2eff7; --ink-secondary: #cbc5d5; --mut: #aaa2b7;
+  --pri: #ad9dff; --pri-dark: #9380f2; --pri-light: #c4b8ff; --pri2: #39304f;
+  --ok: #9bdd95; --okb: #253a2a; --warn: #edc18a; --warnb: #403222;
+  --bad: #ef898d; --badb: #45272e;
+}
+[data-theme=dark] .btn { background: #eeeaf5; color: #211f28; border-color: transparent; }
+[data-theme=dark] .btn:hover:not(:disabled) { background: #d7cfe8; }
+[data-theme=dark] .btn.s,[data-theme=dark] .btn.w { background: var(--soft); color: var(--ink); border-color: var(--card-border); }
+[data-theme=dark] .btn.s:hover:not(:disabled),[data-theme=dark] .btn.w:hover:not(:disabled) { background: var(--pri2); }
+[data-theme=dark] .btn.d { background: #a53745; color: #fff; }
+[data-theme=dark] .overview-stats .card:nth-child(2) { background: var(--pri2); }
+[data-theme=dark] .overview-stats .card:nth-child(3) { background: var(--okb); }
+[data-theme=dark] .overview-stats .card:nth-child(4) { background: var(--warnb); }
+[data-theme=dark] .nav { background: #211f28f5; }
+[data-theme=dark] .brand-mark { background: #e9e4f2; }
+@media(max-width:800px) { .login-theme { top: 22px; right: 22px; } .login-theme .theme-toggle span { display: none; } }
+@media(max-width:450px) { .portal-tools { gap: 8px; } .portal-tools .brand-caption { display: none; } }
+@media print {
+  :root[data-theme=dark] { --ink: #202023; --mut: #777480; --card-border: #eeedf2; --card: #fff; --soft: #f5f4f8; color-scheme: light; }
+  .theme-toggle { display: none; }
+}

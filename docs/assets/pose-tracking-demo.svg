@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="660" viewBox="0 0 1200 660" role="img" aria-labelledby="title desc">
+<title id="title">Kineticare — movement, made visible</title>
+<desc id="desc">Illustrated arm raise with synchronized shoulder, elbow and wrist landmarks. A six-second loop shows rest, raise, hold, lower and a completed repetition. This is an illustration, not recorded inference.</desc>
+<defs>
+ <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#071e27"/><stop offset="1" stop-color="#103f48"/></linearGradient>
+ <linearGradient id="shirt" x2="1" y2="1"><stop stop-color="#209d9f"/><stop offset="1" stop-color="#146b79"/></linearGradient>
+ <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#76ced0" stroke-opacity=".055"/></pattern>
+ <style>
+ text{font-family:Arial,Helvetica,sans-serif}
+ .muted{fill:#9fbfc7;font-size:14px}
+ .label{fill:#99c9cc;font-size:11px;letter-spacing:2px;font-weight:700}
+ .skeleton{fill:none;stroke:#b2fff0;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+ .joint{fill:#dbfff5;stroke:#23bfae;stroke-width:2}
+ .left{animation:left 6s infinite;transform-origin:337px 245px}
+ .right{animation:right 6s infinite;transform-origin:423px 245px}
+ @keyframes left{0%,12%,100%{transform:rotate(-8deg)}40%,52%{transform:rotate(90deg)}82%{transform:rotate(-8deg)}}
+ @keyframes right{0%,12%,100%{transform:rotate(8deg)}40%,52%{transform:rotate(-90deg)}82%{transform:rotate(8deg)}}
+ .phase{fill:#edfffa;font-size:23px;font-weight:700}
+ .raise{animation:raise 6s infinite}.hold{animation:hold 6s infinite}.lower{animation:lower 6s infinite}.rest{animation:rest 6s infinite}
+ @keyframes rest{0%,11%,83%,100%{opacity:1}12%,82%{opacity:0}}
+ @keyframes raise{0%,11%,40%,100%{opacity:0}12%,39%{opacity:1}}
+ @keyframes hold{0%,39%,53%,100%{opacity:0}40%,52%{opacity:1}}
+ @keyframes lower{0%,52%,83%,100%{opacity:0}53%,82%{opacity:1}}
+ .range{transform:scaleX(.05);transform-origin:826px 314px;animation:range 6s infinite}
+ @keyframes range{0%,12%,82%,100%{transform:scaleX(.05)}40%,52%{transform:scaleX(1)}}
+ .rep0{animation:rep0 6s infinite}.rep1{animation:rep1 6s infinite}
+ @keyframes rep0{0%,81%{opacity:1}82%,100%{opacity:0}}
+ @keyframes rep1{0%,81%{opacity:0}82%,100%{opacity:1}}
+ @media(prefers-reduced-motion:reduce){.left,.right,.phase,.range,.rep0,.rep1{animation:none}.raise,.hold,.lower,.rep1{opacity:0}}
+ </style>
+</defs>
+<rect width="1200" height="660" rx="24" fill="url(#bg)"/>
+<rect width="1200" height="660" rx="24" fill="url(#grid)"/>
+<text x="42" y="48" fill="#83e7db" font-size="13" font-weight="700" letter-spacing="3">KINETICARE / MOTION STUDIO</text>
+<text x="42" y="96" fill="#f1fcfb" font-size="34" font-weight="700">Every movement tells a story.</text>
+<text x="42" y="126" class="muted">Guided exercise. Visible progress. A conversation with your clinician.</text>
+<!-- camera viewport -->
+<rect x="32" y="156" width="730" height="440" rx="18" fill="#091e28" stroke="#28505b"/>
+<rect x="54" y="176" width="162" height="28" rx="14" fill="#123b42"/>
+<circle cx="69" cy="190" r="4" fill="#7cf5cf"/>
+<text x="82" y="194" fill="#a2f4de" font-size="11" font-weight="700" letter-spacing="1">LANDMARKS VISIBLE</text>
+<text x="588" y="195" class="label">FRONT VIEW</text>
+<path d="M60 235v-18h18 M716 217h18v18 M60 544v18h18 M716 562h18v-18" fill="none" stroke="#38737b" stroke-width="2"/>
+<ellipse cx="380" cy="568" rx="100" ry="12" fill="#04121c"/>
+<!-- legs and shoes -->
+<path d="M355 393L350 469L346 553 M403 393L409 469L414 553" fill="none" stroke="#293b51" stroke-width="32" stroke-linecap="round"/>
+<path d="M346 553h-19 M414 553h19" fill="none" stroke="#d2e7e6" stroke-width="17" stroke-linecap="round"/>
+<!-- arms rotate as rigid, connected limbs -->
+<g class="left">
+ <path d="M337 245L337 296" stroke="#259397" stroke-width="28" stroke-linecap="round"/>
+ <path d="M337 296L337 351L337 403" fill="none" stroke="#cda084" stroke-width="19" stroke-linecap="round"/>
+ <path d="M337 245L337 325L337 403" class="skeleton"/>
+ <circle cx="337" cy="325" r="5" class="joint"/><circle cx="337" cy="403" r="5" class="joint"/>
+</g>
+<g class="right">
+ <path d="M423 245L423 296" stroke="#259397" stroke-width="28" stroke-linecap="round"/>
+ <path d="M423 296L423 351L423 403" fill="none" stroke="#cda084" stroke-width="19" stroke-linecap="round"/>
+ <path d="M423 245L423 325L423 403" class="skeleton"/>
+ <circle cx="423" cy="325" r="5" class="joint"/><circle cx="423" cy="403" r="5" class="joint"/>
+</g>
+<!-- torso, neck, face -->
+<path d="M337 234Q380 216 423 234L411 333L410 396Q380 409 350 396L349 333Z" fill="url(#shirt)"/>
+<path d="M369 216v14q11 10 22 0v-14" fill="#cda084"/>
+<ellipse cx="380" cy="194" rx="27" ry="33" fill="#d8ae91"/>
+<path d="M353 190q-7-37 24-37 36-4 31 38l-10-19q-23 11-43 4Z" fill="#253344"/>
+<path d="M372 208q8 5 16 0" stroke="#946955" stroke-width="2" fill="none" stroke-linecap="round"/>
+<!-- tracked torso and legs -->
+<path d="M337 245H423L403 389H357ZM357 389L350 469L346 550 M403 389L409 469L414 550" class="skeleton" opacity=".85"/>
+<g class="joint"><circle cx="337" cy="245" r="6"/><circle cx="423" cy="245" r="6"/><circle cx="357" cy="389" r="6"/><circle cx="403" cy="389" r="6"/><circle cx="350" cy="469" r="5"/><circle cx="409" cy="469" r="5"/><circle cx="346" cy="550" r="5"/><circle cx="414" cy="550" r="5"/><circle cx="370" cy="191" r="3"/><circle cx="390" cy="191" r="3"/><circle cx="380" cy="201" r="3"/></g>
+<!-- telemetry panel -->
+<rect x="790" y="156" width="378" height="440" rx="18" fill="#10323d" stroke="#2b525b"/>
+<text x="822" y="195" class="label">BILATERAL ARM RAISE</text>
+<g class="phase"><text x="822" y="235" class="rest">Ready at rest</text><text x="822" y="235" class="raise" opacity="0">Raise with control</text><text x="822" y="235" class="hold" opacity="0">Target reached</text><text x="822" y="235" class="lower" opacity="0">Return slowly</text></g>
+<path d="M822 261H1136" stroke="#31545f"/>
+<text x="822" y="291" class="label">SHOULDER ELEVATION</text>
+<rect x="826" y="308" width="300" height="12" rx="6" fill="#254953"/>
+<rect x="826" y="308" width="300" height="12" rx="6" fill="#79e8ce" class="range"/>
+<text x="822" y="345" class="muted">Rest</text><text x="1084" y="345" class="muted">Target</text>
+<rect x="822" y="370" width="144" height="98" rx="12" fill="#0a2631"/>
+<rect x="982" y="370" width="154" height="98" rx="12" fill="#0a2631"/>
+<text x="838" y="396" class="label">REPETITIONS</text>
+<text x="838" y="443" fill="#f1fcfb" font-size="32" font-weight="700" class="rep0">0 / 5</text>
+<text x="838" y="443" fill="#79e8ce" font-size="32" font-weight="700" class="rep1" opacity="0">1 / 5</text>
+<text x="998" y="396" class="label">POSE MODEL</text><text x="998" y="436" fill="#f1fcfb" font-size="23" font-weight="700">MoveNet</text>
+<circle cx="830" cy="506" r="4" fill="#79e8ce"/><text x="845" y="511" class="muted">Landmarks follow the movement</text>
+<circle cx="830" cy="537" r="4" fill="#79e8ce"/><text x="845" y="542" class="muted">Camera frames stay on the device</text>
+<text x="42" y="630" fill="#7fa4af" font-size="12">ILLUSTRATED WORKFLOW · LOOP RESETS AFTER EACH REP · NOT A RECORDING OF MODEL INFERENCE</text>
+</svg>

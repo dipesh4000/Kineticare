@@ -1,0 +1,8 @@
+{
+  "name": "Kineticare",
+  "description": "Camera-guided home exercise connecting patients and clinicians between appointments with real-time pose tracking and clinician feedback.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -43,6 +43,9 @@ export default function ClientLayout() {
         <div className="workspace-bar"><span>YOUR CARE WORKSPACE</span><span>{new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date())}</span></div>
         <PageMotion><Outlet /></PageMotion>
       </main>
+      <nav className="nav clinician-mobile-nav" aria-label="Mobile workspace navigation" style={{ '--active-tab': Math.max(0, TABS.findIndex(([key]) => key === active)) }}>
+        {TABS.map(([key, label, icon]) => <button key={key} className={active === key ? 'on' : ''} aria-current={active === key ? 'page' : undefined} onClick={() => nav(`/client/${key}`)}><Icon name={icon} size={22} /><span className="label">{key === 'library' ? 'Exercises' : label}</span></button>)}
+      </nav>
     </div>
   );
 }

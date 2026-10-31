@@ -1,8 +1,33 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { miniSquatPose, validateIllustrativeDescriptor } from '../src/exercise/illustrativeMotion.js';
+import { miniSquatPose, sideArmRaisePose, validateIllustrativeDescriptor } from '../src/exercise/illustrativeMotion.js';
+import { angleAt } from '../src/vision/geometry.js';
 
 const distance = (a, b) => Math.hypot(...a.map((value, index) => value - b[index]));
+
+test('arm raise animation preserves arm lengths, planted feet, bilateral angles and full return', () => {
+  const initial = sideArmRaisePose(0);
+  for (const target of [30, 45, 75, 90, 120, 180]) {
+    for (let time = 0; time < 6; time += 0.05) {
+      const pose = sideArmRaisePose(time, 6, target);
+      for (const side of ['left', 'right']) {
+        const p = pose.points;
+        assert.deepEqual(p[`${side}Ankle`], initial.points[`${side}Ankle`]);
+        assert.ok(Math.abs(distance(p[`${side}Shoulder`], p[`${side}Elbow`]) - 0.29) < 1e-8);
+        const xy = name => ({ x: p[name][0], y: p[name][1] });
+        const angle = angleAt(xy(`${side}Hip`), xy(`${side}Shoulder`), xy(`${side}Elbow`));
+        // The display hips are narrower than the shoulders; measure against a vertical torso axis.
+        const shoulder = xy(`${side}Shoulder`);
+        const abduction = angleAt({ x: shoulder.x, y: shoulder.y - 1 }, shoulder, xy(`${side}Elbow`));
+        assert.ok(Number.isFinite(angle));
+        assert.ok(Math.abs(abduction - pose.shoulderDegrees) < 1e-5);
+      }
+    }
+    assert.equal(sideArmRaisePose(3, 6, target).shoulderDegrees, target);
+    assert.deepEqual(sideArmRaisePose(6, 6, target).points, initial.points);
+  }
+  for (const args of [[0, 6, 181], [0, 6, 0], [0, 2, 75], [NaN, 6, 75]]) assert.throws(() => sideArmRaisePose(...args));
+});
 test('illustrative squat preserves planted feet, segment lengths and requested knee angle', () => {
   const initial = miniSquatPose(0, 6, 45);
   for (let time = 0; time <= 6; time += 0.1) {

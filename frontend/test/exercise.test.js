@@ -2,12 +2,75 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { angleAt } from '../src/vision/geometry.js';
 import { armRaiseAngle, squatKneeAngle, toeTouchHipAngle } from '../src/exercise/definitions.js';
-import { isSideExercise, measureAngle, movementSignal } from '../src/exercise/measure.js';
+import { isSideExercise, measureAngle, movementSignal, calibratedProgress, repConfig } from '../src/exercise/measure.js';
 import { advanceRep, createRepState } from '../src/exercise/engine.js';
 import { calibrateRest } from '../src/exercise/reference.js';
 import { scoreRep, scoreRepetitions } from '../src/exercise/score.js';
+import { POSE_CONNECTIONS, poseSummary, shoulderAngles, smoothPose } from '../src/vision/poseOverlay.js';
 
 const point = (name, x, y, score = 1) => ({ name, x, y, score });
+
+test('detailed overlay covers hands, heels, toes and face without reporting missing landmarks as tracked', () => {
+  const names = new Set(POSE_CONNECTIONS.flat());
+  for (const side of ['left', 'right']) for (const joint of ['thumb', 'index', 'pinky', 'heel', 'foot_index', 'eye_inner', 'eye_outer', 'ear']) assert.ok(names.has(`${side}_${joint}`));
+  const pose = { keypoints: [point('nose', 20, 30, 0.9), point('left_wrist', 10, 20, 0.1), point('right_wrist', NaN, 20, 0.9)] };
+  assert.deepEqual(poseSummary(pose), { visible: 1, total: 3, confidence: 90 });
+  assert.deepEqual(poseSummary(null), { visible: 0, total: 0, confidence: 0 });
+});
+
+test('pose smoothing reduces jitter without fabricating missing or invalid joints', () => {
+  const before = { keypoints: [point('left_elbow', 10, 20)] };
+  const current = { keypoints: [point('left_elbow', 20, 30), point('right_elbow', 40, 50, 0.1)] };
+  const smoothed = smoothPose(current, before, 0.5);
+  assert.deepEqual(smoothed.keypoints[0], point('left_elbow', 15, 25));
+  assert.deepEqual(smoothed.keypoints[1], current.keypoints[1]);
+  assert.equal(smoothPose(null, before), null);
+  assert.equal(poseSummary({ keypoints: [point('left_elbow', NaN, 20)] }).visible, 0);
+  assert.equal(smoothPose({ keypoints: [point('left_elbow', 30, 40)] }, { keypoints: [point('left_elbow', NaN, 20)] }).keypoints[0].x, 30);
+});
+
+test('a unilateral arm raise cannot satisfy the bilateral target and occlusion is unassessed', () => {
+  const points = [point('left_hip', 0, 1), point('left_shoulder', 0, 0), point('left_elbow', -1, 0), point('right_hip', 2, 1), point('right_shoulder', 2, 0), point('right_elbow', 2, 1)];
+  assert.deepEqual(shoulderAngles(points), { left: 90, right: 0 });
+  assert.equal(measureAngle('Side Arm Raise', points).angle, 0);
+  points.at(-1).score = 0.1;
+  assert.equal(measureAngle('Side Arm Raise', points).angle, null);
+});
+
+test('arm raises count from zero-degree rest, including overshoots of a shallow target', () => {
+  const rest = calibrateRest(Array(20).fill(0));
+  assert.equal(rest.ok, true);
+  assert.equal(calibratedProgress('Side Arm Raise', null, 45, 45), null);
+  assert.equal(calibratedProgress('Side Arm Raise', rest.value, 45, 0), null);
+  for (const peakAngle of [45, 90]) {
+    let state = createRepState();
+    for (let rep = 0; rep < 3; rep++) {
+      for (let step = 0; step <= 40; step++) {
+        const angle = step < 5 || step > 35 ? 0 : peakAngle * Math.sin(Math.PI * (step - 5) / 30);
+        const radians = angle * Math.PI / 180;
+        const points = ['left', 'right'].flatMap((side, i) => [
+          point(`${side}_hip`, i * 2, 1), point(`${side}_shoulder`, i * 2, 0),
+          point(`${side}_elbow`, i * 2 + (i ? 1 : -1) * Math.sin(radians), Math.cos(radians)),
+        ]);
+        state = advanceRep(state, {
+          progress: calibratedProgress('Side Arm Raise', rest.value, measureAngle('Side Arm Raise', points).angle, 45),
+          timestamp: (rep * 41 + step) * 100,
+        }, repConfig('Side Arm Raise', rest.value, 45));
+      }
+    }
+    assert.equal(state.attemptedReps, 3);
+    assert.equal(state.rejectedReps, 0);
+    assert.equal(state.withinTargetReps, peakAngle === 45 ? 3 : 0);
+  }
+});
+
+test('front-view arm alignment is independent of camera resolution', async () => {
+  const { checkBodyAlignment } = await import('../src/vision/geometry.js');
+  for (const scale of [0.1, 1, 3]) {
+    const points = [point('left_shoulder', 100 * scale, 100 * scale), point('right_shoulder', 200 * scale, 100 * scale), point('left_hip', 110 * scale, 250 * scale), point('right_hip', 190 * scale, 250 * scale)];
+    assert.equal(checkBodyAlignment('Side Arm Raise', points).isAligned, true);
+  }
+});
 
 test('geometry returns stable angles and rejects degenerate vectors', () => {
   assert.equal(angleAt({ x: 0, y: 1 }, { x: 0, y: 0 }, { x: 1, y: 0 }), 90);

@@ -1,0 +1,106 @@
+/* Portal layouts at phone/tablet widths. Loaded after shared and theme styles. */
+.mobile-portal-header { display: none; }
+
+@media (max-width: 800px) {
+  .clinician-app { display: block; min-height: 100dvh; }
+  .clinician-app > .side { display: none; }
+  .mobile-portal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: sticky; top: 0; z-index: 60; padding: max(10px, env(safe-area-inset-top)) 16px 10px; background: var(--card); border-bottom: 1px solid var(--card-border); }
+  .mobile-portal-header .brand-lockup, .patient-brand .brand-lockup { min-width: 0; gap: 9px; }
+  .mobile-portal-header .brand-lockup strong, .patient-brand .brand-lockup strong { font-size: 20px; letter-spacing: -.7px; }
+  .mobile-portal-header .brand-lockup small, .patient-brand .brand-lockup small { font-size: 10px; letter-spacing: 0; }
+  .mobile-header-tools { display: flex; align-items: center; gap: 8px; flex: none; }
+  .mobile-header-tools .theme-toggle, .patient-brand .theme-toggle { padding: 10px; min-width: 40px; min-height: 40px; border: 0; background: var(--soft); }
+  .mobile-header-tools .theme-toggle > span, .patient-brand .brand-caption { display: none; }
+  .mobile-account { position: relative; }
+  .mobile-account > summary { display: grid; place-items: center; padding: 0; width: 40px; min-height: 40px; border-radius: 12px; background: var(--pri2); color: var(--pri); font-size: 12px; list-style: none; }
+  .mobile-account > summary::-webkit-details-marker { display: none; }
+  .mobile-account::details-content { overflow: visible; transition: none; }
+  .mobile-account-menu { position: absolute; right: 0; top: 49px; width: min(250px, calc(100vw - 32px)); padding: 16px; background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: 0 12px 40px #0002; overflow-wrap: anywhere; }
+  .mobile-account-menu > b, .mobile-account-menu > small { display: block; }
+  .mobile-account-menu > small { margin-top: 3px; color: var(--mut); }
+  .mobile-account-menu a, .mobile-account-menu button { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 10px 0; border: 0; background: transparent; text-align: left; font-size: 14px; color: var(--ink); text-decoration: none; }
+  .mobile-account-menu > a { margin-top: 10px; border-top: 1px solid var(--card-border); }
+  .clinician-app > .main { padding: 22px 16px calc(108px + env(safe-area-inset-bottom)); }
+  .clinician-app .workspace-bar { display: none; }
+  .clinician-app h1, .patient-shell h1 { font-size: 25px; line-height: 1.2; letter-spacing: -.8px; overflow-wrap: break-word; }
+  .clinician-app h2, .patient-shell h2 { font-size: 19px; }
+  .clinician-app .mut, .patient-shell .mut { line-height: 1.6; }
+  .clinician-app .card, .patient-shell .card { padding: 18px; border-radius: 16px; }
+  .clinician-app .page-heading { display: block; margin-bottom: 20px; }
+  .clinician-app .page-heading .eyebrow { margin-bottom: 8px; }
+  .clinician-app .page-heading .mut { margin: 10px 0 16px; font-size: 13px; }
+  .clinician-app .page-heading > .btn { width: 100%; }
+  .clinician-overview { display: flex; flex-direction: column; }
+  .clinician-overview > .page-heading { order: 0; }
+  .clinician-overview > .overview-stats { order: 1; margin-bottom: 20px; }
+  .clinician-overview > .overview-lead { order: 2; }
+  .clinician-overview > .dashboard-columns { order: 3; }
+  .clinician-overview > h2 { order: 4; }
+  .clinician-overview > .card { order: 5; }
+  .overview-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .clinician-overview .overview-stats .card:nth-child(n) { padding: 16px; font-size: 11px; margin: 0; }
+  .overview-stats .stat-icon { width: 30px; height: 30px; }
+  .overview-stats .stat { padding-top: 6px; margin-bottom: 4px; font-size: 26px; }
+  .clinician-overview .overview-lead, .clinician-overview .dashboard-columns { display: grid; grid-template-columns: minmax(0,1fr); gap: 16px; }
+  .clinician-overview .care-priority { padding: 22px; border: 1px solid var(--card-border); }
+  .clinician-overview .care-priority h2 { font-size: 28px; line-height: 1.15; letter-spacing: -1px; margin: 14px 0 10px; }
+  .clinician-overview .care-priority p { font-size: 13px; line-height: 1.6; margin-bottom: 0; }
+  .clinician-overview .care-priority > .btn { display: none; }
+  .clinician-overview .activity-module { padding: 18px; margin: 0; }
+  .roster-row { align-items: flex-start; }
+  .roster-row > .row { flex: 1 1 180px; flex-wrap: nowrap; align-items: flex-start; }
+  .roster-row > .row > :last-child { min-width: 0; overflow-wrap: anywhere; }
+  .roster-row > span { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .patient-shell { width: 100%; max-width: 600px; margin: 0 auto; padding: 0 16px calc(108px + env(safe-area-inset-bottom)); min-height: 100dvh; border-radius: 0; }
+  .patient-shell .patient-brand { height: auto; min-height: 64px; padding-top: env(safe-area-inset-top); margin-bottom: 20px; }
+  .patient-shell .portal-tools { gap: 0; }
+  .patient-shell .home-greeting { flex-wrap: nowrap; align-items: center; margin-bottom: 16px; }
+  .patient-shell .home-greeting .hello { font-size: 23px; }
+  .patient-shell .home-greeting .hd { flex: none; }
+  .patient-shell .current-week { margin-bottom: 18px; padding: 12px 0; border-block: 1px solid var(--card-border); }
+  .patient-shell .week-heading { margin-bottom: 8px; font-size: 12px; }
+  .patient-shell .week-days { gap: 4px; }
+  .patient-shell .week-days small { margin-bottom: 2px; }
+  .patient-shell .week-days span { width: 30px; height: 30px; }
+  .patient-shell .daily-focus { padding: 22px; margin-bottom: 18px; border-radius: 18px; }
+  .patient-shell .focus-copy { width: 100%; }
+  .patient-shell .focus-copy h1 { font-size: 31px; line-height: 1.12; margin: 12px 0; letter-spacing: -1px; }
+  .patient-shell .focus-copy p { margin: 0 0 16px; line-height: 1.6; }
+  .patient-shell .focus-copy .btn { width: 100%; }
+  .patient-shell .focus-note { display: none; }
+  .patient-shell .home-content { grid-template-columns: minmax(0,1fr); }
+  .patient-shell .section-heading { gap: 8px; margin: 20px 0 12px; }
+  .patient-shell .section-heading h2 { font-size: 18px; }
+  .patient-shell .section-heading .text-action { white-space: nowrap; font-size: 12px; }
+  .patient-shell .exercise-row { padding: 16px 12px; gap: 10px; }
+  .patient-shell .exercise-copy small { font-size: 12px; line-height: 1.5; }
+  .patient-shell .exercise-meta { flex-wrap: wrap; gap: 5px; margin-top: 8px; font-size: 11px; }
+  .patient-shell .exercise-index { padding: 7px; font-size: 10px; }
+  .patient-shell .plan-footnote { padding: 12px; flex-wrap: wrap; font-size: 11px; }
+  .patient-shell .quick-actions { gap: 6px; }
+  .patient-shell .quick-actions button { font-size: 11px; }
+  .patient-shell.session-shell { padding-top: max(18px, env(safe-area-inset-top)); padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+  .patient-shell .session-actions { bottom: max(8px, env(safe-area-inset-bottom)); }
+  .clinician-app .nav, .patient-shell .nav { width: calc(100% - 24px); max-width: 470px; padding: 6px; bottom: max(10px, env(safe-area-inset-bottom)); border-radius: 17px; box-shadow: 0 4px 24px #00000012; }
+  .clinician-app .nav { display: grid; }
+  .clinician-app .nav button, .patient-shell .nav button { height: 48px; padding: 5px 2px; gap: 3px; }
+  .clinician-app .nav .label, .patient-shell .nav .label { font-size: 11px; }
+  .clinician-app .nav::before, .patient-shell .nav::before { inset-block: 6px; left: 6px; width: calc((100% - 12px) / 5); }
+  .clinician-app .nav::before { width: calc((100% - 12px) / 4); }
+  .clinician-app .wrap, .patient-shell .wrap { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+  .clinician-app .grid:not(.overview-stats), .patient-shell .grid { grid-template-columns: minmax(0,1fr) !important; }
+  .clinician-app .row, .patient-shell .row { max-width: 100%; }
+  .clinician-app input, .clinician-app select, .clinician-app textarea, .patient-shell input, .patient-shell select, .patient-shell textarea { max-width: 100%; }
+  .clinician-app .card p, .patient-shell .card p { overflow-wrap: anywhere; }
+  .clinician-app .exercise-studio-hero { padding: 22px; border-radius: 18px; }
+  .clinician-app .exercise-studio-hero h1 { font-size: 28px; }
+  .clinician-app .studio-tabs { margin-bottom: 18px; }
+}
+
+@media (max-width: 360px) {
+  .mobile-portal-header { padding-inline: 12px; gap: 8px; }
+  .mobile-portal-header .brand-lockup strong { font-size: 18px; }
+  .mobile-header-tools { gap: 5px; }
+  .clinician-app > .main { padding-inline: 12px; }
+  .patient-shell { padding-inline: 12px; }
+}

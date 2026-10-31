@@ -4,7 +4,7 @@ Camera-guided home exercise for independent patients and clinician-connected car
 
 ## Current architecture
 
-- React/Vite frontend with on-device BlazePose tracking (33 landmarks), plus a MoveNet fast mode (17 landmarks).
+- React/Vite frontend with on-device MoveNet pose tracking.
 - Privy email verification codes for signup and login. Wallet creation is disabled.
 - Express backend verifies Privy tokens and enforces account roles and patient consent.
 - MongoDB Atlas stores profiles, patient–clinician connections, assignments, sessions, reviews, messages and Gemini exercise drafts.
@@ -36,8 +36,6 @@ The clinician can publish plans using available bundled references, inspect shar
 Gemini exercise drafts are available in the clinician Exercise Library. They use original clinician-provided reference notes, with explicit permission to send those fields to Google. Drafts remain unmeasured and unavailable for automatic patient assignment.
 
 ## Verification
-
-[Patient and clinician product test walkthrough](docs/PRODUCT_TEST_WALKTHROUGH.md), including phone camera checks, generation, assignment, messaging and current limitations.
 
 - `npm test`: exercise logic and patient-flow tests.
 - `npm run test:backend`: authentication boundary, immutable records, signup role, consent and revocation tests.

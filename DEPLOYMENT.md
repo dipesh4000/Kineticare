@@ -10,7 +10,15 @@ Use [current Privy / Atlas / Gemini configuration](docs/PRIVY_ATLAS_SETUP.md). F
 6. Allow your HTTPS origin in Privy and enable email login. Restrict Atlas access to your backend.
 7. Test signup with distinct patient/clinician emails, role persistence, invite expiry, consent, linking, exercise save, feedback, revocation and logout.
 
-A frontend-only static deployment is insufficient. The local launcher is for development. Existing static-host configuration can build the frontend, but a same-origin /api backend is required for connected use.
+## Vercel (frontend + backend in one project)
+
+1. Set the Vercel project's Root Directory to this repository root (where `package.json` and `vercel.json` live), not `frontend` or `backend`. Use Node.js 22.x.
+2. Root `vercel.json` configures `npm ci --include=dev --include=optional`, `npm run build`, and the `frontend/dist` output. It routes `/api` requests to `api/index.js` and frontend page URLs to `index.html`. Root `package.json` pins Node.js to 22.x. Keep the native platform entries in `package-lock.json`; Linux builds need the Rolldown, Tailwind Oxide, and Lightning CSS Linux binaries even when development happens on Windows.
+3. In Vercel Environment Variables, set `PRIVY_APP_ID`, `PRIVY_APP_SECRET`, `MONGODB_URI`, `MONGODB_DB`, and `VITE_PRIVY_APP_ID`. Add `GEMINI_API_KEY` and `GEMINI_MODEL` for AI features. Apply variables to the required Production/Preview environments. Keep `VITE_API_BASE_URL` unset for same-origin requests. Local `.env` files are excluded from the API function bundle.
+4. Allow the deployed HTTPS domain in Privy and ensure MongoDB Atlas allows connections from the deployed backend. Redeploy after changing build-time `VITE_*` variables.
+5. After deploying, check `/api/health` returns JSON, refresh a frontend page directly, then test login and record saving. Health confirms the API runs; login and saved records verify Privy and Atlas connectivity.
+
+The root deployment uses the serverless API entry without starting a listening server. `backend/vercel.json` is an older standalone backend configuration and is not used by this root deployment. The local launcher remains for development.
 
 Live email and cloud checks need configured credentials. Real-patient release also needs clinical validation, privacy/retention decisions, dependency review, backups and deployment security verification.
 

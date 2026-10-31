@@ -5,6 +5,7 @@ import { reportsRouter } from './reports.js';
 import { config } from '../config/index.js';
 import { recordsRouter } from './records.js';
 import { aiRouter } from './ai.js';
+import { knowledgeChatRouter } from './knowledgeChat.js';
 import { authRouter } from './auth.js';
 import { requireIdentity, canAccessPatient } from '../services/identity.js';
 
@@ -15,6 +16,7 @@ apiApp.use((req, res, next) => { res.set('Cache-Control', 'no-store'); res.set('
 apiApp.use(express.json({ limit: '512kb' }));
 apiApp.use('/auth', authRouter);
 apiApp.use('/records', recordsRouter);
+apiApp.use('/ai/knowledge-chat', knowledgeChatRouter);
 apiApp.use('/ai', aiRouter);
 
 // Health & System status

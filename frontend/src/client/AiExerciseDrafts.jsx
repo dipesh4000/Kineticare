@@ -25,7 +25,7 @@ export default function AiExerciseDrafts() {
         <label htmlFor="ai-brief">Exercise brief (no patient information)</label><input id="ai-brief" value={brief} maxLength={3000} required onChange={event => setBrief(event.target.value)} />
         <label htmlFor="ai-source">Reference, edition, chapter and page</label><input id="ai-source" value={reference} maxLength={3000} required onChange={event => setReference(event.target.value)} />
         <label htmlFor="ai-notes">Your own summary of the relevant reference</label><textarea id="ai-notes" value={referenceNotes} maxLength={3000} required rows="4" onChange={event => setReferenceNotes(event.target.value)} />
-        <p className="mut">The textbook is not uploaded or indexed. Supply original notes and verify the generated content against the cited source.</p>
+        <p className="mut">Manual-note drafts use only the notes supplied here. For retrieved textbook evidence and illustrative animation previews, use Exercise knowledge chat above.</p>
         <label className="check-label"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} />Send this brief, reference and notes to Google Gemini. I have excluded identifiable patient data.</label>
         <div className="row"><button className="btn" disabled={busy || !consent}>{busy ? 'Working…' : 'Generate draft'}</button><button type="button" className="btn s" disabled={busy} onClick={() => run(load)}>Load saved drafts</button></div>
       </form>

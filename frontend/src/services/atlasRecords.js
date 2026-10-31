@@ -1,10 +1,10 @@
 import { getAccessToken } from '@privy-io/react-auth';
 
 const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-export async function connectedApi(path, body) {
+export async function connectedApi(path, body, timeoutMs = 45000) {
   const token = await getAccessToken();
   if (!token) throw new Error('Sign in to use connected services.');
-  const response = await fetch(`${base}/api/${path}`, { method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(45000) });
+  const response = await fetch(`${base}/api/${path}`, { method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(timeoutMs) });
   const data = await response.json().catch(() => null);
   if (!response.ok || !data) throw new Error(data?.error || 'The backend could not complete this request.');
   return data;

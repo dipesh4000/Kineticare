@@ -104,3 +104,13 @@
   .clinician-app > .main { padding-inline: 12px; }
   .patient-shell { padding-inline: 12px; }
 }
+
+@media (max-width:800px) {
+  .clinician-overview > .meetings-panel { order: 1; }
+  .clinician-overview > .overview-stats { order: 2; }
+  .clinician-overview > .overview-lead { order: 3; }
+  .clinician-overview > .dashboard-columns { order: 4; }
+  .clinician-overview > h2 { order: 5; }
+  .clinician-overview > .card { order: 6; }
+  .patient-shell .session-start-actions { position: static; padding: 14px; }
+}

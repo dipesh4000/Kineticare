@@ -1,6 +1,11 @@
 import { POSE_MODES } from './poseOverlay.js';
+import { loadPoseRuntime, withModelTimeout } from './modelLoading.js';
 
 export async function createPoseDetector(mode = 'detailed') {
+  return withModelTimeout(loadDetector(mode));
+}
+
+async function loadDetector(mode) {
   const selected = POSE_MODES[mode] ?? POSE_MODES.detailed;
   const [tf, poseDetection] = await Promise.all([
     import('@tensorflow/tfjs-core'),
@@ -10,9 +15,11 @@ export async function createPoseDetector(mode = 'detailed') {
   if (selected.model === 'BlazePose') {
     // Use the installed model's MediaPipe runtime: its TFJS/WebGL variant
     // produced non-finite coordinates on our browser verification device.
+    const base = `${import.meta.env.BASE_URL}pose/0.5.1675469404`;
+    await loadPoseRuntime(base);
     return poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {
       runtime: 'mediapipe', modelType: selected.modelType, enableSmoothing: true,
-      solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404',
+      solutionPath: base,
     });
   }
   await tf.setBackend('webgl');

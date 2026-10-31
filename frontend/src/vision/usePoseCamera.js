@@ -64,6 +64,7 @@ export default function usePoseCamera(onPose) {
     setTracking({ model: selected.label, visible: 0, total: selected.landmarks, confidence: 0, fps: 0 });
     setError('');
     setStatus('requesting');
+    let stage = 'camera';
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
@@ -76,6 +77,7 @@ export default function usePoseCamera(onPose) {
       await video.play();
       if (generation !== generationRef.current) return;
       setStatus('loading-model');
+      stage = 'model';
 
       const detector = await createPoseDetector(mode);
       if (generation !== generationRef.current) { detector.dispose(); return; }
@@ -113,13 +115,15 @@ export default function usePoseCamera(onPose) {
         }
       };
       frameRef.current = requestAnimationFrame(estimate);
+      return true;
     } catch (cause) {
       if (generation !== generationRef.current) return;
       stop();
       setStatus('error');
       setError(cause?.name === 'NotAllowedError'
         ? 'Camera permission was denied. Allow camera access in your browser and retry.'
-        : !navigator.mediaDevices?.getUserMedia ? 'Camera access requires HTTPS or localhost. On a phone, use your deployed HTTPS address.' : 'The camera or pose model could not start. Check your connection, close other camera apps, or choose Balanced tracking and retry.');
+        : !navigator.mediaDevices?.getUserMedia ? 'Camera access requires HTTPS or localhost. On a phone, use your deployed HTTPS address.' : stage === 'model' ? `Tracking could not start. ${cause?.message || 'Try again or use Fast tracking.'}` : 'The camera could not start. Close other camera apps and retry.');
+      return false;
     }
   }, [stop]);
 

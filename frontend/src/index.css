@@ -507,3 +507,56 @@ summary { cursor: pointer; min-height: 44px; padding-block: 10px; font-weight: 6
 .arm-angle-readout { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; } .arm-angle-readout > span { background: var(--soft); border-radius: 10px; padding: 12px; font-size: 12px; } .arm-angle-readout b { display: block; font-size: 24px; margin-top: 6px; } .arm-angle-readout > p { grid-column: 1/-1; margin: 0; }
 @media (max-width:1100px) { .movement-workspace,.generation-workspace { grid-template-columns: 1fr; } .movement-viewer { position: static; } .generation-empty { min-height: 330px; } }
 @media (max-width:600px) { .exercise-studio-hero { padding: 24px; } .studio-hero-mark { display: none; } .studio-tabs button { gap: 8px; padding: 12px 8px; } .studio-tabs b { font-size: 12px; } .studio-tabs small { font-size: 10px; } .studio-section-heading { flex-wrap: wrap; } .generation-form { padding: 20px; } .generation-empty { padding: 28px; } .motion-hud { top: 10px; left: 10px; right: 10px; } .motion-hud b { font-size: 22px; } .motion-hud > span { font-size: 10px; } }
+
+/* Camera setup actions and appointment calendar. */
+.live-monitor[hidden] { display: none; }
+.session-actions { margin-top: 18px; }
+.session-start-actions { position: static; display: flex; flex-wrap: wrap; }
+.session-start-actions .start-help { flex-basis: 100%; margin: 0 0 6px; }
+.session-start-actions .session-primary { flex-basis: 100%; width: 100%; min-height: 50px; }
+.session-start-actions > .btn.s { flex: 1; }
+.calendar-controls { display: flex; align-items: center; gap: 4px; }
+.calendar-controls button { display: grid; place-items: center; min-width: 36px; min-height: 36px; padding: 6px 10px; background: var(--soft); color: var(--ink); border: 1px solid var(--card-border); border-radius: 9px; cursor: pointer; font-size: 12px; }
+.calendar-range { margin: -5px 0 12px; color: var(--mut); font-size: 11px; }
+.week-days > button { display: flex; flex-direction: column; align-items: center; gap: 4px; border: 1px solid transparent; border-radius: 12px; padding: 8px 0; background: transparent; color: var(--ink); cursor: pointer; min-width: 0; }
+.week-days > button.is-selected { border-color: var(--pri); background: var(--pri2); }
+.week-days > button small { font-size: 10px; margin: 0; }
+.calendar-event-dot,.calendar-no-event { display: block; width: 5px; height: 5px; border-radius: 50%; }
+.calendar-event-dot { background: var(--pri); } .calendar-no-event { background: transparent; }
+.meetings-panel { margin: 0 0 24px; padding: 20px; background: var(--card); border: 1px solid var(--card-border); border-radius: 18px; }
+.meetings-panel .current-week { width: 100%; max-width: none; margin-bottom: 0; }
+.meetings-panel .section-heading { margin: 16px 0 12px; }
+.meeting-list { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)); gap: 12px; }
+.meeting-card { display: flex; align-items: flex-start; gap: 14px; padding: 14px; border-radius: 13px; background: var(--soft); min-width: 0; }
+.meeting-date { display: flex; align-items: center; flex-direction: column; min-width: 42px; color: var(--pri); font-size: 11px; padding-top: 2px; }
+.meeting-date b { font-size: 25px; line-height: 1.2; }
+.meeting-details { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.meeting-details h3 { font-size: 14px; }
+.meeting-details p { font-size: 12px; color: var(--ink-secondary); margin: 6px 0; }
+.meeting-details small { color: var(--mut); font-size: 11px; }
+.meeting-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.meeting-actions .text-action { font-size: 11px; padding: 8px 0; }
+.meeting-empty,.meeting-timezone { color: var(--mut); font-size: 12px; line-height: 1.6; margin: 8px 0 0; }
+.meeting-timezone { font-size: 10px; }
+.meeting-dialog { width: min(540px,calc(100vw - 24px)); max-height: calc(100dvh - 32px); margin: auto; padding: 24px; border: 1px solid var(--card-border); border-radius: 20px; background: var(--card); color: var(--ink); overflow-y: auto; }
+.meeting-dialog::backdrop { background: #111827a8; backdrop-filter: blur(3px); }
+.meeting-dialog h2 { margin: 0; }
+.meeting-dialog fieldset { padding: 0; margin: 0; border: 0; min-width: 0; }
+.meeting-dialog input { width: 100%; max-width: 100%; padding: 12px; border: 1px solid var(--card-border); background: var(--soft); border-radius: 10px; color: var(--ink); font: inherit; }
+.meeting-form-grid { display: grid; grid-template-columns: 1fr 130px; gap: 12px; }
+.meeting-form-grid > label { min-width: 0; }
+.meeting-save { width: 100%; }
+@media (max-width:800px) {
+  .meetings-panel { padding: 14px; margin-bottom: 18px; }
+  .patient-shell .meetings-panel .current-week { padding-top: 0; border-top: 0; margin-bottom: 0; }
+  .meetings-panel .section-heading h2 { font-size: 16px; }
+  .calendar-controls button { min-height: 36px; min-width: 30px; padding: 6px 8px; }
+  .meeting-dialog { padding: 20px; }
+  .meeting-dialog input,.meeting-dialog select { font-size: 16px; min-width: 0; }
+  .meeting-form-grid { grid-template-columns: minmax(0,1fr); gap: 0; }
+  .patient-shell .session-start-actions .start-help { font-size: 13px; }
+}
+
+.session-demo video, .session-shell .vid video { max-height: 300px; object-fit: contain; background: #101827; margin-top: 12px; }
+
+@media (max-width:800px) { .meetings-panel .week-days span { width: 30px; height: 30px; } }

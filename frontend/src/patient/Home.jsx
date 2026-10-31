@@ -7,7 +7,7 @@ import { LineChart, DemoBanner } from '../utils';
 import { toast } from '../components/toastBus';
 import Icon from '../components/Icon';
 import WeeklyActivity from '../components/WeeklyActivity';
-import CurrentWeek from '../components/CurrentWeek';
+import MeetingsPanel from '../components/MeetingsPanel';
 import { startDraft } from '../session/drafts';
 import { clearSessionDraft, loadSessionDraft } from '../session/drafts';
 import { workoutStreak } from '../patientFlow';
@@ -70,7 +70,7 @@ export default function PatientHome() {
       </div>
 
       
-      <CurrentWeek />
+      <MeetingsPanel />
       <section className="daily-focus">
         <div className="focus-copy"><span className="eyebrow"><span className="status-dot" /> YOUR SPACE TO MOVE</span><h1>Progress, at<br /><em>your own pace.</em></h1><p>Your plan. A little guidance. A step forward.<br />Make a moment for yourself today.</p><button className="btn" onClick={() => nav(plan ? '/patient/workout' : '/patient/plan')}>{plan ? 'Start your session' : 'View your care plan'} <span aria-hidden="true">↗</span></button></div>
         <div className="focus-note"><span className="focus-orbit" aria-hidden="true"><Icon name="workout" size={26} /></span><span>{plan?.items.length ?? 0} guided exercises<small>{plan?.source === 'self-guided' ? 'Starter template · pending clinical review' : 'Your movement plan'}</small></span></div>

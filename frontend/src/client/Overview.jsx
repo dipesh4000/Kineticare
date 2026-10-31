@@ -4,6 +4,7 @@ import { DemoBanner } from '../utils';
 import { useAuth } from '../auth/authContext';
 import Icon from '../components/Icon';
 import WeeklyActivity from '../components/WeeklyActivity';
+import MeetingsPanel from '../components/MeetingsPanel';
 
 
 export default function ClientOverview() {
@@ -19,6 +20,7 @@ export default function ClientOverview() {
   return (
     <div className="clinician-overview">
       <div className="page-heading"><div><p className="eyebrow">YOUR DAILY OVERVIEW</p><h1>Welcome back, {user.displayName}</h1><p className="mut">Your patients, their progress, and what needs your attention.</p></div><button className="btn" onClick={() => nav('/client/patients')}><Icon name="me" size={18} />Manage patients</button></div>
+      <MeetingsPanel />
       <div className="overview-lead">
         <section className="care-priority"><div className="section-label"><span>YOUR PRACTICE, AT A GLANCE</span><Icon name="prog" /></div><h2>More clarity.<br /><em>More considered care.</em></h2><p>{needsReview ? `${needsReview} sessions are ready for your review.` : 'You’re up to date on submitted sessions.'} {openRequests ? `${openRequests} patient requests are waiting.` : 'Keep your patients moving forward.'}</p><button className="btn w" onClick={() => nav('/client/patients')}>Review your patients <span aria-hidden="true">↗</span></button></section>
         <WeeklyActivity sessions={recent.map(item => item.session)} compact />

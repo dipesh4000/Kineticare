@@ -60,7 +60,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
   const [viewMode, setViewMode] = useState('camera');
   const [replayTrackingLost, setReplayTrackingLost] = useState(false);
   const [measurement, setMeasurement] = useState(null);
-  const [poseMode, setPoseMode] = useState('detailed');
+  const [poseMode, setPoseMode] = useState('balanced');
   const [armAngles, setArmAngles] = useState({ left: null, right: null });
   const [calibration, setCalibration] = useState({ status: 'idle', progress: 0, message: '' });
   const [repState, setRepState] = useState(createRepState);
@@ -278,21 +278,26 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
     });
   }, [replayDone]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const startCamera = async () => {
+  const startCamera = async (requestedMode = poseMode) => {
+    const selectedMode = typeof requestedMode === 'string' ? requestedMode : poseMode;
+    setPoseMode(selectedMode);
+    setPaused(false);
+    calibrationRef.current = null;
     setMode('camera');
-    setTiming({ elapsed: 0, active: 0, paused: 0, unassessed: 0, readyRest: 0 });
+    if (mode !== 'camera') setTiming({ elapsed: 0, active: 0, paused: 0, unassessed: 0, readyRest: 0 });
     setMeasurement(null);
     setCalibration({ status: 'idle', progress: 0, message: '' });
     restRef.current = null;
     squatSideRef.current = null;
     smoothRef.current = [];
     prevAngleRef.current = null;
-    repRef.current = createRepState();
+    repRef.current = mode === 'camera' ? advanceRep(repRef.current, { progress: 0, timestamp: performance.now(), tracked: false }) : createRepState();
     setRepState(repRef.current);
     profilerRef.current?.stop();
     profilerRef.current = startProfiler(`${exercise.ex} (camera)`);
     speak(`${exercise.ex}. Stand ${exercise.ex === 'Side Arm Raise' ? 'facing' : 'side-on to'} the camera with your whole body in view.`, true);
-    await startPoseCamera(poseMode);
+    const started = await startPoseCamera(selectedMode);
+    if (started) videoRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   };
 
   const startCalibration = () => {
@@ -373,24 +378,15 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       <div className="row sp">
         <h2 style={{ margin: 0 }}>{exercise.ex}</h2><span className="tag">{exercise.targetReps} reps · {exercise.targetExcursionDeg}° target</span>
       </div>
-      <p className="mut">{!mode ? '1. Preview the movement. 2. Start camera. 3. Hold still for setup, then begin.' : calibration.status === 'ready' ? 'Move slowly, then return fully to your resting position to count each rep.' : mode === 'replay' ? 'Practice preview — these repetitions are simulated.' : 'Wait for “Tracking movement” before starting your reps.'}</p>
+      <p className="mut">{!mode ? '1. Preview the movement. 2. Start exercise below. 3. Hold still for camera setup.' : calibration.status === 'ready' ? 'Move slowly, then return fully to your resting position to count each rep.' : mode === 'replay' ? 'Practice preview — these repetitions are simulated.' : 'Wait for “Tracking movement” before starting your reps.'}</p>
       {exercise.ex === 'Side Arm Raise' && !mode && <SideArmRaiseDemo target={exercise.targetExcursionDeg} />}
-      {(!mode || cameraStatus === 'error') && <label className="tracking-select">Tracking detail<select value={poseMode} onChange={event => setPoseMode(event.target.value)}>{Object.entries(POSE_MODES).map(([key, option]) => <option key={key} value={key}>{option.label}</option>)}</select><span className="mut">Choose Balanced or Fast if your phone struggles. Changing modes starts a new exercise attempt.</span></label>}
-      <div className="row" style={{ margin: '10px 0', flexWrap: 'wrap' }}>
-        {!mode ? (
-          <>
-            <button className="btn" onClick={startCamera}>Start camera</button>
-            <button className="btn s" onClick={() => setMode('replay')}>Use replay demo</button>
-          </>
-        ) : mode === 'camera' ? (
-          <button className="btn s" onClick={() => setViewMode(value => value === 'camera' ? 'skeleton' : 'camera')}>{viewMode === 'camera' ? 'Skeleton view' : 'Show camera'}</button>
-        ) : null}
-      </div>
-      {mode === 'camera' && cameraStatus === 'error' && <button className="btn" onClick={startCamera}>Retry camera</button>}
+      {reference && !mode && <div className="card session-demo"><h3>Movement demonstration</h3><ReferenceVideo mediaPath={reference.mediaPath} /><p className="mut">{meta.setup} Start below when you are ready.</p></div>}
+      {(!mode || cameraStatus === 'error') && <label className="tracking-select">Tracking detail<select value={poseMode} onChange={event => setPoseMode(event.target.value)}>{Object.entries(POSE_MODES).map(([key, option]) => <option key={key} value={key}>{option.label}</option>)}</select><span className="mut">Choose Balanced or Fast if your phone struggles. Retrying keeps completed repetitions; camera setup runs again.</span></label>}
       {mode === 'camera' && cameraStatus === 'loading-model' && <p className="session-status" role="status">Loading {POSE_MODES[poseMode].label.toLowerCase()} tracking. The first start downloads the model and needs an internet connection.</p>}
       {mode === 'replay' && <div className="demo">Replay demo: movement and score are simulated.</div>}
-      {mode === 'camera' && <div className="tracking-panel" aria-label="Tracking quality"><div><b>{tracking.visible}/{tracking.total || 33}</b><span>Landmarks visible</span></div><div><b>{tracking.confidence}%</b><span>Detection confidence</span></div><div><b>{tracking.fps || '—'}</b><span>Frames / sec</span></div><p><span className="tracking-dot left" />Your left side <span className="tracking-dot right" />Your right side · {tracking.model}</p></div>}
-      {mode === 'camera' && calibration.status !== 'ready' && <div className="session-status" role="status"><b>{calibration.status === 'collecting' ? 'Hold still — setting your resting position…' : calibration.status === 'error' ? 'Setup needs another try' : 'Position yourself for camera setup'}</b><p>{calibration.message || (exercise.ex === 'Side Arm Raise' ? 'Face the camera with both arms down. Keep both hips, shoulders and elbows visible.' : meta.setup + ' Stand upright and still. Setup will begin automatically.')}</p>{cameraStatus === 'running' && calibration.status !== 'collecting' && <button className="btn" disabled={!trackingUsable} onClick={startCalibration}>{calibration.status === 'error' ? 'Retry setup' : 'Set resting position now'}</button>}</div>}
+      {mode === 'camera' && cameraStatus === 'running' && <div className="tracking-panel" aria-label="Tracking quality"><div><b>{tracking.visible}/{tracking.total || 33}</b><span>Landmarks visible</span></div><div><b>{tracking.confidence}%</b><span>Detection confidence</span></div><div><b>{tracking.fps || '—'}</b><span>Frames / sec</span></div><p><span className="tracking-dot left" />Your left side <span className="tracking-dot right" />Your right side · {tracking.model}</p></div>}
+      {mode === 'camera' && cameraStatus === 'running' && calibration.status !== 'ready' && <div className="session-status" role="status"><b>{calibration.status === 'collecting' ? 'Hold still — setting your resting position…' : calibration.status === 'error' ? 'Setup needs another try' : 'Position yourself for camera setup'}</b><p>{calibration.message || (exercise.ex === 'Side Arm Raise' ? 'Face the camera with both arms down. Keep both hips, shoulders and elbows visible.' : meta.setup + ' Stand upright and still. Setup will begin automatically.')}</p>{cameraStatus === 'running' && calibration.status !== 'collecting' && <button className="btn" disabled={!trackingUsable} onClick={startCalibration}>{calibration.status === 'error' ? 'Retry setup' : 'Set resting position now'}</button>}</div>}
+      <div className="live-monitor" hidden={!mode}>
       <div className={`cam${paused || !active ? ' paused' : ''}`} aria-label={mode === 'camera' ? 'Live camera with pose overlay' : 'Exercise preview'}>
         <video ref={videoRef} className="pose-layer" style={{ visibility: viewMode === 'skeleton' ? 'hidden' : 'visible' }} muted playsInline />
         <canvas ref={canvasRef} className="pose-layer" />
@@ -402,13 +398,14 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
         </span>
       </div>
 
+      </div>
       {alignmentIssue && mode === 'camera' && (
         <div className="demo" role="alert" style={{ background: 'var(--warnb)', color: 'var(--warn)', borderColor: 'rgba(180,83,9,0.3)', display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
           <span>⚠️ <b>Orientation Check:</b> {alignmentIssue}</span>
         </div>
       )}
 
-      <div style={{ marginTop: 12 }}>
+      <div hidden={!mode} style={{ marginTop: 12 }}>
         <div className="prog" style={{ height: 22 }} role="progressbar" aria-label="Movement progress" aria-valuemin={0} aria-valuemax={100}
           aria-valuenow={Math.round(Math.min(100, movementProgress * 100))}>
           <b style={{ width: `${Math.min(100, movementProgress * 100)}%`, transition: 'width .12s linear' }} />
@@ -418,7 +415,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
         <p className="mut" style={{ textAlign: 'center', margin: 0 }}>{state?.all ? `${plan.items.slice(0, exIdx + 1).filter(item => !item.videoOnly).length} of ${plan.items.filter(item => !item.videoOnly).length}` : 'Single exercise'} · target {exercise.targetExcursionDeg}° × {exercise.targetReps} reps</p>
       </div>
 
-      {reference && (
+      {reference && mode && (
         <div style={{ marginTop: 12 }}>
           <button className="btn s sm" onClick={() => setShowDemo(value => !value)}>{showDemo ? 'Hide demo video' : 'Show demo video'}</button>
           {showDemo && <div className="vid" style={{ marginTop: 10, maxWidth: 220 }}><ReferenceVideo mediaPath={reference.mediaPath} loop autoPlay controls={false} /></div>}
@@ -428,7 +425,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       {cameraError && <div className="demo" role="alert" style={{ marginTop: 12 }}>{cameraError}</div>}
       {mode === 'replay' && replayTrackingLost && <div className="demo" role="alert" style={{ marginTop: 12 }}>Unable to assess. Adjust your position and retry.</div>}
       {cue && mode && <div className="demo" role="status" style={{ marginTop: 12 }}>{cue}</div>}
-      {(mode === 'camera' || mode === 'replay') && (
+      {(cameraReady || mode === 'replay') && (
         <div className="card" style={{ marginTop: 12 }}>
           <div className="row sp">
             <span>{mode === 'replay' ? 'Simulated movement' : measurement === null ? 'Required joints not visible' : `${meta.angleLabel}: ${measurement}°`}</span>
@@ -466,28 +463,32 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
         </div>
       )}
 
-      <div className="row sp">
+      {mode && <div className="row sp">
         <b style={{ fontSize: 24 }}>{timing.active}s</b>
         <span className="mut">{mode === 'replay' ? `of ${replayDuration}s replay` : 'assessed active time'}</span>
-      </div>
+      </div>}
       {mode === 'camera' && <p className="mut">Elapsed {timing.elapsed}s · paused {timing.paused}s · unassessed {timing.unassessed}s</p>}
       {mode === 'replay' && <div className="prog"><b style={{ width: `${Math.min(100, timing.active / replayDuration * 100)}%` }} /></div>}
-      <div className="row session-actions" style={{ marginTop: 14, flexWrap: 'wrap' }}>
-        {mode && <button className="btn s" onClick={togglePause}>{paused ? 'Resume' : 'Pause'}</button>}
+      <div className={`row session-actions${!mode ? ' session-start-actions' : ''}`}>
+        {!mode && <><p className="mut start-help">Ready to begin? Your camera opens next, followed by a short resting-position setup.</p><button className="btn session-primary" onClick={startCamera}>Start exercise</button><button className="btn s" onClick={() => setMode('replay')}>Try a simulated demo</button></>}
+        {mode === 'camera' && cameraStatus === 'error' && <><button className="btn session-primary" onClick={startCamera}>Retry camera setup</button>{poseMode !== 'fast' && <button className="btn s" onClick={() => startCamera('fast')}>Try Fast tracking</button>}</>}
+        {mode === 'camera' && ['requesting', 'loading-model'].includes(cameraStatus) && <button className="btn session-primary" disabled>{cameraStatus === 'requesting' ? 'Opening camera…' : 'Loading tracking…'}</button>}
+        {mode === 'camera' && cameraStatus === 'running' && <button className="btn s" onClick={() => setViewMode(value => value === 'camera' ? 'skeleton' : 'camera')}>{viewMode === 'camera' ? 'Skeleton view' : 'Show camera'}</button>}
+        {(mode === 'replay' || cameraReady) && <button className="btn s" onClick={togglePause}>{paused ? 'Resume' : 'Pause'}</button>}
         {mode === 'replay' && <button className="btn s" onClick={() => setReplayTrackingLost(value => !value)}>{replayTrackingLost ? 'Restore tracking' : 'Simulate tracking loss'}</button>}
-        {mode && <button className="btn s" aria-pressed={speechEnabled} onClick={() => {
+        {(mode === 'replay' || cameraStatus === 'running') && <button className="btn s" aria-pressed={speechEnabled} onClick={() => {
           const next = !speechEnabled;
           speechRef.current = next;
           setSpeechEnabled(next);
           if (next) speak('Voice guidance on.', true);
         }}>{speechEnabled ? 'Voice on · tap to mute' : 'Voice off · tap to enable'}</button>}
-        {mode === 'camera' && <button className="btn" disabled={!timing.elapsed} onClick={() => finishCameraExercise()}>Finish exercise</button>}
-        <button className="btn d" onClick={() => {
-          if (!confirm('Stop and save this exercise as partial?')) return;
-          if (mode === 'camera' && timing.elapsed) finishCameraExercise('partial');
+        {mode === 'camera' && cameraStatus === 'running' && <button className="btn" disabled={!cameraReady || !timing.active} onClick={() => finishCameraExercise()}>Finish exercise</button>}
+        <button className={mode ? 'btn d' : 'btn s'} onClick={() => {
+          if (timing.active > 0 && !confirm('Stop and save this exercise as partial?')) return;
+          if (mode === 'camera' && timing.active > 0) finishCameraExercise('partial');
           else if (mode === 'replay' && timing.elapsed) finish({ ex: exercise.ex, t: timing.active, s: null, completion: 'partial', c: 'Replay demo' });
           else nav('/patient/plan');
-        }}>Stop</button>
+        }}>{mode ? 'Stop' : 'Back to plan'}</button>
       </div>
     </>
   );

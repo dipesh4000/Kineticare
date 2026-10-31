@@ -59,11 +59,11 @@ To test real arm tracking now, use a separate unassigned patient account's self-
 
 ## 5. Patient: camera and repetition acceptance
 
-On the unassigned test patient, open **Workout → Side Arm Raise → Practice**. Review the preview, complete the camera checklist, then choose **Begin exercise** and **Start camera**. Use a stable phone, even lighting and enough distance to include your hips, both shoulders and elbows; keep hands/feet visible if you want those extra landmarks to be tracked too.
+On the unassigned test patient, open **Workout → Side Arm Raise → Practice**. Review the preview, complete the camera checklist, then choose **Continue to camera**, then **Start exercise** below the preview. Use a stable phone, even lighting and enough distance to include your hips, both shoulders and elbows; keep hands/feet visible if you want those extra landmarks to be tracked too.
 
 | Scenario | Expected result |
 | --- | --- |
-| Start Detailed mode | BlazePose full (MediaPipe runtime) loads; the quality panel identifies 33 possible landmarks. First use downloads model assets. |
+| Choose Detailed mode | BlazePose full (MediaPipe runtime) loads; the quality panel identifies 33 possible landmarks. First use downloads model assets. |
 | Stand facing camera, arms at sides | Setup collects a stable rest position and shows Tracking movement. Do not begin reps before this. |
 | Watch the overlay | Left and right sides have different colors. Confident face, hand and foot landmarks connect to the body. Hidden joints are not fabricated. |
 | Compare left/right shoulder readouts | Both update independently. These are camera estimates; detection confidence is not a clinical accuracy score. |
@@ -125,8 +125,20 @@ The fixtures are excluded from the production app entry/build. Automated checks 
 
 ## Verification recorded for this change
 
-- 33 frontend tests and 12 backend tests passed; lint and the production build passed. Vite still warns about large dependency chunks.
+- 36 frontend tests and 14 backend tests passed; lint and the production build passed. Vite still warns about large dependency chunks.
 - Actual browser inference on the bundled squat video returned finite, drawn landmarks in Detailed (33), Balanced (33) and Fast (17) modes. Detailed uses the MediaPipe runtime because the tested TFJS BlazePose runtime returned invalid coordinates on this browser.
 - The 3D arm preview's range, view, tempo, pause and one-cycle video export were exercised in the browser.
 - Synthetic generation submission, result review and phone-width layouts were checked. This did not call live Gemini or test real cloud account persistence.
 - Live phone camera performance, physical arm-raise counts and the two-account cloud flow still require the device/account acceptance checks above.
+
+## Meeting calendar and current camera startup
+
+Clinician: open Overview and select Schedule beside Upcoming meetings. Enter a title, future local date/time, duration, and optionally select a linked patient and paste an HTTPS meeting link. Save the meeting. It should appear in Upcoming meetings and add a dot to that date in the calendar. Select the date to filter its meetings; Today returns to the seven-day window with today in the middle (fourth column). Cancel a test meeting and confirm that its marker/list entry is removed. Linked patients see their appointments on Home after the workspace refresh; personal clinician meetings remain private. These meetings are stored in Atlas, not in an external calendar, and do not create a video call or email invitation.
+
+Camera setup now ends with a regular Start exercise button below the demonstration and tracking choice. Balanced 33-landmark tracking is the default for phones. The camera preview stays hidden until start; pause/finish controls are unavailable during model loading or failure. A failure shows its reason and Retry camera setup / Try Fast tracking. Restarting setup preserves completed reps and discards the unfinished rep.
+
+The production build includes the pinned MediaPipe runtime, WASM, and Full/Lite model files under `pose/0.5.1675469404/`. Deploy the entire `frontend/dist` directory, including `pose/`, and restart the frontend/backend after updating code. Startup no longer depends on the jsDelivr CDN. Loading has a 45-second timeout; the first use still needs to download files from the app's own host.
+
+To check production tree shaking and asset loading locally, run `npm exec --workspace frontend -- vite build --config test/vite.production-preview.config.js` and serve `frontend/dist/verification` as a separate static root. Its `/test/pose-model-preview.html` uses the compiled production loader. Do not publish these synthetic fixtures as the main app. A normal `npm run build` removes that nested verification output.
+
+The current production verification confirmed 33-landmark inference using only same-origin runtime scripts, meeting creation/date filtering/cancellation in the UI, a single static Start exercise action below the preview, and today at index 3 on both mobile calendars without horizontal overflow at 360px. Live phone camera input and configured Atlas/Privy accounts remain device/account checks.

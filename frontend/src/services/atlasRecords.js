@@ -30,6 +30,8 @@ async function mutate(patientId, operation, body) {
   return result;
 }
 export const atlasMutations = {
+  scheduleMeeting: async data => { const result = await connectedApi('records/meetings', data); window.dispatchEvent(new Event('kineticare-records-updated')); return result; },
+  cancelMeeting: async id => { const result = await connectedApi(`records/meetings/${encodeURIComponent(id)}/cancel`, {}); window.dispatchEvent(new Event('kineticare-records-updated')); return result; },
   saveAssignmentDraft: (id, data) => mutate(id, 'saveAssignmentDraft', data),
   publishAssignment: (id, data) => mutate(id, 'publishAssignment', data),
   saveSession: (id, data) => mutate(id, 'saveSession', data),

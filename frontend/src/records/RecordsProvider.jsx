@@ -5,7 +5,7 @@ import { atlasMutations, subscribeAtlasWorkspace } from '../services/atlasRecord
 import { buildSelfGuidedPlan } from '../patient/selfGuided';
 
 const starterPlan = buildSelfGuidedPlan();
-const emptyWorkspace = { schemaVersion: 1, patients: [], assignments: {}, assignmentDrafts: {}, sessions: {}, feedback: {}, requests: {}, references: [] };
+const emptyWorkspace = { schemaVersion: 1, patients: [], assignments: {}, assignmentDrafts: {}, sessions: {}, feedback: {}, requests: {}, references: [], meetings: [] };
 export default function RecordsProvider({ children }) {
   const { user } = useAuth();
   const [snapshot, setSnapshot] = useState({ uid: null, workspace: emptyWorkspace, error: '', ready: false });

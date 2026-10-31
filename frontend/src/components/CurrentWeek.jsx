@@ -1,16 +1,22 @@
-export default function CurrentWeek() {
+import { useState } from 'react';
+import { centeredDays, localDayKey, meetingsOnDay } from '../calendar';
+
+export default function CurrentWeek({ meetings = [], selectedDate, onSelect }) {
+  const [offset, setOffset] = useState(0);
   const today = new Date();
-  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (today.getDay() + 6) % 7);
-  const days = Array.from({ length: 7 }, (_, index) => new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + index));
+  const days = centeredDays(new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset));
   const format = date => date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
   return (
-    <section className="current-week" aria-label="Current week">
-      <div className="week-heading"><span>This week</span><small>{format(days[0])} – {format(days[6])}</small></div>
+    <section className="current-week" aria-label="Seven-day calendar">
+      <div className="week-heading"><span>{offset ? 'Calendar' : 'Around today'}</span><div className="calendar-controls"><button type="button" aria-label="Previous seven days" onClick={() => { setOffset(value => value - 7); onSelect?.(null); }}>‹</button><button type="button" onClick={() => { setOffset(0); onSelect?.(null); }}>Today</button><button type="button" aria-label="Next seven days" onClick={() => { setOffset(value => value + 7); onSelect?.(null); }}>›</button></div></div>
+      <p className="calendar-range">{format(days[0])} – {format(days[6])}</p>
       <div className="week-days">
-        {days.map(date => <div key={date.toISOString()} className={date.toDateString() === today.toDateString() ? 'is-today' : ''} aria-current={date.toDateString() === today.toDateString() ? 'date' : undefined}>
-          <small>{date.toLocaleDateString(undefined, { weekday: 'narrow' })}</small><span>{date.getDate()}</span>
-        </div>)}
+        {days.map(date => {
+          const isToday = localDayKey(date) === localDayKey(today);
+          const count = meetingsOnDay(meetings, date).length;
+          return <button type="button" key={localDayKey(date)} className={`${isToday ? 'is-today' : ''}${selectedDate === localDayKey(date) ? ' is-selected' : ''}`} aria-current={isToday ? 'date' : undefined} aria-pressed={selectedDate === localDayKey(date)} aria-label={`${date.toLocaleDateString(undefined, { dateStyle: 'full' })}${isToday ? ', today' : ''}, ${count} meetings`} onClick={() => onSelect?.(date)}><small>{date.toLocaleDateString(undefined, { weekday: 'short' })}</small><span>{date.getDate()}</span><i className={count ? 'calendar-event-dot' : 'calendar-no-event'} aria-hidden="true" /></button>;
+        })}
       </div>
     </section>
   );

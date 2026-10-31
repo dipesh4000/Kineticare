@@ -1,0 +1,39 @@
+{
+  "items": [
+    {
+      "id": "REVIEW-001",
+      "status": "open",
+      "issue": "Reconcile every chapter bookmark with detailed contents and visible chapter headings before extraction."
+    },
+    {
+      "id": "REVIEW-002",
+      "status": "open",
+      "issue": "Inventory tables, boxes and figures chapter by chapter; text extraction cannot establish visual relationships."
+    },
+    {
+      "id": "REVIEW-003",
+      "status": "open",
+      "issue": "Review glossary and relevant index entries for aliases; none are extracted yet."
+    },
+    {
+      "id": "REVIEW-004",
+      "status": "open",
+      "issue": "Some bookmarks contain source spelling/spacing errors; retain raw titles and document verified corrections."
+    },
+    {
+      "id": "REVIEW-005",
+      "status": "open",
+      "issue": "Confirm appendix presence or absence from source content."
+    },
+    {
+      "id": "REVIEW-006",
+      "status": "open",
+      "issue": "Pilot has source-curated exercise evidence; clinical approval and motion assets are absent. Rendering must stay blocked."
+    },
+    {
+      "id": "REVIEW-007",
+      "status": "open",
+      "issue": "Standing toe touch and general bilateral side arm raise are not covered by the pilot; do not map to a different exercise."
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "entries": {
+    "CH-01": {
+      "metadata_path": "chapters/chapter-01/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-02": {
+      "metadata_path": "chapters/chapter-02/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-03": {
+      "metadata_path": "chapters/chapter-03/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-04": {
+      "metadata_path": "chapters/chapter-04/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-05": {
+      "metadata_path": "chapters/chapter-05/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-06": {
+      "metadata_path": "chapters/chapter-06/chapter-metadata.json",
+      "knowledge_unit_ids": [
+        "KU-CH06-0001",
+        "KU-CH06-0002",
+        "KU-CH06-0003",
+        "KU-CH06-0004",
+        "KU-CH06-0005",
+        "KU-CH06-0006",
+        "KU-CH06-0007",
+        "KU-CH06-0008",
+        "KU-CH06-0009"
+      ]
+    },
+    "CH-07": {
+      "metadata_path": "chapters/chapter-07/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-08": {
+      "metadata_path": "chapters/chapter-08/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-09": {
+      "metadata_path": "chapters/chapter-09/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-10": {
+      "metadata_path": "chapters/chapter-10/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-11": {
+      "metadata_path": "chapters/chapter-11/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-12": {
+      "metadata_path": "chapters/chapter-12/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-13": {
+      "metadata_path": "chapters/chapter-13/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-14": {
+      "metadata_path": "chapters/chapter-14/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-15": {
+      "metadata_path": "chapters/chapter-15/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-16": {
+      "metadata_path": "chapters/chapter-16/chapter-metadata.json",
+      "knowledge_unit_ids": [
+        "KU-CH16-0001",
+        "KU-CH16-0002",
+        "KU-CH16-0003",
+        "KU-CH16-0004"
+      ]
+    },
+    "CH-17": {
+      "metadata_path": "chapters/chapter-17/chapter-metadata.json",
+      "knowledge_unit_ids": [
+        "KU-CH17-0001",
+        "KU-CH17-0002",
+        "KU-CH17-0003",
+        "KU-CH17-0004",
+        "KU-CH17-0005",
+        "KU-CH17-0006",
+        "KU-CH17-0007"
+      ]
+    },
+    "CH-18": {
+      "metadata_path": "chapters/chapter-18/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-19": {
+      "metadata_path": "chapters/chapter-19/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-20": {
+      "metadata_path": "chapters/chapter-20/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-21": {
+      "metadata_path": "chapters/chapter-21/chapter-metadata.json",
+      "knowledge_unit_ids": [
+        "KU-CH21-0001",
+        "KU-CH21-0002",
+        "KU-CH21-0003",
+        "KU-CH21-0004",
+        "KU-CH21-0005",
+        "KU-CH21-0006",
+        "KU-CH21-0007",
+        "KU-CH21-0008"
+      ]
+    },
+    "CH-22": {
+      "metadata_path": "chapters/chapter-22/chapter-metadata.json",
+      "knowledge_unit_ids": [
+        "KU-CH22-0001",
+        "KU-CH22-0002",
+        "KU-CH22-0003",
+        "KU-CH22-0004"
+      ]
+    },
+    "CH-23": {
+      "metadata_path": "chapters/chapter-23/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-24": {
+      "metadata_path": "chapters/chapter-24/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    },
+    "CH-25": {
+      "metadata_path": "chapters/chapter-25/chapter-metadata.json",
+      "knowledge_unit_ids": []
+    }
+  }
+}

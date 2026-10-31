@@ -1,0 +1,126 @@
+{
+  "status": "source_curated_pilot",
+  "clusters": [
+    {
+      "cluster_id": "CLUSTER-0001",
+      "cluster_name": "Contraction and loading foundations",
+      "parent_cluster": null,
+      "description": "Pilot source-curated units; chapter coverage remains partial.",
+      "included_knowledge_units": [
+        "KU-CH06-0001",
+        "KU-CH06-0002",
+        "KU-CH06-0003",
+        "KU-CH06-0004",
+        "KU-CH06-0005",
+        "KU-CH06-0006",
+        "KU-CH06-0007",
+        "KU-CH06-0008",
+        "KU-CH06-0009"
+      ],
+      "important_entities": [],
+      "related_clusters": [],
+      "retrieval_keywords": [],
+      "source_chapters": [
+        6
+      ]
+    },
+    {
+      "cluster_id": "CLUSTER-0002",
+      "cluster_name": "Modified bridge control",
+      "parent_cluster": null,
+      "description": "Pilot source-curated units; chapter coverage remains partial.",
+      "included_knowledge_units": [
+        "KU-CH16-0001",
+        "KU-CH16-0002",
+        "KU-CH16-0003",
+        "KU-CH16-0004"
+      ],
+      "important_entities": [
+        "abdominals",
+        "gluteus maximus",
+        "lumbar extensors",
+        "quadriceps"
+      ],
+      "related_clusters": [],
+      "retrieval_keywords": [],
+      "source_chapters": [
+        16
+      ]
+    },
+    {
+      "cluster_id": "CLUSTER-0003",
+      "cluster_name": "Shoulder rotation and elevation",
+      "parent_cluster": null,
+      "description": "Pilot source-curated units; chapter coverage remains partial.",
+      "included_knowledge_units": [
+        "KU-CH17-0001",
+        "KU-CH17-0002",
+        "KU-CH17-0003",
+        "KU-CH17-0004",
+        "KU-CH17-0005",
+        "KU-CH17-0006",
+        "KU-CH17-0007"
+      ],
+      "important_entities": [
+        "deltoid",
+        "infraspinatus",
+        "supraspinatus",
+        "teres minor"
+      ],
+      "related_clusters": [],
+      "retrieval_keywords": [],
+      "source_chapters": [
+        17
+      ]
+    },
+    {
+      "cluster_id": "CLUSTER-0004",
+      "cluster_name": "Knee function and closed-chain techniques",
+      "parent_cluster": null,
+      "description": "Pilot source-curated units; chapter coverage remains partial.",
+      "included_knowledge_units": [
+        "KU-CH21-0001",
+        "KU-CH21-0002",
+        "KU-CH21-0003",
+        "KU-CH21-0004",
+        "KU-CH21-0005",
+        "KU-CH21-0006",
+        "KU-CH21-0007",
+        "KU-CH21-0008"
+      ],
+      "important_entities": [
+        "hamstrings",
+        "plantarflexors",
+        "quadriceps",
+        "quadriceps femoris"
+      ],
+      "related_clusters": [],
+      "retrieval_keywords": [],
+      "source_chapters": [
+        21
+      ]
+    },
+    {
+      "cluster_id": "CLUSTER-0005",
+      "cluster_name": "Heel loading and support",
+      "parent_cluster": null,
+      "description": "Pilot source-curated units; chapter coverage remains partial.",
+      "included_knowledge_units": [
+        "KU-CH22-0001",
+        "KU-CH22-0002",
+        "KU-CH22-0003",
+        "KU-CH22-0004"
+      ],
+      "important_entities": [
+        "gastrocnemius",
+        "plantarflexors",
+        "soleus"
+      ],
+      "related_clusters": [],
+      "retrieval_keywords": [],
+      "source_chapters": [
+        22
+      ]
+    }
+  ]
+}

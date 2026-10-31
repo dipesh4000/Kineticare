@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "status": "no_reviewed_motion_assets",
+  "templates": [],
+  "policy": "Only registered, reviewed templates with matching exercise variation, rig profile, contact constraints and permitted parameters may render. Textbook prose never supplies bone rotations."
+}

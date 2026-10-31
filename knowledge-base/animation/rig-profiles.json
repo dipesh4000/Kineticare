@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "profiles": [],
+  "required_fields": [
+    "rig_profile_id",
+    "asset_path",
+    "bone_map",
+    "coordinate_system",
+    "rest_pose",
+    "rotation_order",
+    "units",
+    "validated_joint_limits",
+    "review_status"
+  ],
+  "note": "Specification requirements only. No rig or universal numerical joint limits have been invented."
+}

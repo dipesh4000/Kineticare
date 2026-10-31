@@ -1,0 +1,403 @@
+{
+  "schema_version": 1,
+  "status": "pilot_indexed",
+  "entries": {
+    "abdominals": [
+      "KU-CH16-0002"
+    ],
+    "achilles context": [
+      "KU-CH22-0004"
+    ],
+    "achilles evidence is condition specific": [
+      "KU-CH22-0004"
+    ],
+    "ankle weight bearing": [
+      "KU-CH22-0002"
+    ],
+    "assisted heel lowering": [
+      "KU-CH22-0003"
+    ],
+    "assisted reset with eccentric heel lowering": [
+      "KU-CH22-0003"
+    ],
+    "band external rotation": [
+      "KU-CH17-0001"
+    ],
+    "bilateral calf raise": [
+      "KU-CH22-0001"
+    ],
+    "bilateral heel raising and lowering": [
+      "KU-CH22-0001"
+    ],
+    "bilateral mini squat technique": [
+      "KU-CH21-0003"
+    ],
+    "bridge hold": [
+      "KU-CH16-0003"
+    ],
+    "bridge progression": [
+      "KU-CH16-0004"
+    ],
+    "bridge progression with extremity movement": [
+      "KU-CH16-0004"
+    ],
+    "bridge stabilizers": [
+      "KU-CH16-0002"
+    ],
+    "bridge technique": [
+      "KU-CH16-0001"
+    ],
+    "calf raise": [
+      "KU-CH22-0001"
+    ],
+    "chain qualification": [
+      "KU-CH06-0007"
+    ],
+    "ckc": [
+      "KU-CH06-0006"
+    ],
+    "closed chain": [
+      "KU-CH06-0006"
+    ],
+    "closed kinetic chain": [
+      "KU-CH06-0006"
+    ],
+    "closed kinetic chain terminology": [
+      "KU-CH06-0006"
+    ],
+    "concentric": [
+      "KU-CH06-0002",
+      "KU-CH21-0007"
+    ],
+    "concentric muscle action": [
+      "KU-CH06-0002"
+    ],
+    "deltoid": [
+      "KU-CH17-0007"
+    ],
+    "distal fixation": [
+      "KU-CH06-0007"
+    ],
+    "distally fixated": [
+      "KU-CH06-0007"
+    ],
+    "dynamic not isotonic": [
+      "KU-CH06-0004"
+    ],
+    "dynamic resistance is not necessarily isotonic": [
+      "KU-CH06-0004"
+    ],
+    "eccentric": [
+      "KU-CH06-0003",
+      "KU-CH21-0007",
+      "KU-CH22-0003"
+    ],
+    "eccentric calf lowering": [
+      "KU-CH22-0003"
+    ],
+    "eccentric heel drop": [
+      "KU-CH22-0003"
+    ],
+    "eccentric heel lower": [
+      "KU-CH22-0003"
+    ],
+    "eccentric muscle action": [
+      "KU-CH06-0003"
+    ],
+    "elbow joint": [
+      "KU-CH17-0001"
+    ],
+    "empty can": [
+      "KU-CH17-0007"
+    ],
+    "external rotation towel cue": [
+      "KU-CH17-0003"
+    ],
+    "external rotator roles and position dependence": [
+      "KU-CH17-0002"
+    ],
+    "forward step up": [
+      "KU-CH21-0006"
+    ],
+    "full can": [
+      "KU-CH17-0005"
+    ],
+    "full can elevation": [
+      "KU-CH17-0005"
+    ],
+    "full can exercise does not isolate supraspinatus": [
+      "KU-CH17-0007"
+    ],
+    "full can scaption": [
+      "KU-CH17-0005"
+    ],
+    "gastrocnemius": [
+      "KU-CH22-0003"
+    ],
+    "glenohumeral joint": [
+      "KU-CH17-0001",
+      "KU-CH17-0004",
+      "KU-CH17-0005"
+    ],
+    "gluteus maximus": [
+      "KU-CH16-0002"
+    ],
+    "hamstring function depends on task and fixation": [
+      "KU-CH21-0002"
+    ],
+    "hamstrings": [
+      "KU-CH21-0002",
+      "KU-CH21-0008"
+    ],
+    "heel raise": [
+      "KU-CH22-0001"
+    ],
+    "hip flexion": [
+      "KU-CH21-0005"
+    ],
+    "hip joint": [
+      "KU-CH16-0001",
+      "KU-CH21-0005"
+    ],
+    "hook lying bridge": [
+      "KU-CH16-0001"
+    ],
+    "infraspinatus": [
+      "KU-CH17-0002"
+    ],
+    "isometric": [
+      "KU-CH06-0001",
+      "KU-CH16-0003",
+      "KU-CH21-0008"
+    ],
+    "isometric muscle action": [
+      "KU-CH06-0001"
+    ],
+    "isotonic terminology": [
+      "KU-CH06-0004"
+    ],
+    "knee co contraction": [
+      "KU-CH21-0008"
+    ],
+    "knee extension": [
+      "KU-CH21-0001",
+      "KU-CH21-0003"
+    ],
+    "knee flexion": [
+      "KU-CH21-0002",
+      "KU-CH21-0003",
+      "KU-CH21-0005"
+    ],
+    "knee flexors": [
+      "KU-CH21-0002"
+    ],
+    "knee joint": [
+      "KU-CH21-0001",
+      "KU-CH21-0002",
+      "KU-CH21-0003",
+      "KU-CH21-0005"
+    ],
+    "lengthening contraction": [
+      "KU-CH06-0003"
+    ],
+    "lumbar extensors": [
+      "KU-CH16-0002"
+    ],
+    "maintained bridge for isometric control": [
+      "KU-CH16-0003"
+    ],
+    "marching bridge": [
+      "KU-CH16-0004"
+    ],
+    "mini squat": [
+      "KU-CH21-0003"
+    ],
+    "mini squat alignment": [
+      "KU-CH21-0004"
+    ],
+    "minisquat": [
+      "KU-CH21-0003"
+    ],
+    "modified bridge": [
+      "KU-CH16-0001"
+    ],
+    "modified bridge technique": [
+      "KU-CH16-0001"
+    ],
+    "muscle roles in modified bridging": [
+      "KU-CH16-0002"
+    ],
+    "okc": [
+      "KU-CH06-0005"
+    ],
+    "open chain": [
+      "KU-CH06-0005"
+    ],
+    "open kinetic chain": [
+      "KU-CH06-0005"
+    ],
+    "open kinetic chain terminology": [
+      "KU-CH06-0005"
+    ],
+    "overload context": [
+      "KU-CH06-0009"
+    ],
+    "partial squat": [
+      "KU-CH21-0003"
+    ],
+    "plantarflexors": [
+      "KU-CH21-0007",
+      "KU-CH22-0001"
+    ],
+    "progressive overload is conditional": [
+      "KU-CH06-0009"
+    ],
+    "quadriceps": [
+      "KU-CH16-0002",
+      "KU-CH21-0001",
+      "KU-CH21-0007",
+      "KU-CH21-0008"
+    ],
+    "quadriceps and knee extension": [
+      "KU-CH21-0001"
+    ],
+    "quadriceps femoris": [
+      "KU-CH21-0001"
+    ],
+    "quadriceps hamstring co contraction": [
+      "KU-CH21-0008"
+    ],
+    "quadriceps phases in step training": [
+      "KU-CH21-0007"
+    ],
+    "quads": [
+      "KU-CH21-0001"
+    ],
+    "resistance context": [
+      "KU-CH06-0008"
+    ],
+    "resistance exercise requires individual context": [
+      "KU-CH06-0008"
+    ],
+    "resisted humeral external rotation": [
+      "KU-CH17-0001"
+    ],
+    "scaption": [
+      "KU-CH17-0004"
+    ],
+    "scapular plane": [
+      "KU-CH17-0004"
+    ],
+    "scapular plane arm elevation": [
+      "KU-CH17-0004"
+    ],
+    "seated knee co contraction setting": [
+      "KU-CH21-0008"
+    ],
+    "short arc squat": [
+      "KU-CH21-0003"
+    ],
+    "shortening contraction": [
+      "KU-CH06-0002"
+    ],
+    "shoulder elevation precaution": [
+      "KU-CH17-0006"
+    ],
+    "shoulder er": [
+      "KU-CH17-0001"
+    ],
+    "shoulder er muscles": [
+      "KU-CH17-0002"
+    ],
+    "shoulder er towel": [
+      "KU-CH17-0003"
+    ],
+    "shoulder external rotation": [
+      "KU-CH17-0001"
+    ],
+    "soleus": [
+      "KU-CH22-0003"
+    ],
+    "source qualified shoulder elevation precaution": [
+      "KU-CH17-0006"
+    ],
+    "source specific partial squat alignment cues": [
+      "KU-CH21-0004"
+    ],
+    "stair exercise": [
+      "KU-CH21-0006"
+    ],
+    "standing full can elevation": [
+      "KU-CH17-0005"
+    ],
+    "standing resisted shoulder external rotation": [
+      "KU-CH17-0001"
+    ],
+    "standing shoulder external rotation": [
+      "KU-CH17-0001"
+    ],
+    "standing wall slide": [
+      "KU-CH21-0005"
+    ],
+    "standing wall slide technique": [
+      "KU-CH21-0005"
+    ],
+    "static contraction": [
+      "KU-CH06-0001"
+    ],
+    "step ascent": [
+      "KU-CH21-0007"
+    ],
+    "step descent": [
+      "KU-CH21-0007"
+    ],
+    "step down": [
+      "KU-CH21-0006"
+    ],
+    "step quadriceps": [
+      "KU-CH21-0007"
+    ],
+    "step technique": [
+      "KU-CH21-0006"
+    ],
+    "step up": [
+      "KU-CH21-0006"
+    ],
+    "step up and step down setup": [
+      "KU-CH21-0006"
+    ],
+    "supine bridge": [
+      "KU-CH16-0001"
+    ],
+    "support and tolerance in ankle weight bearing exercise": [
+      "KU-CH22-0002"
+    ],
+    "supraspinatus": [
+      "KU-CH17-0007"
+    ],
+    "supraspinatus isolation": [
+      "KU-CH17-0007"
+    ],
+    "supraspinatus not isolated": [
+      "KU-CH17-0007"
+    ],
+    "teres minor": [
+      "KU-CH17-0002"
+    ],
+    "towel cue for shoulder external rotation": [
+      "KU-CH17-0003"
+    ],
+    "wall slide": [
+      "KU-CH21-0005"
+    ],
+    "wall squat": [
+      "KU-CH21-0005"
+    ],
+    "weight bearing": [
+      "KU-CH06-0007"
+    ],
+    "weight bearing and distal fixation are separate descriptors": [
+      "KU-CH06-0007"
+    ]
+  }
+}

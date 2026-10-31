@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "status": "pilot_indexed",
+  "entries": {
+    "abdominals": [
+      "KU-CH16-0002"
+    ],
+    "deltoid": [
+      "KU-CH17-0007"
+    ],
+    "elbow joint": [
+      "KU-CH17-0001"
+    ],
+    "gastrocnemius": [
+      "KU-CH22-0003"
+    ],
+    "glenohumeral joint": [
+      "KU-CH17-0001",
+      "KU-CH17-0004",
+      "KU-CH17-0005"
+    ],
+    "gluteus maximus": [
+      "KU-CH16-0002"
+    ],
+    "hamstrings": [
+      "KU-CH21-0002",
+      "KU-CH21-0008"
+    ],
+    "hip joint": [
+      "KU-CH16-0001",
+      "KU-CH21-0005"
+    ],
+    "infraspinatus": [
+      "KU-CH17-0002"
+    ],
+    "knee joint": [
+      "KU-CH21-0001",
+      "KU-CH21-0002",
+      "KU-CH21-0003",
+      "KU-CH21-0005"
+    ],
+    "lumbar extensors": [
+      "KU-CH16-0002"
+    ],
+    "plantarflexors": [
+      "KU-CH21-0007",
+      "KU-CH22-0001"
+    ],
+    "quadriceps": [
+      "KU-CH16-0002",
+      "KU-CH21-0007",
+      "KU-CH21-0008"
+    ],
+    "quadriceps femoris": [
+      "KU-CH21-0001"
+    ],
+    "soleus": [
+      "KU-CH22-0003"
+    ],
+    "supraspinatus": [
+      "KU-CH17-0007"
+    ],
+    "teres minor": [
+      "KU-CH17-0002"
+    ]
+  }
+}

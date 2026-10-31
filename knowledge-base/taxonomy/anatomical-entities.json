@@ -1,0 +1,151 @@
+{
+  "status": "pilot_extracted",
+  "entities": [
+    {
+      "entity_id": "ENTITY-000001",
+      "name": "elbow joint",
+      "entity_type": "joints",
+      "knowledge_unit_ids": [
+        "KU-CH17-0001"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000002",
+      "name": "glenohumeral joint",
+      "entity_type": "joints",
+      "knowledge_unit_ids": [
+        "KU-CH17-0001",
+        "KU-CH17-0004",
+        "KU-CH17-0005"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000003",
+      "name": "hip joint",
+      "entity_type": "joints",
+      "knowledge_unit_ids": [
+        "KU-CH16-0001",
+        "KU-CH21-0005"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000004",
+      "name": "knee joint",
+      "entity_type": "joints",
+      "knowledge_unit_ids": [
+        "KU-CH21-0001",
+        "KU-CH21-0002",
+        "KU-CH21-0003",
+        "KU-CH21-0005"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000005",
+      "name": "abdominals",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH16-0002"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000006",
+      "name": "deltoid",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH17-0007"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000007",
+      "name": "gastrocnemius",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH22-0003"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000008",
+      "name": "gluteus maximus",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH16-0002"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000009",
+      "name": "hamstrings",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH21-0002",
+        "KU-CH21-0008"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000010",
+      "name": "infraspinatus",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH17-0002"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000011",
+      "name": "lumbar extensors",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH16-0002"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000012",
+      "name": "plantarflexors",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH21-0007",
+        "KU-CH22-0001"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000013",
+      "name": "quadriceps",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH16-0002",
+        "KU-CH21-0007",
+        "KU-CH21-0008"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000014",
+      "name": "quadriceps femoris",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH21-0001"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000015",
+      "name": "soleus",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH22-0003"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000016",
+      "name": "supraspinatus",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH17-0007"
+      ]
+    },
+    {
+      "entity_id": "ENTITY-000017",
+      "name": "teres minor",
+      "entity_type": "muscles",
+      "knowledge_unit_ids": [
+        "KU-CH17-0002"
+      ]
+    }
+  ]
+}

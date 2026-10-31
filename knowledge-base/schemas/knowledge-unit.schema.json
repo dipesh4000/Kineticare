@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:kineticare:knowledge-unit:v1",
+  "title": "Source-grounded therapeutic exercise knowledge unit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "knowledge_type", "domain", "subdomain", "body_regions", "anatomical_entities", "concept", "summary", "detailed_content", "biomechanical_details", "functional_significance", "clinical_considerations", "related_exercises", "related_knowledge_units", "synonyms_and_aliases", "retrieval_keywords", "chapter_metadata", "source_traceability"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^KU-CH[0-9]{2}-[0-9]{4}$"},
+    "title": {"$ref": "#/$defs/text"},
+    "knowledge_type": {"enum": ["anatomy", "joint_biomechanics", "muscle_function", "exercise_principle", "movement_pattern", "clinical_guideline", "technique", "functional_relationship"]},
+    "domain": {"enum": ["human_anatomy", "joint_biomechanics", "muscle_physiology", "therapeutic_exercise", "regional_biomechanics", "functional_movement", "clinical_considerations"]},
+    "subdomain": {"type": ["string", "null"]},
+    "body_regions": {"type": "array", "uniqueItems": true, "items": {"enum": ["spine_trunk", "shoulder_girdle", "elbow_forearm", "wrist_hand", "hip_pelvis", "knee", "ankle_foot"]}},
+    "anatomical_entities": {
+      "type": "object", "additionalProperties": false,
+      "required": ["bones", "joints", "muscles", "ligaments", "tendons", "other_structures"],
+      "properties": {"bones": {"$ref": "#/$defs/terms"}, "joints": {"$ref": "#/$defs/terms"}, "muscles": {"$ref": "#/$defs/terms"}, "ligaments": {"$ref": "#/$defs/terms"}, "tendons": {"$ref": "#/$defs/terms"}, "other_structures": {"$ref": "#/$defs/terms"}}
+    },
+    "concept": {"$ref": "#/$defs/text"},
+    "summary": {"$ref": "#/$defs/text"},
+    "detailed_content": {"$ref": "#/$defs/text"},
+    "biomechanical_details": {
+      "type": "object", "additionalProperties": false,
+      "required": ["movement", "joint_actions", "anatomical_planes", "anatomical_axes", "muscle_actions", "contraction_types", "stabilization_requirements"],
+      "properties": {"movement": {"$ref": "#/$defs/terms"}, "joint_actions": {"$ref": "#/$defs/terms"}, "anatomical_planes": {"$ref": "#/$defs/terms"}, "anatomical_axes": {"$ref": "#/$defs/terms"}, "muscle_actions": {"$ref": "#/$defs/terms"}, "contraction_types": {"$ref": "#/$defs/terms"}, "stabilization_requirements": {"$ref": "#/$defs/terms"}}
+    },
+    "functional_significance": {"type": ["string", "null"]},
+    "clinical_considerations": {
+      "type": "object", "additionalProperties": false, "required": ["indications", "precautions", "contraindications", "limitations"],
+      "properties": {"indications": {"$ref": "#/$defs/terms"}, "precautions": {"$ref": "#/$defs/terms"}, "contraindications": {"$ref": "#/$defs/terms"}, "limitations": {"$ref": "#/$defs/terms"}}
+    },
+    "related_exercises": {"$ref": "#/$defs/terms"},
+    "related_knowledge_units": {"$ref": "#/$defs/terms"},
+    "synonyms_and_aliases": {"$ref": "#/$defs/terms"},
+    "retrieval_keywords": {"$ref": "#/$defs/terms"},
+    "chapter_metadata": {
+      "type": "object", "additionalProperties": false,
+      "required": ["book", "edition", "chapter_number", "chapter_title", "section_title", "printed_page_numbers", "pdf_page_numbers"],
+      "properties": {
+        "book": {"const": "Therapeutic Exercise: Foundations and Techniques"}, "edition": {"const": "6th"},
+        "chapter_number": {"type": "integer", "minimum": 1, "maximum": 25}, "chapter_title": {"$ref": "#/$defs/text"},
+        "section_title": {"$ref": "#/$defs/text"},
+        "printed_page_numbers": {"type": "array", "uniqueItems": true, "minItems": 1, "items": {"type": "integer", "minimum": 1}},
+        "pdf_page_numbers": {"type": "array", "uniqueItems": true, "minItems": 1, "items": {"type": "integer", "minimum": 1, "maximum": 1057}}
+      }
+    },
+    "source_traceability": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_type", "source_location", "source_support", "extraction_confidence"],
+      "properties": {"source_type": {"enum": ["text", "table", "figure", "diagram"]}, "source_location": {"$ref": "#/$defs/text"}, "source_support": {"enum": ["direct", "summarized"]}, "extraction_confidence": {"enum": ["high", "medium", "low"]}}
+    }
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "terms": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/text"}}
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "chapter": "Chapter 22: The Ankle and Foot",
+  "chapter_number": 22,
+  "sections_processed": [],
+  "knowledge_units_created": 4,
+  "relationships_created": 1,
+  "clusters_updated": [
+    "CLUSTER-0005"
+  ],
+  "tables_processed": [],
+  "figures_processed": [
+    "22.17"
+  ],
+  "unreadable_content": [],
+  "missing_information": [],
+  "items_requiring_review": [
+    "Remaining chapter content and visuals; no entire section declared complete.",
+    "Qualified clinician review of extracted pilot and historical source guidance.",
+    "Animation assets, rig mapping and numerical motion constraints are not provided by these summaries."
+  ],
+  "completion_status": "partial",
+  "subsections_sampled": [
+    "Closed-Chain (Weight-Bearing) Exercises"
+  ],
+  "pdf_pages_read": [
+    920,
+    921
+  ],
+  "boxes_processed": [
+    "22.9"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "chapter_id": "CH-02",
+  "chapter_number": 2,
+  "chapter_title": "Prevention, Health,and Wellness",
+  "part_id": "PART-01",
+  "pdf_start_page": 76,
+  "pdf_end_page": 83,
+  "printed_start_page_label": "43",
+  "printed_end_page_label": "50",
+  "section_ids": [
+    "SEC-02-001",
+    "SEC-02-002",
+    "SEC-02-003",
+    "SEC-02-004",
+    "SEC-02-005",
+    "SEC-02-006",
+    "SEC-02-007",
+    "SEC-02-008",
+    "SEC-02-009",
+    "SEC-02-010",
+    "SEC-02-011",
+    "SEC-02-012",
+    "SEC-02-013",
+    "SEC-02-014",
+    "SEC-02-015"
+  ],
+  "range_basis": "chapter start bookmark through page before next chapter or glossary",
+  "status": "pending"
+}

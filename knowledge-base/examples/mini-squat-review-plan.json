@@ -1,0 +1,11 @@
+{
+  "status": "needs_review",
+  "exercise_id": "EX-KU-000001",
+  "motion_template_id": null,
+  "rig_profile_id": null,
+  "phase_ids": ["bilateral-mini-squat:1", "bilateral-mini-squat:2"],
+  "parameters": [],
+  "claims": [{"text": "The cited initial mini-squat technique bends both knees through a partial range and then extends them; its guidance is specific to that source technique.", "evidence_unit_ids": ["KU-CH21-0003"]}],
+  "missing_requirements": ["Clinician approval of the exact variation", "Reviewed motion template and compatible rig", "Validated contacts, movement range and presentation timing"],
+  "questions": []
+}

@@ -1,0 +1,33 @@
+{
+  "status": "classification_vocabulary_from_user_brief",
+  "domains": [
+    {
+      "id": "human_anatomy",
+      "name": "Human Anatomy"
+    },
+    {
+      "id": "joint_biomechanics",
+      "name": "Joint Biomechanics and Kinematics"
+    },
+    {
+      "id": "muscle_physiology",
+      "name": "Muscle Physiology and Function"
+    },
+    {
+      "id": "therapeutic_exercise",
+      "name": "Therapeutic Exercise Principles"
+    },
+    {
+      "id": "regional_biomechanics",
+      "name": "Regional Biomechanics"
+    },
+    {
+      "id": "functional_movement",
+      "name": "Functional Movement and Kinetic Relationships"
+    },
+    {
+      "id": "clinical_considerations",
+      "name": "Clinical Considerations"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "chapter": "Chapter 6: Resistance Exercise for Impaired Muscle Performance",
+  "chapter_number": 6,
+  "sections_processed": [],
+  "knowledge_units_created": 9,
+  "relationships_created": 2,
+  "clusters_updated": [
+    "CLUSTER-0001"
+  ],
+  "tables_processed": [],
+  "figures_processed": [],
+  "unreadable_content": [],
+  "missing_information": [],
+  "items_requiring_review": [
+    "Remaining chapter content and visuals; no entire section declared complete.",
+    "Qualified clinician review of extracted pilot and historical source guidance.",
+    "Animation assets, rig mapping and numerical motion constraints are not provided by these summaries."
+  ],
+  "completion_status": "partial",
+  "subsections_sampled": [
+    "Dynamic Exercise: Concentric and Eccentric",
+    "Isometric Exercise (Static Exercise)",
+    "Muscle Performance and Resistance Exercise: Definitions and Guiding Principles",
+    "Open-Chain and Closed-Chain Exercise",
+    "Overload Principle"
+  ],
+  "pdf_pages_read": [
+    191,
+    193,
+    212,
+    213,
+    214,
+    219,
+    220
+  ]
+}

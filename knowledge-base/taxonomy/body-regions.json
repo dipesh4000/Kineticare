@@ -1,0 +1,33 @@
+{
+  "status": "classification_vocabulary_from_user_brief",
+  "regions": [
+    {
+      "id": "spine_trunk",
+      "name": "Spine and trunk"
+    },
+    {
+      "id": "shoulder_girdle",
+      "name": "Shoulder and shoulder girdle"
+    },
+    {
+      "id": "elbow_forearm",
+      "name": "Elbow and forearm"
+    },
+    {
+      "id": "wrist_hand",
+      "name": "Wrist and hand"
+    },
+    {
+      "id": "hip_pelvis",
+      "name": "Hip and pelvis"
+    },
+    {
+      "id": "knee",
+      "name": "Knee"
+    },
+    {
+      "id": "ankle_foot",
+      "name": "Ankle and foot"
+    }
+  ]
+}

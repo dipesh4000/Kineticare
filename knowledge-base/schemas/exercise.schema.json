@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["exercise_id", "slug", "exercise_name", "exercise_category", "target_body_regions", "aliases", "starting_position", "technique", "movement_phases", "equipment", "precautions", "contraindications", "related_knowledge_units", "source_reference", "field_provenance", "source_limits", "missing_information", "review_status", "clinical_approval", "animation", "source_parameters"],
+  "properties": {
+    "exercise_id": {"type": "string", "pattern": "^EX-KU-[0-9]{6}$"},
+    "slug": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "exercise_name": {"type": "string", "minLength": 1},
+    "exercise_category": {"type": "string", "minLength": 1},
+    "target_body_regions": {"$ref": "#/$defs/terms"},
+    "aliases": {"$ref": "#/$defs/terms"},
+    "starting_position": {"type": "string", "minLength": 1},
+    "technique": {"$ref": "#/$defs/terms"},
+    "equipment": {"$ref": "#/$defs/terms"},
+    "precautions": {"$ref": "#/$defs/terms"},
+    "contraindications": {"$ref": "#/$defs/terms"},
+    "related_knowledge_units": {"$ref": "#/$defs/terms"},
+    "source_limits": {"$ref": "#/$defs/terms"},
+    "missing_information": {"$ref": "#/$defs/terms"},
+    "source_reference": {
+      "type": "object", "required": ["chapter", "pages", "pdf_pages"],
+      "properties": {"chapter": {"type": "integer", "minimum": 1, "maximum": 25}, "pages": {"$ref": "#/$defs/pages"}, "pdf_pages": {"$ref": "#/$defs/pages"}}
+    },
+    "field_provenance": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/terms"}},
+    "movement_phases": {"type": "array", "minItems": 1, "items": {
+      "type": "object", "required": ["phase_id", "phase_name", "description", "joint_actions", "muscle_actions", "contraction_types", "stabilization", "source_support", "evidence_unit_ids", "duration_seconds", "joint_targets_degrees"],
+      "properties": {
+        "phase_id": {"type": "string", "minLength": 1}, "phase_name": {"type": "string", "minLength": 1}, "description": {"type": "string", "minLength": 1},
+        "joint_actions": {"$ref": "#/$defs/terms"}, "muscle_actions": {"$ref": "#/$defs/terms"}, "contraction_types": {"$ref": "#/$defs/terms"}, "stabilization": {"$ref": "#/$defs/terms"},
+        "source_support": {"enum": ["direct", "summarized", "unknown"]}, "evidence_unit_ids": {"$ref": "#/$defs/terms"},
+        "duration_seconds": {"type": ["number", "null"], "exclusiveMinimum": 0}, "joint_targets_degrees": {"type": ["object", "null"]}
+      },
+      "allOf": [{"if": {"properties": {"source_support": {"enum": ["direct", "summarized"]}}}, "then": {"properties": {"evidence_unit_ids": {"minItems": 1}}}}, {"if": {"properties": {"source_support": {"const": "unknown"}}}, "then": {"properties": {"joint_actions": {"maxItems": 0}, "muscle_actions": {"maxItems": 0}, "contraction_types": {"maxItems": 0}, "stabilization": {"maxItems": 0}, "evidence_unit_ids": {"maxItems": 0}}}}]
+    }},
+    "review_status": {"enum": ["source_curated_clinical_review_pending", "approved", "rejected"]},
+    "clinical_approval": {"type": "object", "required": ["status", "reviewer", "reviewed_at"], "properties": {"status": {"enum": ["pending", "approved", "rejected"]}, "reviewer": {"type": ["string", "null"]}, "reviewed_at": {"type": ["string", "null"]}}},
+    "source_parameters": {"type": "array", "items": {
+      "type": "object", "required": ["name", "minimum", "maximum", "unit", "scope", "evidence_unit_ids", "usage"],
+      "properties": {"name": {"type": "string"}, "minimum": {"type": "number"}, "maximum": {"type": "number"}, "unit": {"enum": ["degrees", "inches"]}, "scope": {"type": "string", "minLength": 1}, "evidence_unit_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "usage": {"const": "source_guidance_requires_review_not_automatic_target"}}
+    }},
+    "animation": {"type": "object", "required": ["status", "motion_template_id", "rig_profile_id", "render_ready", "required_parameters", "engineering_contact_requirements"], "properties": {"status": {"type": "string"}, "motion_template_id": {"type": ["string", "null"]}, "rig_profile_id": {"type": ["string", "null"]}, "render_ready": {"type": "boolean"}, "required_parameters": {"$ref": "#/$defs/terms"}, "engineering_contact_requirements": {"type": "array", "items": {"type": "object", "required": ["description", "provenance", "review_status"], "properties": {"description": {"type": "string"}, "provenance": {"const": "engineering_interpretation"}, "review_status": {"const": "pending"}}}}}}
+  },
+  "$defs": {"terms": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}, "pages": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer", "minimum": 1}}}
+}

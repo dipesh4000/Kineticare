@@ -1,0 +1,31 @@
+{
+  "chapter": "Chapter 17: The Shoulder and Shoulder Girdle",
+  "chapter_number": 17,
+  "sections_processed": [],
+  "knowledge_units_created": 7,
+  "relationships_created": 3,
+  "clusters_updated": [
+    "CLUSTER-0003"
+  ],
+  "tables_processed": [],
+  "figures_processed": [
+    "17.52 A/B",
+    "17.54"
+  ],
+  "unreadable_content": [],
+  "missing_information": [],
+  "items_requiring_review": [
+    "Remaining chapter content and visuals; no entire section declared complete.",
+    "Qualified clinician review of extracted pilot and historical source guidance.",
+    "Animation assets, rig mapping and numerical motion constraints are not provided by these summaries."
+  ],
+  "completion_status": "partial",
+  "subsections_sampled": [
+    "Dynamic Strengthening Exercises: Glenohumeral Muscles"
+  ],
+  "pdf_pages_read": [
+    638,
+    639,
+    640
+  ]
+}

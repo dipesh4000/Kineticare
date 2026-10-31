@@ -1,0 +1,43 @@
+{
+  "status": "partial_exercise_pilot",
+  "chapters_total": 25,
+  "chapters_complete": 0,
+  "chapters_pending": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25
+  ],
+  "knowledge_units_total": 32,
+  "relationships_total": 11,
+  "exercises_total": 8,
+  "chapters_sampled": [
+    6,
+    16,
+    17,
+    21,
+    22
+  ],
+  "clinical_review": "pending"
+}

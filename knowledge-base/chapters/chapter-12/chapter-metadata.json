@@ -1,0 +1,29 @@
+{
+  "chapter_id": "CH-12",
+  "chapter_number": 12,
+  "chapter_title": "Surgical Interventions and Postoperative Management",
+  "part_id": "PART-03",
+  "pdf_start_page": 384,
+  "pdf_end_page": 406,
+  "printed_start_page_label": "351",
+  "printed_end_page_label": "373",
+  "section_ids": [
+    "SEC-12-001",
+    "SEC-12-002",
+    "SEC-12-003",
+    "SEC-12-004",
+    "SEC-12-005",
+    "SEC-12-006",
+    "SEC-12-007",
+    "SEC-12-008",
+    "SEC-12-009",
+    "SEC-12-010",
+    "SEC-12-011",
+    "SEC-12-012",
+    "SEC-12-013",
+    "SEC-12-014",
+    "SEC-12-015"
+  ],
+  "range_basis": "chapter start bookmark through page before next chapter or glossary",
+  "status": "pending"
+}

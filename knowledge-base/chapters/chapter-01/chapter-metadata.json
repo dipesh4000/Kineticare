@@ -1,0 +1,33 @@
+{
+  "chapter_id": "CH-01",
+  "chapter_number": 1,
+  "chapter_title": "Therapeutic Exercise: Foundational Concepts",
+  "part_id": "PART-01",
+  "pdf_start_page": 34,
+  "pdf_end_page": 75,
+  "printed_start_page_label": "1",
+  "printed_end_page_label": "42",
+  "section_ids": [
+    "SEC-01-001",
+    "SEC-01-002",
+    "SEC-01-003",
+    "SEC-01-004",
+    "SEC-01-005",
+    "SEC-01-006",
+    "SEC-01-007",
+    "SEC-01-008",
+    "SEC-01-009",
+    "SEC-01-010",
+    "SEC-01-011",
+    "SEC-01-012",
+    "SEC-01-013",
+    "SEC-01-014",
+    "SEC-01-015",
+    "SEC-01-016",
+    "SEC-01-017",
+    "SEC-01-018",
+    "SEC-01-019"
+  ],
+  "range_basis": "chapter start bookmark through page before next chapter or glossary",
+  "status": "pending"
+}

@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-31",
+  "status": "passed",
+  "counts": {
+    "parts": 5,
+    "chapters": 25,
+    "outline_nodes": 1058,
+    "knowledge_units": 32,
+    "relationships": 11,
+    "exercises": 8,
+    "clusters": 5
+  },
+  "tests_passed": 26,
+  "command": "python -m unittest discover -s scripts -p 'test_*.py'",
+  "verified": [
+    "Canonical schema, ID and page consistency",
+    "Exact exercise-variation retrieval",
+    "Unsupported and ambiguous variation handling",
+    "Source-backed step phase metadata",
+    "Rejection of invented citations, phases and executable code",
+    "Render gate with synthetic approved asset fixture, bounds, authorization and revocation",
+    "Pending chapters omit empty collections; populated collections remain mandatory"
+  ],
+  "not_verified": [
+    "Clinical approval",
+    "LLM semantic citation entailment",
+    "Live Gemini API",
+    "Actual rig or rendered motion",
+    "Full textbook coverage"
+  ]
+}

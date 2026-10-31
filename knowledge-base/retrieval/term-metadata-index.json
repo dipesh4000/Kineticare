@@ -1,0 +1,702 @@
+{
+  "schema_version": 1,
+  "entries": {
+    "KU-CH06-0001": {
+      "primary_keywords": [
+        "Isometric muscle action"
+      ],
+      "secondary_keywords": [
+        "isometric",
+        "Isometric muscle action",
+        "static contraction"
+      ],
+      "aliases": [
+        "static contraction"
+      ],
+      "body_regions": [],
+      "chapter_id": "CH-06",
+      "cluster_ids": [
+        "CLUSTER-0001"
+      ]
+    },
+    "KU-CH06-0002": {
+      "primary_keywords": [
+        "Concentric muscle action"
+      ],
+      "secondary_keywords": [
+        "concentric",
+        "Concentric muscle action",
+        "shortening contraction"
+      ],
+      "aliases": [
+        "shortening contraction"
+      ],
+      "body_regions": [],
+      "chapter_id": "CH-06",
+      "cluster_ids": [
+        "CLUSTER-0001"
+      ]
+    },
+    "KU-CH06-0003": {
+      "primary_keywords": [
+        "Eccentric muscle action"
+      ],
+      "secondary_keywords": [
+        "eccentric",
+        "Eccentric muscle action",
+        "lengthening contraction"
+      ],
+      "aliases": [
+        "lengthening contraction"
+      ],
+      "body_regions": [],
+      "chapter_id": "CH-06",
+      "cluster_ids": [
+        "CLUSTER-0001"
+      ]
+    },
+    "KU-CH06-0004": {
+      "primary_keywords": [
+        "Dynamic resistance is not necessarily isotonic"
+      ],
+      "secondary_keywords": [
+        "dynamic not isotonic",
+        "Dynamic resistance is not necessarily isotonic",
+        "isotonic terminology"
+      ],
+      "aliases": [
+        "isotonic terminology"
+      ],
+      "body_regions": [],
+      "chapter_id": "CH-06",
+      "cluster_ids": [
+        "CLUSTER-0001"
+      ]
+    },
+    "KU-CH06-0005": {
+      "primary_keywords": [
+        "Open kinetic chain terminology"
+      ],
+      "secondary_keywords": [
+        "open chain",
+        "Open kinetic chain terminology",
+        "open kinetic chain",
+        "OKC"
+      ],
+      "aliases": [
+        "open chain",
+        "open kinetic chain",
+        "OKC"
+      ],
+      "body_regions": [],
+      "chapter_id": "CH-06",
+      "cluster_ids": [
+        "CLUSTER-0001"
+      ]
+    },
+    "KU-CH06-0006": {
+      "primary_keywords": [
+        "Closed kinetic chain terminology"
+      ],
+      "secondary_keywords": [
+        "closed chain",
+        "Closed kinetic chain terminology",
+        "closed kinetic chain",
+        "CKC"
+      ],
+      "aliases": [
+        "closed chain",
+        "closed kinetic chain",
+        "CKC"
+      ],
+      "body_regions": [],
+      "chapter_id": "CH-06",
+      "cluster_ids": [
+        "CLUSTER-0001"
+      ]
+    },
+    "KU-CH06-0007": {
+      "primary_keywords": [
+        "Weight bearing and distal fixation are separate descriptors"
+      ],
+      "secondary_keywords": [
+        "chain qualification",
+        "Weight bearing and distal fixation are separate descriptors",
+        "distally fixated",
+        "distal fixation",
+        "weight bearing"
+      ],
+      "aliases": [
+        "distally fixated",
+        "distal fixation",
+        "weight bearing"
+      ],
+      "body_regions": [],
+      "chapter_id": "CH-06",
+      "cluster_ids": [
+        "CLUSTER-0001"
+      ]
+    },
+    "KU-CH06-0008": {
+      "primary_keywords": [
+        "Resistance exercise requires individual context"
+      ],
+      "secondary_keywords": [
+        "resistance context",
+        "Resistance exercise requires individual context"
+      ],
+      "aliases": [],
+      "body_regions": [],
+      "chapter_id": "CH-06",
+      "cluster_ids": [
+        "CLUSTER-0001"
+      ]
+    },
+    "KU-CH06-0009": {
+      "primary_keywords": [
+        "Progressive overload is conditional"
+      ],
+      "secondary_keywords": [
+        "overload context",
+        "Progressive overload is conditional"
+      ],
+      "aliases": [],
+      "body_regions": [],
+      "chapter_id": "CH-06",
+      "cluster_ids": [
+        "CLUSTER-0001"
+      ]
+    },
+    "KU-CH16-0001": {
+      "primary_keywords": [
+        "Modified bridge technique"
+      ],
+      "secondary_keywords": [
+        "bridge technique",
+        "Modified bridge technique",
+        "modified bridge",
+        "hook-lying bridge",
+        "supine bridge",
+        "hip joint"
+      ],
+      "aliases": [
+        "modified bridge",
+        "hook-lying bridge",
+        "supine bridge"
+      ],
+      "body_regions": [
+        "spine_trunk",
+        "hip_pelvis"
+      ],
+      "chapter_id": "CH-16",
+      "cluster_ids": [
+        "CLUSTER-0002"
+      ]
+    },
+    "KU-CH16-0002": {
+      "primary_keywords": [
+        "Muscle roles in modified bridging"
+      ],
+      "secondary_keywords": [
+        "bridge stabilizers",
+        "Muscle roles in modified bridging",
+        "gluteus maximus",
+        "quadriceps",
+        "abdominals",
+        "lumbar extensors"
+      ],
+      "aliases": [],
+      "body_regions": [
+        "spine_trunk",
+        "hip_pelvis"
+      ],
+      "chapter_id": "CH-16",
+      "cluster_ids": [
+        "CLUSTER-0002"
+      ]
+    },
+    "KU-CH16-0003": {
+      "primary_keywords": [
+        "Maintained bridge for isometric control"
+      ],
+      "secondary_keywords": [
+        "bridge hold",
+        "Maintained bridge for isometric control",
+        "isometric"
+      ],
+      "aliases": [
+        "bridge hold"
+      ],
+      "body_regions": [
+        "spine_trunk",
+        "hip_pelvis"
+      ],
+      "chapter_id": "CH-16",
+      "cluster_ids": [
+        "CLUSTER-0002"
+      ]
+    },
+    "KU-CH16-0004": {
+      "primary_keywords": [
+        "Bridge progression with extremity movement"
+      ],
+      "secondary_keywords": [
+        "bridge progression",
+        "Bridge progression with extremity movement",
+        "marching bridge"
+      ],
+      "aliases": [
+        "marching bridge",
+        "bridge progression"
+      ],
+      "body_regions": [
+        "spine_trunk",
+        "hip_pelvis"
+      ],
+      "chapter_id": "CH-16",
+      "cluster_ids": [
+        "CLUSTER-0002"
+      ]
+    },
+    "KU-CH17-0001": {
+      "primary_keywords": [
+        "Standing resisted shoulder external rotation"
+      ],
+      "secondary_keywords": [
+        "shoulder er",
+        "Standing resisted shoulder external rotation",
+        "standing shoulder external rotation",
+        "band external rotation",
+        "resisted humeral external rotation",
+        "glenohumeral joint",
+        "elbow joint",
+        "shoulder external rotation"
+      ],
+      "aliases": [
+        "standing shoulder external rotation",
+        "band external rotation",
+        "resisted humeral external rotation"
+      ],
+      "body_regions": [
+        "shoulder_girdle",
+        "elbow_forearm"
+      ],
+      "chapter_id": "CH-17",
+      "cluster_ids": [
+        "CLUSTER-0003"
+      ]
+    },
+    "KU-CH17-0002": {
+      "primary_keywords": [
+        "External rotator roles and position dependence"
+      ],
+      "secondary_keywords": [
+        "shoulder er muscles",
+        "External rotator roles and position dependence",
+        "infraspinatus",
+        "teres minor"
+      ],
+      "aliases": [],
+      "body_regions": [
+        "shoulder_girdle"
+      ],
+      "chapter_id": "CH-17",
+      "cluster_ids": [
+        "CLUSTER-0003"
+      ]
+    },
+    "KU-CH17-0003": {
+      "primary_keywords": [
+        "Towel cue for shoulder external rotation"
+      ],
+      "secondary_keywords": [
+        "shoulder er towel",
+        "Towel cue for shoulder external rotation",
+        "external rotation towel cue"
+      ],
+      "aliases": [
+        "external rotation towel cue"
+      ],
+      "body_regions": [
+        "shoulder_girdle"
+      ],
+      "chapter_id": "CH-17",
+      "cluster_ids": [
+        "CLUSTER-0003"
+      ]
+    },
+    "KU-CH17-0004": {
+      "primary_keywords": [
+        "Scapular-plane arm elevation"
+      ],
+      "secondary_keywords": [
+        "scapular plane",
+        "Scapular-plane arm elevation",
+        "scaption",
+        "glenohumeral joint"
+      ],
+      "aliases": [
+        "scaption",
+        "scapular plane"
+      ],
+      "body_regions": [
+        "shoulder_girdle"
+      ],
+      "chapter_id": "CH-17",
+      "cluster_ids": [
+        "CLUSTER-0003"
+      ]
+    },
+    "KU-CH17-0005": {
+      "primary_keywords": [
+        "Standing full-can elevation"
+      ],
+      "secondary_keywords": [
+        "full can",
+        "Standing full-can elevation",
+        "full-can elevation",
+        "full-can scaption",
+        "glenohumeral joint"
+      ],
+      "aliases": [
+        "full can",
+        "full-can elevation",
+        "full-can scaption"
+      ],
+      "body_regions": [
+        "shoulder_girdle"
+      ],
+      "chapter_id": "CH-17",
+      "cluster_ids": [
+        "CLUSTER-0003"
+      ]
+    },
+    "KU-CH17-0006": {
+      "primary_keywords": [
+        "Source-qualified shoulder elevation precaution"
+      ],
+      "secondary_keywords": [
+        "shoulder elevation precaution",
+        "Source-qualified shoulder elevation precaution"
+      ],
+      "aliases": [],
+      "body_regions": [
+        "shoulder_girdle"
+      ],
+      "chapter_id": "CH-17",
+      "cluster_ids": [
+        "CLUSTER-0003"
+      ]
+    },
+    "KU-CH17-0007": {
+      "primary_keywords": [
+        "Full-can exercise does not isolate supraspinatus"
+      ],
+      "secondary_keywords": [
+        "supraspinatus not isolated",
+        "Full-can exercise does not isolate supraspinatus",
+        "supraspinatus isolation",
+        "empty can",
+        "supraspinatus",
+        "deltoid"
+      ],
+      "aliases": [
+        "supraspinatus isolation",
+        "empty can"
+      ],
+      "body_regions": [
+        "shoulder_girdle"
+      ],
+      "chapter_id": "CH-17",
+      "cluster_ids": [
+        "CLUSTER-0003"
+      ]
+    },
+    "KU-CH21-0001": {
+      "primary_keywords": [
+        "Quadriceps and knee extension"
+      ],
+      "secondary_keywords": [
+        "quadriceps",
+        "Quadriceps and knee extension",
+        "quads",
+        "quadriceps femoris",
+        "knee joint",
+        "knee extension"
+      ],
+      "aliases": [
+        "quadriceps",
+        "quads"
+      ],
+      "body_regions": [
+        "knee"
+      ],
+      "chapter_id": "CH-21",
+      "cluster_ids": [
+        "CLUSTER-0004"
+      ]
+    },
+    "KU-CH21-0002": {
+      "primary_keywords": [
+        "Hamstring function depends on task and fixation"
+      ],
+      "secondary_keywords": [
+        "hamstrings",
+        "Hamstring function depends on task and fixation",
+        "knee flexors",
+        "knee joint",
+        "knee flexion"
+      ],
+      "aliases": [
+        "knee flexors"
+      ],
+      "body_regions": [
+        "knee",
+        "hip_pelvis"
+      ],
+      "chapter_id": "CH-21",
+      "cluster_ids": [
+        "CLUSTER-0004"
+      ]
+    },
+    "KU-CH21-0003": {
+      "primary_keywords": [
+        "Bilateral mini-squat technique"
+      ],
+      "secondary_keywords": [
+        "mini squat",
+        "Bilateral mini-squat technique",
+        "minisquat",
+        "partial squat",
+        "short-arc squat",
+        "knee joint",
+        "knee flexion",
+        "knee extension"
+      ],
+      "aliases": [
+        "minisquat",
+        "mini squat",
+        "partial squat",
+        "short-arc squat"
+      ],
+      "body_regions": [
+        "knee",
+        "hip_pelvis"
+      ],
+      "chapter_id": "CH-21",
+      "cluster_ids": [
+        "CLUSTER-0004"
+      ]
+    },
+    "KU-CH21-0004": {
+      "primary_keywords": [
+        "Source-specific partial-squat alignment cues"
+      ],
+      "secondary_keywords": [
+        "mini squat alignment",
+        "Source-specific partial-squat alignment cues"
+      ],
+      "aliases": [],
+      "body_regions": [
+        "knee",
+        "hip_pelvis"
+      ],
+      "chapter_id": "CH-21",
+      "cluster_ids": [
+        "CLUSTER-0004"
+      ]
+    },
+    "KU-CH21-0005": {
+      "primary_keywords": [
+        "Standing wall-slide technique"
+      ],
+      "secondary_keywords": [
+        "wall slide",
+        "Standing wall-slide technique",
+        "standing wall slide",
+        "wall squat",
+        "hip joint",
+        "knee joint",
+        "hip flexion",
+        "knee flexion"
+      ],
+      "aliases": [
+        "standing wall slide",
+        "wall squat"
+      ],
+      "body_regions": [
+        "knee",
+        "hip_pelvis"
+      ],
+      "chapter_id": "CH-21",
+      "cluster_ids": [
+        "CLUSTER-0004"
+      ]
+    },
+    "KU-CH21-0006": {
+      "primary_keywords": [
+        "Step-up and step-down setup"
+      ],
+      "secondary_keywords": [
+        "step technique",
+        "Step-up and step-down setup",
+        "step up",
+        "step down",
+        "forward step-up",
+        "stair exercise"
+      ],
+      "aliases": [
+        "step up",
+        "step down",
+        "forward step-up",
+        "stair exercise"
+      ],
+      "body_regions": [
+        "knee",
+        "hip_pelvis",
+        "ankle_foot"
+      ],
+      "chapter_id": "CH-21",
+      "cluster_ids": [
+        "CLUSTER-0004"
+      ]
+    },
+    "KU-CH21-0007": {
+      "primary_keywords": [
+        "Quadriceps phases in step training"
+      ],
+      "secondary_keywords": [
+        "step quadriceps",
+        "Quadriceps phases in step training",
+        "step ascent",
+        "step descent",
+        "quadriceps",
+        "plantarflexors",
+        "concentric",
+        "eccentric"
+      ],
+      "aliases": [
+        "step ascent",
+        "step descent"
+      ],
+      "body_regions": [
+        "knee",
+        "ankle_foot"
+      ],
+      "chapter_id": "CH-21",
+      "cluster_ids": [
+        "CLUSTER-0004"
+      ]
+    },
+    "KU-CH21-0008": {
+      "primary_keywords": [
+        "Seated knee co-contraction setting"
+      ],
+      "secondary_keywords": [
+        "knee co contraction",
+        "Seated knee co-contraction setting",
+        "knee co-contraction",
+        "quadriceps hamstring co-contraction",
+        "quadriceps",
+        "hamstrings",
+        "isometric"
+      ],
+      "aliases": [
+        "knee co-contraction",
+        "quadriceps hamstring co-contraction"
+      ],
+      "body_regions": [
+        "knee"
+      ],
+      "chapter_id": "CH-21",
+      "cluster_ids": [
+        "CLUSTER-0004"
+      ]
+    },
+    "KU-CH22-0001": {
+      "primary_keywords": [
+        "Bilateral heel raising and lowering"
+      ],
+      "secondary_keywords": [
+        "heel raise",
+        "Bilateral heel raising and lowering",
+        "calf raise",
+        "bilateral calf raise",
+        "plantarflexors"
+      ],
+      "aliases": [
+        "heel raise",
+        "calf raise",
+        "bilateral calf raise"
+      ],
+      "body_regions": [
+        "ankle_foot"
+      ],
+      "chapter_id": "CH-22",
+      "cluster_ids": [
+        "CLUSTER-0005"
+      ]
+    },
+    "KU-CH22-0002": {
+      "primary_keywords": [
+        "Support and tolerance in ankle weight-bearing exercise"
+      ],
+      "secondary_keywords": [
+        "ankle weight bearing",
+        "Support and tolerance in ankle weight-bearing exercise"
+      ],
+      "aliases": [],
+      "body_regions": [
+        "ankle_foot"
+      ],
+      "chapter_id": "CH-22",
+      "cluster_ids": [
+        "CLUSTER-0005"
+      ]
+    },
+    "KU-CH22-0003": {
+      "primary_keywords": [
+        "Assisted reset with eccentric heel lowering"
+      ],
+      "secondary_keywords": [
+        "eccentric heel lower",
+        "Assisted reset with eccentric heel lowering",
+        "eccentric heel drop",
+        "eccentric calf lowering",
+        "assisted heel lowering",
+        "gastrocnemius",
+        "soleus",
+        "eccentric"
+      ],
+      "aliases": [
+        "eccentric heel drop",
+        "eccentric calf lowering",
+        "assisted heel lowering"
+      ],
+      "body_regions": [
+        "ankle_foot"
+      ],
+      "chapter_id": "CH-22",
+      "cluster_ids": [
+        "CLUSTER-0005"
+      ]
+    },
+    "KU-CH22-0004": {
+      "primary_keywords": [
+        "Achilles evidence is condition-specific"
+      ],
+      "secondary_keywords": [
+        "achilles context",
+        "Achilles evidence is condition-specific"
+      ],
+      "aliases": [],
+      "body_regions": [
+        "ankle_foot"
+      ],
+      "chapter_id": "CH-22",
+      "cluster_ids": [
+        "CLUSTER-0005"
+      ]
+    }
+  }
+}

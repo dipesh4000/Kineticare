@@ -1,0 +1,376 @@
+{
+  "status": "pilot_extracted",
+  "aliases": [
+    {
+      "term": "static contraction",
+      "knowledge_unit_ids": [
+        "KU-CH06-0001"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "shortening contraction",
+      "knowledge_unit_ids": [
+        "KU-CH06-0002"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "lengthening contraction",
+      "knowledge_unit_ids": [
+        "KU-CH06-0003"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "isotonic terminology",
+      "knowledge_unit_ids": [
+        "KU-CH06-0004"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "open chain",
+      "knowledge_unit_ids": [
+        "KU-CH06-0005"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "open kinetic chain",
+      "knowledge_unit_ids": [
+        "KU-CH06-0005"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "OKC",
+      "knowledge_unit_ids": [
+        "KU-CH06-0005"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "closed chain",
+      "knowledge_unit_ids": [
+        "KU-CH06-0006"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "closed kinetic chain",
+      "knowledge_unit_ids": [
+        "KU-CH06-0006"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "CKC",
+      "knowledge_unit_ids": [
+        "KU-CH06-0006"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "distally fixated",
+      "knowledge_unit_ids": [
+        "KU-CH06-0007"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "distal fixation",
+      "knowledge_unit_ids": [
+        "KU-CH06-0007"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "weight bearing",
+      "knowledge_unit_ids": [
+        "KU-CH06-0007"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "modified bridge",
+      "knowledge_unit_ids": [
+        "KU-CH16-0001"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "hook-lying bridge",
+      "knowledge_unit_ids": [
+        "KU-CH16-0001"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "supine bridge",
+      "knowledge_unit_ids": [
+        "KU-CH16-0001"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "bridge hold",
+      "knowledge_unit_ids": [
+        "KU-CH16-0003"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "marching bridge",
+      "knowledge_unit_ids": [
+        "KU-CH16-0004"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "bridge progression",
+      "knowledge_unit_ids": [
+        "KU-CH16-0004"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "standing shoulder external rotation",
+      "knowledge_unit_ids": [
+        "KU-CH17-0001"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "band external rotation",
+      "knowledge_unit_ids": [
+        "KU-CH17-0001"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "resisted humeral external rotation",
+      "knowledge_unit_ids": [
+        "KU-CH17-0001"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "external rotation towel cue",
+      "knowledge_unit_ids": [
+        "KU-CH17-0003"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "scaption",
+      "knowledge_unit_ids": [
+        "KU-CH17-0004"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "scapular plane",
+      "knowledge_unit_ids": [
+        "KU-CH17-0004"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "full can",
+      "knowledge_unit_ids": [
+        "KU-CH17-0005"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "full-can elevation",
+      "knowledge_unit_ids": [
+        "KU-CH17-0005"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "full-can scaption",
+      "knowledge_unit_ids": [
+        "KU-CH17-0005"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "supraspinatus isolation",
+      "knowledge_unit_ids": [
+        "KU-CH17-0007"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "empty can",
+      "knowledge_unit_ids": [
+        "KU-CH17-0007"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "quadriceps",
+      "knowledge_unit_ids": [
+        "KU-CH21-0001"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "quads",
+      "knowledge_unit_ids": [
+        "KU-CH21-0001"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "knee flexors",
+      "knowledge_unit_ids": [
+        "KU-CH21-0002"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "minisquat",
+      "knowledge_unit_ids": [
+        "KU-CH21-0003"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "mini squat",
+      "knowledge_unit_ids": [
+        "KU-CH21-0003"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "partial squat",
+      "knowledge_unit_ids": [
+        "KU-CH21-0003"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "short-arc squat",
+      "knowledge_unit_ids": [
+        "KU-CH21-0003"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "standing wall slide",
+      "knowledge_unit_ids": [
+        "KU-CH21-0005"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "wall squat",
+      "knowledge_unit_ids": [
+        "KU-CH21-0005"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "step up",
+      "knowledge_unit_ids": [
+        "KU-CH21-0006"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "step down",
+      "knowledge_unit_ids": [
+        "KU-CH21-0006"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "forward step-up",
+      "knowledge_unit_ids": [
+        "KU-CH21-0006"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "stair exercise",
+      "knowledge_unit_ids": [
+        "KU-CH21-0006"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "step ascent",
+      "knowledge_unit_ids": [
+        "KU-CH21-0007"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "step descent",
+      "knowledge_unit_ids": [
+        "KU-CH21-0007"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "knee co-contraction",
+      "knowledge_unit_ids": [
+        "KU-CH21-0008"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "quadriceps hamstring co-contraction",
+      "knowledge_unit_ids": [
+        "KU-CH21-0008"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "heel raise",
+      "knowledge_unit_ids": [
+        "KU-CH22-0001"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "calf raise",
+      "knowledge_unit_ids": [
+        "KU-CH22-0001"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "bilateral calf raise",
+      "knowledge_unit_ids": [
+        "KU-CH22-0001"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "eccentric heel drop",
+      "knowledge_unit_ids": [
+        "KU-CH22-0003"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "eccentric calf lowering",
+      "knowledge_unit_ids": [
+        "KU-CH22-0003"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    },
+    {
+      "term": "assisted heel lowering",
+      "knowledge_unit_ids": [
+        "KU-CH22-0003"
+      ],
+      "scope": "retrieval only; not exercise-variation equivalence"
+    }
+  ]
+}

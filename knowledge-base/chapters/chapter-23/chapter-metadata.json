@@ -1,0 +1,22 @@
+{
+  "chapter_id": "CH-23",
+  "chapter_number": 23,
+  "chapter_title": "Advanced Functional Training",
+  "part_id": "PART-04",
+  "pdf_start_page": 928,
+  "pdf_end_page": 961,
+  "printed_start_page_label": "895",
+  "printed_end_page_label": "928",
+  "section_ids": [
+    "SEC-23-001",
+    "SEC-23-002",
+    "SEC-23-003",
+    "SEC-23-004",
+    "SEC-23-005",
+    "SEC-23-006",
+    "SEC-23-007",
+    "SEC-23-008"
+  ],
+  "range_basis": "chapter start bookmark through page before next chapter or glossary",
+  "status": "pending"
+}

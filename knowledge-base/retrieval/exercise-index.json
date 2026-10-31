@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "status": "pilot_indexed",
+  "entries": {
+    "assisted eccentric heel lowering": [
+      "EX-KU-000006"
+    ],
+    "assisted heel lowering": [
+      "EX-KU-000006"
+    ],
+    "band external rotation": [
+      "EX-KU-000007"
+    ],
+    "bilateral calf raise": [
+      "EX-KU-000005"
+    ],
+    "bilateral mini squat": [
+      "EX-KU-000001"
+    ],
+    "bilateral standing heel raise": [
+      "EX-KU-000005"
+    ],
+    "bridge": [
+      "EX-KU-000004"
+    ],
+    "calf raise": [
+      "EX-KU-000005"
+    ],
+    "eccentric calf lowering": [
+      "EX-KU-000006"
+    ],
+    "eccentric heel drop": [
+      "EX-KU-000006"
+    ],
+    "forward step up": [
+      "EX-KU-000003"
+    ],
+    "forward step up and step down": [
+      "EX-KU-000003"
+    ],
+    "forward step up down": [
+      "EX-KU-000003"
+    ],
+    "full can": [
+      "EX-KU-000008"
+    ],
+    "full can elevation": [
+      "EX-KU-000008"
+    ],
+    "full can scaption": [
+      "EX-KU-000008"
+    ],
+    "heel raise": [
+      "EX-KU-000005"
+    ],
+    "hook lying bridge": [
+      "EX-KU-000004"
+    ],
+    "mini squat": [
+      "EX-KU-000001"
+    ],
+    "minisquat": [
+      "EX-KU-000001"
+    ],
+    "modified bridge": [
+      "EX-KU-000004"
+    ],
+    "modified supine bridge": [
+      "EX-KU-000004"
+    ],
+    "partial squat": [
+      "EX-KU-000001"
+    ],
+    "resisted humeral external rotation": [
+      "EX-KU-000007"
+    ],
+    "short arc squat": [
+      "EX-KU-000001"
+    ],
+    "standing band shoulder external rotation": [
+      "EX-KU-000007"
+    ],
+    "standing full can scaption": [
+      "EX-KU-000008"
+    ],
+    "standing full can scapular plane elevation": [
+      "EX-KU-000008"
+    ],
+    "standing heel raise": [
+      "EX-KU-000005"
+    ],
+    "standing resisted shoulder external rotation": [
+      "EX-KU-000007"
+    ],
+    "standing shoulder external rotation": [
+      "EX-KU-000007"
+    ],
+    "standing wall slide": [
+      "EX-KU-000002"
+    ],
+    "step down": [
+      "EX-KU-000003"
+    ],
+    "step up": [
+      "EX-KU-000003"
+    ],
+    "supine bridge": [
+      "EX-KU-000004"
+    ],
+    "wall squat": [
+      "EX-KU-000002"
+    ]
+  }
+}

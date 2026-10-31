@@ -6,7 +6,7 @@ Updated 30 October 2026. Current Firebase-free setup; start fresh without accoun
 
 Create a Privy app, enable Email login and allow http://localhost:3000 plus your production HTTPS origin. The UI uses email only and disables automatic wallet creation. Copy the public app ID to root .env as PRIVY_APP_ID and frontend/.env.local as VITE_PRIVY_APP_ID. Set PRIVY_APP_SECRET only in root .env. Never expose secrets in VITE variables.
 
-Privy's SDK manages email codes, login, token refresh and logout. The backend verifies access tokens before reading Atlas profiles. First-time users enter their name and choose Patient or Clinician. Roles cannot be changed through signup after creation. Clinician self-registration does not imply professional verification.
+Privy's SDK manages email codes, login, token refresh and logout. The app uses `useLoginWithEmail` with its own email/code form and Privy's Captcha component. Users submit the code with **Verify and continue**; failed or stalled requests show an error, and users can resend a code or change email. A local UI timeout does not cancel the SDK's request; if verification finishes later, the authenticated session still proceeds normally. The backend verifies access tokens before reading Atlas profiles. First-time users enter their name and choose Patient or Clinician. Roles cannot be changed through signup after creation. Clinician self-registration does not imply professional verification.
 
 ## Atlas
 

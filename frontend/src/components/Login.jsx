@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/authContext';
 import Brand from './Brand';
 import ThemeToggle from './ThemeToggle';
+import EmailLogin from './EmailLogin';
 
 export default function Login() {
-  const { user, loading, connectedEnabled, authenticated, needsProfile, signIn, signOut, register, retryProfile, error } = useAuth();
+  const { user, loading, connectedEnabled, authenticated, needsProfile, signOut, register, retryProfile, error } = useAuth();
   const [name, setName] = useState('');
   const [role, setRole] = useState('patient');
   const [busy, setBusy] = useState(false);
@@ -23,7 +24,7 @@ export default function Login() {
         <label htmlFor="signup-role">I am joining as</label><select id="signup-role" value={role} onChange={event => setRole(event.target.value)}><option value="patient">Patient</option><option value="clinician">Clinician</option></select>
         <p className="mut">{role === 'patient' ? 'No clinician invitation is required. You control who can access your records.' : 'Patients must consent before you can view their records. Registration does not verify professional credentials.'}</p>
         <button className="btn" disabled={busy}>{busy ? 'Saving…' : 'Create account'}</button>
-      </form> : !authenticated ? <><p>Sign up or sign in with a verification code sent to your email.</p><button className="btn" disabled={!connectedEnabled || busy} onClick={() => run(() => signIn())}>Continue with email</button></> : null}
+      </form> : !authenticated && connectedEnabled ? <EmailLogin /> : null}
       {(error || notice) && <p role="alert" className="demo">{notice || error}</p>}
       {authenticated && error && <button className="btn s" disabled={busy} onClick={() => run(retryProfile)}>Retry account loading</button>}
       {authenticated && !user && <button className="btn s" disabled={busy} onClick={() => run(signOut)}>Sign out</button>}

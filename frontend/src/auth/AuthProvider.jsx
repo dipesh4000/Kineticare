@@ -4,33 +4,33 @@ import { AuthContext } from './authContext';
 import { connectedApi } from '../services/atlasRecords';
 
 function ConnectedAuth({ children }) {
-  const { ready, authenticated, login, logout, user: privyUser } = usePrivy();
+  const { ready, authenticated, logout, user: privyUser } = usePrivy();
+  const privyId = privyUser?.id;
   const [profile, setProfile] = useState(null);
   const [fetching, setFetching] = useState(false);
   const [error, setError] = useState('');
   const [loadedFor, setLoadedFor] = useState(null);
   useEffect(() => {
-    if (!ready || !authenticated || !privyUser?.id) return;
+    if (!ready || !authenticated || !privyId) return;
     let active = true;
     connectedApi('auth/me').then(data => {
-      if (active) { setProfile(data.user); setLoadedFor(privyUser.id); setError(''); }
-    }).catch(cause => { if (active) { setProfile(null); setError(cause.message); setLoadedFor(privyUser.id); } });
+      if (active) { setProfile(data.user); setLoadedFor(privyId); setError(''); }
+    }).catch(cause => { if (active) { setProfile(null); setError(cause.message); setLoadedFor(privyId); } });
     return () => { active = false; };
-  }, [ready, authenticated, privyUser?.id]);
+  }, [ready, authenticated, privyId]);
   const register = useCallback(async (displayName, role) => {
     setFetching(true);
     try { const data = await connectedApi('auth/register', { displayName, role }); setProfile(data.user); setError(''); }
     finally { setFetching(false); }
   }, []);
   const value = useMemo(() => ({
-    user: authenticated && loadedFor === privyUser?.id ? profile : null,
-    loading: !ready || authenticated && loadedFor !== privyUser?.id,
-    needsProfile: authenticated && loadedFor === privyUser?.id && !profile && !error,
+    user: authenticated && loadedFor === privyId ? profile : null,
+    loading: !ready || authenticated && loadedFor !== privyId,
+    needsProfile: authenticated && loadedFor === privyId && !profile && !error,
     authenticated, connectedEnabled: true, error, fetching, register,
-    signIn: login,
     async signOut() { await logout(); setProfile(null); setLoadedFor(null); setError(''); },
-    retryProfile: async () => { const data = await connectedApi('auth/me'); setProfile(data.user); setError(''); },
-  }), [authenticated, loadedFor, privyUser?.id, profile, ready, error, fetching, register, login, logout]);
+    retryProfile: async () => { const data = await connectedApi('auth/me'); setProfile(data.user); setLoadedFor(privyId); setError(''); },
+  }), [authenticated, loadedFor, privyId, profile, ready, error, fetching, register, logout]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

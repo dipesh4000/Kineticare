@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { miniSquatPose, SKELETON_SEGMENTS, validateIllustrativeDescriptor } from '../exercise/illustrativeMotion';
+import { miniSquatPose, sideArmRaisePose, SKELETON_SEGMENTS, validateIllustrativeDescriptor } from '../exercise/illustrativeMotion';
 
-export default function ExerciseAnimationPreview({ descriptor }) {
+export default function ExerciseAnimationPreview({ descriptor, initialPeak, compact = false }) {
   const hostRef = useRef(null);
   const controlsRef = useRef(null);
-  const [peak, setPeak] = useState(30);
+  const isArm = descriptor?.id === 'side-arm-raise-illustration-v1';
+  const title = isArm ? 'Side arm raise' : 'Mini-squat';
+  const [peak, setPeak] = useState(initialPeak ?? (isArm ? 75 : 30));
+  const [poseStats, setPoseStats] = useState({ angle: 0, phase: 'Rest position' });
   const [duration, setDuration] = useState(6);
-  const [view, setView] = useState('oblique');
-  const [paused, setPaused] = useState(false);
+  const [view, setView] = useState(isArm ? 'front' : 'oblique');
+  const [paused, setPaused] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [recording, setRecording] = useState(false);
   const [video, setVideo] = useState(null);
   const [error, setError] = useState('');
@@ -24,28 +27,34 @@ export default function ExerciseAnimationPreview({ descriptor }) {
     let observer;
     let elapsed = 0;
     let previous = null;
-    let running = true;
+    let running = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let statsAt = 0;
+    const getPose = isArm ? sideArmRaisePose : miniSquatPose;
     let recordingEnd = null;
     let recorder;
     let disposed = false;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#f1f5f9');
-    const camera = new THREE.PerspectiveCamera(38, 16 / 9, 0.1, 30);
+    scene.background = new THREE.Color('#101c30');
+    scene.add(new THREE.HemisphereLight('#e3efff', '#425578', 2.4));
+    const light = new THREE.DirectionalLight('#ffffff', 3); light.position.set(3, 5, 4); scene.add(light);
+    const camera = new THREE.PerspectiveCamera(38, 4 / 3, 0.1, 30);
     camera.position.set(...(view === 'front' ? [0, 1.3, 4.4] : view === 'side' ? [4.4, 1.3, 0] : [3.1, 1.7, 3.4]));
     camera.lookAt(0, 0.95, 0);
     const jointGeometry = new THREE.SphereGeometry(0.035, 12, 8);
-    const jointMaterial = new THREE.MeshBasicMaterial({ color: '#1e2653' });
+    const jointMaterial = new THREE.MeshStandardMaterial({ color: '#c7d8f1', roughness: 0.45 });
     const jointMeshes = new Map();
-    const lineGeometry = new THREE.BufferGeometry();
-    const linePositions = new Float32Array(SKELETON_SEGMENTS.length * 6);
-    lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-    const lineMaterial = new THREE.LineBasicMaterial({ color: '#0d825e' });
-    const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-    // Animated geometry must not be culled using its initial, all-zero bounds.
-    lines.frustumCulled = false;
-    scene.add(lines);
-    const grid = new THREE.GridHelper(3, 12, '#94a3b8', '#cbd5e1');
-    scene.add(grid);
+    const boneGeometry = new THREE.CylinderGeometry(1, 1, 1, 16);
+    const boneMaterial = new THREE.MeshStandardMaterial({ color: '#8274f4', roughness: 0.42, metalness: 0.12 });
+    const boneMeshes = SKELETON_SEGMENTS.map(() => { const mesh = new THREE.Mesh(boneGeometry, boneMaterial); scene.add(mesh); return mesh; });
+    const bodyGeometry = new THREE.SphereGeometry(1, 24, 16);
+    const bodyMaterial = new THREE.MeshStandardMaterial({ color: '#e8eef9', roughness: 0.6 });
+    const torso = new THREE.Mesh(bodyGeometry, bodyMaterial); torso.scale.set(0.21, 0.30, 0.12); scene.add(torso);
+    const pelvisMesh = new THREE.Mesh(bodyGeometry, boneMaterial); pelvisMesh.scale.set(0.19, 0.12, 0.13); scene.add(pelvisMesh);
+    const floor = new THREE.Mesh(new THREE.CircleGeometry(1.35, 64), new THREE.MeshStandardMaterial({ color: '#1b2c46', roughness: 1 }));
+    floor.rotation.x = -Math.PI / 2; floor.position.y = -0.005; scene.add(floor);
+    const grid = new THREE.GridHelper(2.7, 12, '#40516d', '#263954'); scene.add(grid);
+    const axis = new THREE.Vector3(0, 1, 0);
+    const from = new THREE.Vector3(), to = new THREE.Vector3(), direction = new THREE.Vector3();
     const composite = document.createElement('canvas');
     composite.width = 960;
     composite.height = 600;
@@ -59,7 +68,7 @@ export default function ExerciseAnimationPreview({ descriptor }) {
       stopCapture?.(new Error('Video recording stopped because the preview closed.'));
       renderer?.setAnimationLoop(null);
       renderer?.dispose();
-      jointGeometry.dispose(); jointMaterial.dispose(); lineGeometry.dispose(); lineMaterial.dispose();
+      jointGeometry.dispose(); jointMaterial.dispose(); boneGeometry.dispose(); boneMaterial.dispose(); bodyGeometry.dispose(); bodyMaterial.dispose(); floor.geometry.dispose(); floor.material.dispose();
       grid.geometry.dispose();
       for (const material of Array.isArray(grid.material) ? grid.material : [grid.material]) material.dispose();
       renderer?.domElement.remove();
@@ -68,18 +77,18 @@ export default function ExerciseAnimationPreview({ descriptor }) {
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      renderer.domElement.setAttribute('aria-label', 'Illustrative mini-squat skeleton preview');
+      renderer.domElement.setAttribute('aria-label', `Illustrative ${title} 3D movement preview`);
       renderer.domElement.style.display = 'block';
       renderer.domElement.style.width = '100%';
       host.appendChild(renderer.domElement);
-      const resize = () => { const width = Math.max(host.clientWidth, 280); renderer.setSize(width, width * 9 / 16, false); };
+      const resize = () => { const width = Math.max(host.clientWidth, 160); renderer.setSize(width, width * 3 / 4, false); };
       observer = new ResizeObserver(resize);
       observer.observe(host);
       resize();
-      const initial = miniSquatPose(0, duration, peak);
+      const initial = getPose(0, duration, peak);
       for (const name of Object.keys(initial.points)) {
         const mesh = new THREE.Mesh(jointGeometry, jointMaterial);
-        if (name === 'head') mesh.scale.setScalar(2.2);
+        if (name === 'head') mesh.scale.set(3.2, 3.8, 3.1);
         jointMeshes.set(name, mesh);
         scene.add(mesh);
       }
@@ -87,20 +96,26 @@ export default function ExerciseAnimationPreview({ descriptor }) {
         if (!active) return;
         if (previous !== null && running) elapsed += Math.min((timestamp - previous) / 1000, 0.1);
         previous = timestamp;
-        const pose = miniSquatPose(elapsed, duration, peak);
+        const pose = getPose(elapsed, duration, peak);
         for (const [name, mesh] of jointMeshes) mesh.position.set(...pose.points[name]);
         for (let i = 0; i < SKELETON_SEGMENTS.length; i++) {
           const [a, b] = SKELETON_SEGMENTS[i];
-          linePositions.set(pose.points[a], i * 6);
-          linePositions.set(pose.points[b], i * 6 + 3);
+          from.set(...pose.points[a]); to.set(...pose.points[b]); direction.subVectors(to, from);
+          const mesh = boneMeshes[i];
+          const radius = a.includes('Hip') || a.includes('Knee') ? 0.055 : a.includes('Ankle') || a.includes('Toe') || a.includes('Heel') ? 0.025 : 0.038;
+          mesh.position.copy(from).add(to).multiplyScalar(0.5);
+          mesh.scale.set(radius, direction.length(), radius);
+          mesh.quaternion.setFromUnitVectors(axis, direction.normalize());
         }
-        lineGeometry.attributes.position.needsUpdate = true;
+        torso.position.set(0, pose.points.pelvis[1] + 0.32, pose.points.pelvis[2]);
+        pelvisMesh.position.set(...pose.points.pelvis);
+        if (timestamp - statsAt > 120) { statsAt = timestamp; setPoseStats({ angle: Math.round(pose.shoulderDegrees ?? pose.kneeFlexionDegrees), phase: pose.phaseName }); }
         renderer.render(scene, camera);
         if (recorder?.state === 'recording') {
           painter.fillStyle = '#f1f5f9'; painter.fillRect(0, 0, 960, 600);
-          painter.drawImage(renderer.domElement, 0, 0, 960, 540);
+          painter.drawImage(renderer.domElement, 120, 0, 720, 540);
           painter.fillStyle = '#1e2653'; painter.font = 'bold 20px sans-serif';
-          painter.fillText('Kineticare | Illustrative mini-squat — clinician review pending', 20, 567);
+          painter.fillText(`Kineticare | ${title} — illustrative motion for review`, 20, 567);
           painter.font = '16px sans-serif';
           painter.fillText(`${pose.phaseName} | Synthetic geometry | Demonstration setting: ${peak}° | Not a patient prescription`, 20, 592);
           if (recordingEnd !== null && elapsed >= recordingEnd) recorder.stop();
@@ -147,7 +162,7 @@ export default function ExerciseAnimationPreview({ descriptor }) {
       queueMicrotask(() => { if (host.isConnected) setError('The 3D preview could not start. Enable WebGL or try another browser.'); });
     }
     return dispose;
-  }, [supported, peak, duration, view]);
+  }, [supported, peak, duration, view, isArm, title]);
 
   useEffect(() => () => { if (video) URL.revokeObjectURL(video.url); }, [video]);
 
@@ -162,18 +177,17 @@ export default function ExerciseAnimationPreview({ descriptor }) {
   }
 
   if (!supported) return <p>No compatible illustrative motion is available for this exercise.</p>;
-  return <section aria-label="Exercise animation preview">
-    <h3>Mini-squat animation preview</h3>
-    <p className="mut">Illustrative skeleton for clinician review. Synthetic proportions and motion interpolation; not an approved patient demonstration.</p>
-    <div className="row" style={{ flexWrap: 'wrap', alignItems: 'end', marginBottom: 12 }}>
-      <label>Demonstration knee flexion<select value={peak} disabled={recording} onChange={event => { setPeak(Number(event.target.value)); setPaused(false); }}><option value="30">30°</option><option value="45">45°</option></select></label>
-      <label>Preview cycle (seconds)<select value={duration} disabled={recording} onChange={event => { setDuration(Number(event.target.value)); setPaused(false); }}><option value="3">3</option><option value="6">6</option><option value="12">12</option></select></label>
-      <label>View<select value={view} disabled={recording} onChange={event => { setView(event.target.value); setPaused(false); }}><option value="oblique">Oblique</option><option value="front">Front</option><option value="side">Side</option></select></label>
+  return <section className="motion-preview" aria-label={`${title} animation preview`}>
+    {!compact && <div className="row sp"><h3>{title} · movement preview</h3><span className="tag">Illustrative 3D</span></div>}
+    <div className="motion-stage"><div ref={hostRef} className="motion-canvas" /><div className="motion-hud"><span>{poseStats.phase}</span><b>{poseStats.angle}° <small>/ {peak}°</small></b></div><span className="motion-view-label">{view} view · {duration}s cycle</span></div>
+    <div className="motion-controls">
+      {!compact && <label>{isArm ? 'Preview arm height' : 'Preview knee flexion'}<select value={peak} disabled={recording} onChange={event => { setPeak(Number(event.target.value)); setPaused(window.matchMedia('(prefers-reduced-motion: reduce)').matches); }}>{(isArm ? [30, 45, 60, 75, 90, 120] : [30, 45]).map(value => <option key={value} value={value}>{value}°</option>)}</select></label>}
+      <label>Tempo<select value={duration} disabled={recording} onChange={event => { setDuration(Number(event.target.value)); setPaused(window.matchMedia('(prefers-reduced-motion: reduce)').matches); }}><option value="3">3s cycle</option><option value="6">6s cycle</option><option value="12">12s cycle</option></select></label>
+      <label>Camera angle<select value={view} disabled={recording} onChange={event => { setView(event.target.value); setPaused(window.matchMedia('(prefers-reduced-motion: reduce)').matches); }}><option value="front">Front</option><option value="oblique">3/4 view</option><option value="side">Side</option></select></label>
     </div>
-    <div ref={hostRef} style={{ width: '100%', minHeight: 180, borderRadius: 12, overflow: 'hidden', background: '#f1f5f9' }} />
-    <p className="mut">30–45° is the cited initial mini-squat range, not an individual target. Cycle time is a presentation choice.</p>
-    <div className="row"><button type="button" className="btn s" disabled={recording} onClick={() => { if (controlsRef.current) setPaused(controlsRef.current.toggle()); }}>{paused ? 'Play' : 'Pause'}</button><button type="button" className="btn" disabled={recording} onClick={exportVideo}>{recording ? 'Rendering one cycle…' : 'Render video'}</button></div>
-    {video && <div><video src={video.url} controls playsInline style={{ width: '100%', marginTop: 16 }} /><a className="btn s" href={video.url} download={`kineticare-mini-squat-illustration.${video.extension}`}>Download preview video</a></div>}
+    <div className="row"><button type="button" className="btn s" aria-pressed={paused} disabled={recording} onClick={() => { if (controlsRef.current) setPaused(controlsRef.current.toggle()); }}>{paused ? 'Play animation' : 'Pause animation'}</button>{!compact && <button type="button" className="btn" disabled={recording} onClick={exportVideo}>{recording ? 'Rendering one cycle…' : 'Export preview video'}</button>}</div>
+    <p className="mut">{isArm ? `Raise both arms out to ${peak}°, then lower fully to count one rep.` : '30–45° is the source-scoped demonstration range.'} Synthetic movement preview; follow your assigned range. {compact ? '' : 'Exporting a preview does not approve it for patient assignment.'}</p>
+    {video && <div><video src={video.url} controls playsInline style={{ width: '100%', marginTop: 16 }} /><a className="btn s" href={video.url} download={`kineticare-${isArm ? 'arm-raise' : 'mini-squat'}-illustration.${video.extension}`}>Download preview video</a></div>}
     {error && <p role="alert">{error}</p>}
   </section>;
 }

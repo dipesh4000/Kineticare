@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useRecords } from '../records/recordsContext';
 import { toast } from '../components/toastBus';
 import ReferenceVideo from '../components/ReferenceVideo';
+import SideArmRaiseDemo from '../components/SideArmRaiseDemo';
 import { exerciseMeta } from '../exercise/measure';
 
 export default function PatientPre() {
@@ -27,7 +28,7 @@ export default function PatientPre() {
           <p className="mut">{x.note || 'Move slowly and stop if you feel pain or dizziness.'}</p>
         </div>
         <div className="card">
-          <h3>Clinician demonstration</h3>
+          <h3>{reference ? 'Clinician demonstration' : 'Movement preview'}</h3>
           {reference ? <div className="vid"><ReferenceVideo mediaPath={reference.mediaPath} /></div> : <p className="demo">No demonstration video is attached to this exercise.</p>}
         </div>
         <button className="btn" style={{ width: '100%' }} onClick={() => nav('/patient/plan')}>Back to plan</button>
@@ -55,8 +56,8 @@ export default function PatientPre() {
         <p className="mut">{x.note || 'No extra precautions set.'}</p>
       </div>
       <div className="card">
-        <h3>Clinician demonstration</h3>
-        {reference ? <div className="vid"><ReferenceVideo mediaPath={reference.mediaPath} /></div> : <p className="demo">This legacy demo assignment has no approved reference recording. A new published assignment must include one.</p>}
+        <h3>{reference ? 'Clinician demonstration' : 'Movement preview'}</h3>
+        {reference ? <div className="vid"><ReferenceVideo mediaPath={reference.mediaPath} /></div> : x.ex === 'Side Arm Raise' ? <SideArmRaiseDemo target={x.targetExcursionDeg} /> : <p className="demo">No demonstration is attached. Follow your plan instructions.</p>}
       </div>
       <div className="card">
         <h3>Camera setup</h3>
@@ -64,11 +65,12 @@ export default function PatientPre() {
           <label className="check-label" key={label}><input type="checkbox" checked={checks[index]} onChange={event => setChecks(current => current.map((value, itemIndex) => itemIndex === index ? event.target.checked : value))} /> {label}</label>
         ))}
         <p className="mut">{exerciseMeta(x.ex).setup}</p>
-        <p className="mut">The camera activates only after you choose Start camera. Workout video stays on this device.</p>
+        <p className="mut">The camera activates only after you choose Start exercise on the next screen. Workout video stays on this device.</p>
       </div>
+      <p className="mut" role="status">{checks.every(Boolean) ? 'Ready. Next, start the camera and hold still for setup.' : `Camera checklist: ${checks.filter(Boolean).length} of 3 ready. Complete all three to continue.`}</p>
       <button className="btn" disabled={!checks.every(Boolean)} style={{ width: '100%', marginBottom: 8 }}
         onClick={() => nav('/patient/live', { state: { ...state, exIdx, all: !!state?.all } })}>
-        Begin exercise
+        Continue to camera
       </button>
       <button className="btn s" style={{ width: '100%' }} onClick={requestHelp}>
         I need help

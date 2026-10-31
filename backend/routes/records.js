@@ -2,6 +2,8 @@ import express from 'express';
 import { atlasDb } from '../services/atlas.js';
 import { canAccessPatient, requireIdentity } from '../services/identity.js';
 import { bundledReferences } from '../services/bundledReferences.js';
+import { randomUUID } from 'node:crypto';
+import { validateMeeting } from '../services/meetingValidation.js';
 
 const fail = (message, status = 400) => { throw Object.assign(new Error(message), { status }); };
 const validId = value => typeof value === 'string' && /^[\w:-]{1,128}$/.test(value);
@@ -24,6 +26,9 @@ recordsRouter.get('/workspace', async (req, res) => {
     const clinician = await db.collection('users').findOne({ _id: link.clinicianUid });
     workspace.relationship = { clinicianUid: link.clinicianUid, clinicianName: clinician?.displayName, consentAt: link.consentAt };
   }
+  workspace.meetings = identity.role === 'clinician'
+    ? await db.collection('meetings').find({ clinicianUid: identity.uid }).toArray()
+    : link ? await db.collection('meetings').find({ patientId: identity.uid, clinicianUid: link.clinicianUid }).toArray() : [];
   for (const { patientId, kind, data } of records) {
     if (kind === 'assignments' && (identity.role === 'clinician' ? data.clinicianUid === identity.uid : data.clinicianUid === link?.clinicianUid)) {
       if (data.status === 'draft') workspace.assignmentDrafts[patientId] = data;
@@ -41,6 +46,23 @@ recordsRouter.get('/workspace', async (req, res) => {
   }
   workspace.references = bundledReferences;
   res.json(workspace);
+});
+
+recordsRouter.post('/meetings', async (req, res) => {
+  if (req.identity.role !== 'clinician') fail('Only clinicians can schedule meetings.', 403);
+  const meeting = validateMeeting(req.body);
+  if (meeting.patientId && !await authorize(req.identity, meeting.patientId)) fail('Patient access denied.', 403);
+  const data = { ...meeting, _id: randomUUID(), clinicianUid: req.identity.uid, clinicianName: req.identity.displayName, status: 'scheduled', createdAt: new Date().toISOString() };
+  await (await database()).collection('meetings').insertOne(data);
+  res.status(201).json(data);
+});
+
+recordsRouter.post('/meetings/:meetingId/cancel', async (req, res) => {
+  if (req.identity.role !== 'clinician') fail('Only clinicians can cancel meetings.', 403);
+  if (!validId(req.params.meetingId)) fail('Invalid meeting ID.');
+  const result = await (await database()).collection('meetings').updateOne({ _id: req.params.meetingId, clinicianUid: req.identity.uid, status: 'scheduled' }, { $set: { status: 'cancelled', cancelledAt: new Date().toISOString() } });
+  if (!result.matchedCount) fail('Meeting not found or already cancelled.', 404);
+  res.json({ success: true });
 });
 
 recordsRouter.post('/:patientId/:operation', async (req, res) => {

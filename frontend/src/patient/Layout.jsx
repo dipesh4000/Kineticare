@@ -3,7 +3,6 @@ import Icon from '../components/Icon';
 import Brand from '../components/Brand';
 import PageMotion from '../components/PageMotion';
 import ThemeToggle from '../components/ThemeToggle';
-import CurrentWeek from '../components/CurrentWeek';
 import { useRecords } from '../records/recordsContext';
 
 const TABS = [
@@ -24,9 +23,8 @@ export default function PatientLayout() {
   const active = TABS.find(([k]) => pathname.includes(`/patient/${k}`))?.[0] ?? 'home';
 
   return (
-    <div className="phone">
+    <div className={`phone patient-shell${hideNav ? ' session-shell' : ''}`}>
       {!hideNav && <header className="patient-brand"><Brand subtitle="Your recovery companion" /><div className="portal-tools"><span className="brand-caption">PATIENT PORTAL</span><ThemeToggle /></div></header>}
-      {!hideNav && <CurrentWeek />}
       {error && <p role="alert" className="demo">{error}</p>}
       <main className={`patient-content ${pathname === '/patient/home' ? 'patient-dashboard' : 'patient-detail-page'}`}><PageMotion><Outlet /></PageMotion></main>
       {!hideNav && (

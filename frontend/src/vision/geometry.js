@@ -13,7 +13,7 @@ export function namedKeypoints(keypoints) {
 }
 
 export function visible(points, minimumScore = 0.3) {
-  return points.every(point => point && Number.isFinite(point.score) && point.score >= minimumScore);
+  return points.every(point => point && Number.isFinite(point.x) && Number.isFinite(point.y) && Number.isFinite(point.score) && point.score >= minimumScore);
 }
 
 /**
@@ -67,7 +67,8 @@ export function checkBodyAlignment(exerciseName, keypoints) {
   // Front-view exercise (e.g. Side Arm Raise)
   if (visible([ls, rs], 0.35)) {
     const shoulderDx = Math.abs(ls.x - rs.x);
-    if (shoulderDx < 40) {
+    const torsoHeight = visible([lh, rh], 0.3) ? Math.abs((ls.y + rs.y - lh.y - rh.y) / 2) : null;
+    if (torsoHeight && shoulderDx / torsoHeight < 0.2) {
       return {
         isAligned: false,
         orientation: 'side',

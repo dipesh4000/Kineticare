@@ -33,7 +33,25 @@ export const SKELETON_SEGMENTS = [
   ...['left', 'right'].flatMap(side => [[`${side}Hip`, `${side}Knee`], [`${side}Knee`, `${side}Ankle`], [`${side}Ankle`, `${side}Toe`], [`${side}Toe`, `${side}Heel`], [`${side}Heel`, `${side}Ankle`], ['neck', `${side}Shoulder`], [`${side}Shoulder`, `${side}Elbow`], [`${side}Elbow`, `${side}Wrist`]]),
 ];
 
+export function sideArmRaisePose(time, durationSeconds = 6, peakDegrees = 75) {
+  if (![time, durationSeconds, peakDegrees].every(Number.isFinite) || durationSeconds < 3 || durationSeconds > 12 || peakDegrees < 1 || peakDegrees > 180) throw new Error('Unsupported arm raise preview parameters.');
+  const phase = ((time % durationSeconds) + durationSeconds) % durationSeconds / durationSeconds;
+  // A short rest and peak hold make the complete repetition easy to follow.
+  const ramp = phase < 0.12 || phase > 0.92 ? 0 : phase < 0.46 ? (phase - 0.12) / 0.34 : phase < 0.56 ? 1 : 1 - (phase - 0.56) / 0.36;
+  const progress = (1 - Math.cos(Math.PI * ramp)) / 2;
+  const angle = peakDegrees * progress * Math.PI / 180;
+  const { points } = miniSquatPose(0, 6, 30);
+  for (const [side, direction] of [['left', -1], ['right', 1]]) {
+    const shoulder = points[`${side}Shoulder`];
+    points[`${side}Elbow`] = [shoulder[0] + direction * 0.29 * Math.sin(angle), shoulder[1] - 0.29 * Math.cos(angle), shoulder[2]];
+    const elbow = points[`${side}Elbow`];
+    points[`${side}Wrist`] = [elbow[0] + direction * 0.27 * Math.sin(angle), elbow[1] - 0.27 * Math.cos(angle), elbow[2] + 0.025];
+  }
+  return { points, shoulderDegrees: peakDegrees * progress, phaseName: phase < 0.12 || phase > 0.92 ? 'Arms at sides' : phase < 0.46 ? 'Raise both arms' : phase < 0.56 ? 'Hold briefly' : 'Lower with control' };
+}
+
 export function validateIllustrativeDescriptor(descriptor) {
+  if (descriptor?.id === 'side-arm-raise-illustration-v1' && descriptor.exercise_id === 'arm-raise') return true;
   return descriptor?.id === 'mini-squat-illustration-v1' && descriptor.exercise_id === 'EX-KU-000001'
     && Array.isArray(descriptor.knee_range_degrees) && descriptor.knee_range_degrees.length === 2
     && descriptor.knee_range_degrees[0] === 30 && descriptor.knee_range_degrees[1] === 45;

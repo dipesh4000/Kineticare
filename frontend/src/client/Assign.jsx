@@ -27,6 +27,8 @@ export default function ClientAssign() {
   const initial = savedDraft ?? current;
   const [planName, setPlanName] = useState(initial?.name ?? 'Mobility plan');
   const [frequency, setFrequency] = useState(initial?.schedule?.weeklyFrequency ?? 3);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const [items, setItems] = useState(ALL_EXERCISES.map(exercise => {
     const item = initial?.items?.find(candidate => candidate.ex === exercise);
     return item ? { ...defaults(exercise), ...item, checked: true } : defaults(exercise);
@@ -69,31 +71,34 @@ export default function ClientAssign() {
   };
 
   const saveDraft = async () => {
-    if (!items.some(item => item.checked)) return toast('Select at least one exercise.');
+    if (!items.some(item => item.checked)) { setError('Select at least one exercise.'); return; }
+    setBusy(true); setError('');
     try {
       await saveAssignmentDraft(id, build('draft'));
       toast('Assignment draft saved');
     } catch {
-      toast('Draft could not be saved');
-    }
+      setError('Draft could not be saved. Your changes are still here; try again.');
+    } finally { setBusy(false); }
   };
 
   const publish = async () => {
     const value = build('published');
     const error = validate(value);
-    if (error) return toast(error);
+    if (error) { setError(error); return; }
+    setBusy(true); setError('');
     try {
       await publishAssignment(id, value);
       toast(`Assignment version ${value.v} published`);
       nav(`/client/patients/${id}`);
     } catch {
-      toast('Assignment could not be published');
-    }
+      setError('Assignment could not be published. Your changes are still here; try again.');
+    } finally { setBusy(false); }
   };
 
   return (
     <>
       <h1>Assignment for {patient.n}</h1>
+      <p className="mut">1. Choose exercises → 2. Set targets → 3. Review and publish. Save a draft to finish later.</p>
       <div className="card">
         <label htmlFor="pn">Plan name</label>
         <input id="pn" type="text" value={planName} onChange={event => setPlanName(event.target.value)} />
@@ -103,14 +108,14 @@ export default function ClientAssign() {
         <h3 style={{ marginTop: 16 }}>Exercises and patient targets</h3>
         {items.map((item, index) => (
           <div key={item.ex} className="card" style={{ background: 'var(--soft)' }}>
-            <label className="check-label"><input type="checkbox" checked={item.checked} onChange={() => setItem(index, { checked: !item.checked })} /> {item.ex}</label>
+            <label className="check-label"><input type="checkbox" checked={item.checked} onChange={() => setItem(index, { checked: !item.checked, referenceVersionId: item.referenceVersionId || approvedReferences(item.ex)[0]?.versionId || '' })} /> {item.ex}</label>
             {item.checked && <>
               <label>Approved reference</label>
               <select value={item.referenceVersionId} onChange={event => setItem(index, { referenceVersionId: event.target.value })}>
                 <option value="">Choose a reference</option>
                 {approvedReferences(item.ex).map(reference => <option key={reference.versionId} value={reference.versionId}>Version {reference.version} · {reference.cameraView}</option>)}
               </select>
-              {!approvedReferences(item.ex).length && <p className="mut">Capture and approve this exercise in the library before publishing.</p>}
+              {!approvedReferences(item.ex).length && <p className="session-status">No approved reference is available. You can save this as a draft, but it cannot be published yet. <a href="/client/library" target="_blank" rel="noreferrer">View exercise library</a></p>}
               <div className="grid">
                 <label>{item.videoOnly ? 'Suggested reps (not counted)' : 'Target reps'}<input type="number" min="1" max="100" value={item.targetReps} onChange={event => setItem(index, { targetReps: Number(event.target.value) })} /></label>
                 {!item.videoOnly && <label>Target movement (degrees)<input type="number" min="1" max="180" value={item.targetExcursionDeg} onChange={event => setItem(index, { targetExcursionDeg: Number(event.target.value) })} /></label>}
@@ -121,12 +126,15 @@ export default function ClientAssign() {
           </div>
         ))}
         <p className="mut">Targets are clinician-set. Publishing creates a new immutable assignment version for future sessions.</p>
-        <div className="row" style={{ flexWrap: 'wrap' }}><button className="btn" onClick={publish}>Publish assignment</button><button className="btn s" onClick={saveDraft}>Save draft</button></div>
       </div>
       <div className="card">
         <h3>Patient preview</h3>
         <b>{planName || 'Plan'}</b>
         {items.filter(item => item.checked).map(item => <p key={item.ex}>{item.ex}: {item.videoOnly ? `video guide, about ${item.targetReps} reps, not camera-measured` : `${item.targetReps} reps, ${item.targetExcursionDeg}° target`} · {item.note || 'No additional note'}</p>)}
+        {!items.some(item => item.checked) && <p className="mut">Select an exercise above to preview the patient's plan.</p>}
+        <p className="mut">{frequency} sessions per week · {items.filter(item => item.checked).length} exercises selected</p>
+        {error && <p className="session-status" role="alert">{error}</p>}
+        <div className="row" style={{ flexWrap: 'wrap' }}><button className="btn" disabled={busy || !items.some(item => item.checked)} onClick={publish}>{busy ? 'Saving…' : 'Publish patient plan'}</button><button className="btn s" disabled={busy} onClick={saveDraft}>Save draft</button></div>
       </div>
     </>
   );

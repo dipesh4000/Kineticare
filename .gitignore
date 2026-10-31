@@ -19,6 +19,8 @@ Desktop.ini
 .env.*
 !.env.example
 !.env.sample
+!.env.groq.example
+!.env.*.example
 *.pem
 *.key
 

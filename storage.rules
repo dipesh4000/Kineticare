@@ -1,0 +1,36 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Default deny for all storage paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isClinician() {
+      return isAuthenticated() && request.auth.token.role == 'clinician';
+    }
+
+    // Approved reference video clips (demonstrations)
+    // Only clinicians can upload; file must be video/mp4 or video/webm and under 50MB
+    match /references/{referenceId}/{versionId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isClinician()
+        && request.resource.size < 50 * 1024 * 1024
+        && (request.resource.contentType.matches('video/mp4') || request.resource.contentType.matches('video/webm'));
+    }
+
+    // Explicit privacy safeguard: patient workout video streams are strictly local in browser memory
+    // and forbidden from being stored in Cloud Storage
+    match /patient-recordings/{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    match /workouts/{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

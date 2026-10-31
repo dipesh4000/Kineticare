@@ -7,12 +7,15 @@ import { clearPerfLog, readPerfLog } from '../session/profiler';
 
 import PWAInstallButton from '../components/PWAInstallButton';
 import CareConnection from '../components/CareConnection';
+import AssessmentPanel from '../client/assessment/AssessmentPanel';
 
 export default function PatientProfile() {
   const nav = useNavigate();
   const { user, signOut } = useAuth();
-  const { patientId, assignment, backend } = useRecords();
+  const { patientId, assignment, workspace, backend } = useRecords();
   const linkedPlan = assignment(patientId);
+  const clinicianName = workspace.relationship?.clinicianName ?? linkedPlan?.by ?? user.clinicianName ?? null;
+  const clinicianEmail = workspace.relationship?.clinicianEmail ?? null;
   const [runs, setRuns] = useState(readPerfLog);
   const download = () => {
     const url = URL.createObjectURL(new Blob([JSON.stringify(runs, null, 2)], { type: 'application/json' }));
@@ -24,9 +27,13 @@ export default function PatientProfile() {
     <>
       <h1>Info & Settings</h1>
       <CareConnection />
+      <AssessmentPanel patientId={patientId} readOnly />
       <div className="card">
         <b>{user.displayName}</b>
-        <p className="mut">Patient account · Clinician: {linkedPlan?.by ?? user.clinicianName ?? 'Not linked'}</p>
+        <p className="mut">
+          Patient account · Clinician: {clinicianName || 'Not linked'}
+          {clinicianEmail ? ` (${clinicianEmail})` : ''}
+        </p>
       </div>
       <div className="card">
         <div className="row sp">

@@ -4,6 +4,7 @@ import { ALL_EXERCISES, VIDEO_ONLY_EXERCISES } from '../data';
 import { useRecords } from '../records/recordsContext';
 import { toast } from '../components/toastBus';
 import { useAuth } from '../auth/authContext';
+import { assessmentIsStale } from '../../../shared/assessmentFields.js';
 
 const defaults = exercise => ({
   ex: exercise,
@@ -25,6 +26,9 @@ export default function ClientAssign() {
   const current = assignment(id);
   const savedDraft = assignmentDraft(id);
   const initial = savedDraft ?? current;
+  const assessments = workspace.assessments?.[id] ?? [];
+  const [assessmentKey, setAssessmentKey] = useState(initial?.assessmentId ? `${initial.assessmentId}:v${initial.assessmentVersion}` : '');
+  const assessment = assessments.find(item => `${item.assessmentId}:v${item.version}` === assessmentKey);
   const [planName, setPlanName] = useState(initial?.name ?? 'Mobility plan');
   const [frequency, setFrequency] = useState(initial?.schedule?.weeklyFrequency ?? 3);
   const [busy, setBusy] = useState(false);
@@ -45,6 +49,8 @@ export default function ClientAssign() {
     by: user.displayName,
     clinicianUid: user.uid,
     patientUid: id,
+    assessmentId: assessment?.assessmentId ?? null,
+    assessmentVersion: assessment?.version ?? null,
     status,
     schedule: { weeklyFrequency: frequency },
     createdAt: new Date().toISOString(),
@@ -59,6 +65,7 @@ export default function ClientAssign() {
   });
 
   const validate = assignmentValue => {
+    if (!assessment) return 'Select a published assessment first.';
     if (!assignmentValue.items.length) return 'Select at least one exercise.';
     if (!Number.isInteger(frequency) || frequency < 1 || frequency > 7) return 'Weekly frequency must be between 1 and 7.';
     for (const item of assignmentValue.items) {
@@ -90,8 +97,8 @@ export default function ClientAssign() {
       await publishAssignment(id, value);
       toast(`Assignment version ${value.v} published`);
       nav(`/client/patients/${id}`);
-    } catch {
-      setError('Assignment could not be published. Your changes are still here; try again.');
+    } catch (cause) {
+      setError(cause.message || 'Assignment could not be published. Your changes are still here; try again.');
     } finally { setBusy(false); }
   };
 
@@ -100,6 +107,14 @@ export default function ClientAssign() {
       <h1>Assignment for {patient.n}</h1>
       <p className="mut">1. Choose exercises → 2. Set targets → 3. Review and publish. Save a draft to finish later.</p>
       <div className="card">
+        <label htmlFor="assignment-assessment">Select assessment</label>
+        <select id="assignment-assessment" value={assessmentKey} onChange={event => setAssessmentKey(event.target.value)}>
+          <option value="">Choose a published assessment</option>
+          {assessments.map(item => <option key={`${item.assessmentId}:v${item.version}`} value={`${item.assessmentId}:v${item.version}`}>Version {item.version} · {item.assessedAt}</option>)}
+        </select>
+        {!assessments.length && <p className="mut">Publish an assessment on the patient’s detail page before publishing a plan. You can save a draft now.</p>}
+        {assessment && assessmentIsStale(assessment) && <p role="status">This assessment is over 8 weeks old. Consider reassessing before publishing.</p>}
+        {assessment && <p className="mut">Assessment v{assessment.version} selected. Targets remain clinician-set; restrictions are recorded for your review: {assessment.restrictions.join(', ') || 'none recorded'}.</p>}
         <label htmlFor="pn">Plan name</label>
         <input id="pn" type="text" value={planName} onChange={event => setPlanName(event.target.value)} />
         <label htmlFor="frequency">Sessions per week</label>
@@ -129,6 +144,7 @@ export default function ClientAssign() {
       </div>
       <div className="card">
         <h3>Patient preview</h3>
+        <p className="mut">{assessment ? `Linked to assessment v${assessment.version}, assessed ${assessment.assessedAt}.` : 'No assessment selected.'} No automatic target changes are applied.</p>
         <b>{planName || 'Plan'}</b>
         {items.filter(item => item.checked).map(item => <p key={item.ex}>{item.ex}: {item.videoOnly ? `video guide, about ${item.targetReps} reps, not camera-measured` : `${item.targetReps} reps, ${item.targetExcursionDeg}° target`} · {item.note || 'No additional note'}</p>)}
         {!items.some(item => item.checked) && <p className="mut">Select an exercise above to preview the patient's plan.</p>}

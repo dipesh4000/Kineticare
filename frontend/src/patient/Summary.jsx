@@ -10,6 +10,7 @@ import { sessionMode } from '../patientFlow';
 import MovementReport from '../components/MovementReport';
 import ExportPdf from '../components/ExportPdf';
 import { useAuth } from '../auth/authContext';
+import { mapError } from '../services/errorMapping';
 
 const mean = values => (values.length ? values.reduce((total, value) => total + value, 0) / values.length : 0);
 const scoreOf = result => (result.movementScore != null ? result.movementScore / 100 : result.s);
@@ -34,6 +35,7 @@ export default function PatientSummary() {
   const { patientId, patientPlan, sessions, saveSession } = useRecords();
   const sessionId = useRef(state?.sessionId ?? crypto.randomUUID());
   const [saveState, setSaveState] = useState('idle');
+  const [saveError, setSaveError] = useState(null);
   const [serverAnalysis, setServerAnalysis] = useState(null);
   const done = useMemo(() => state?.done || [], [state?.done]);
   const previous = sessions(patientId).at(-1);
@@ -42,6 +44,10 @@ export default function PatientSummary() {
   const attempted = done.reduce((total, result) => total + (result.attemptedReps ?? 0), 0);
   const onTarget = done.reduce((total, result) => total + (result.withinTargetReps ?? 0), 0);
   const plan = patientPlan(patientId);
+  const assessmentContext = {
+    assessmentId: state?.assignmentId ? state.assessmentId ?? null : plan?.assessmentId ?? null,
+    assessmentVersion: state?.assignmentId ? state.assessmentVersion ?? null : plan?.assessmentVersion ?? null,
+  };
 
   useEffect(() => {
     if (done.length) {
@@ -53,12 +59,14 @@ export default function PatientSummary() {
 
   const save = async () => {
     setSaveState('saving');
+    setSaveError(null);
     try {
       await saveSession(patientId, {
         schemaVersion: 1,
         sessionId: sessionId.current,
         assignmentId: state?.assignmentId ?? plan?.assignmentId ?? 'demo-assignment',
         assignmentVersion: state?.assignmentVersion ?? plan?.v ?? 1,
+        ...assessmentContext,
         status: done.length && done.every(item => item.completion !== 'partial') ? 'completed' : 'partial',
         mode: sessionMode(done),
         createdAt: new Date().toISOString(),
@@ -69,15 +77,16 @@ export default function PatientSummary() {
       setSaveState('saved');
       clearSessionDraft(patientId);
       nav('/patient/home');
-    } catch {
-      setSaveState('error');
+    } catch (err) {
+      setSaveState('not-saved');
+      setSaveError(mapError(err));
     }
   };
 
   return (
     <>
       <h1>Workout summary</h1>
-      {done.length > 0 && <><ExportPdf patient={user} plan={plan} session={{ r: done, mode: sessionMode(done), d: new Date().toLocaleDateString() }} label="Print movement report" /><MovementReport patient={user} plan={plan} session={{ r: done, mode: sessionMode(done), d: new Date().toLocaleDateString() }} /></>}
+      {done.length > 0 && <><ExportPdf patient={user} plan={plan} session={{ r: done, ...assessmentContext, mode: sessionMode(done), d: new Date().toLocaleDateString() }} label="Print movement report" /><MovementReport patient={user} plan={plan} session={{ r: done, ...assessmentContext, mode: sessionMode(done), d: new Date().toLocaleDateString() }} /></>}
       {sessionMode(done) === 'replay' && <DemoBanner />}
       {done.length === 0 && <div className="card">Nothing to summarise yet. Finish an exercise first.</div>}
 
@@ -195,6 +204,11 @@ export default function PatientSummary() {
         Kineticare calculates joint kinematics, eccentric deceleration, and motor consistency in real time. Replay scores use synthetic telemetry for demonstration.
       </p>
 
+      {saveState === 'not-saved' && (
+        <div className="demo" role="alert">
+          {saveError ? `Save failed: ${saveError}` : 'Save failed. Your summary is still available; retry when connected.'}
+        </div>
+      )}
       {saveState === 'error' && <div className="demo" role="alert">Save failed. Your summary is still available; retry when connected.</div>}
       <button
         className="btn"

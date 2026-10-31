@@ -27,8 +27,8 @@ export async function evaluateSessionServer(session, plan) {
   const results = session.r || session.exerciseResults || [];
   const exerciseEvaluations = results.map(result => {
     const planItem = plan?.items?.find(it => it.ex === result.ex) || {};
-    const targetDeg = planItem.targetExcursionDeg || result.targetExcursionDeg || (result.ex === 'Squat' ? 45 : result.ex === 'Side Arm Raise' ? 75 : 60);
-    const targetReps = planItem.targetReps || result.targetReps || 5;
+    const targetDeg = result.targetExcursionDeg || planItem.targetExcursionDeg || (result.ex === 'Squat' ? 45 : result.ex === 'Side Arm Raise' ? 75 : 60);
+    const targetReps = result.targetReps || planItem.targetReps || 5;
 
     const evalResult = evaluateExerciseRepetitions(result.reps || [], {
       ex: result.ex,
@@ -55,6 +55,9 @@ export async function evaluateSessionServer(session, plan) {
   return {
     success: true,
     evaluatedAt: new Date().toISOString(),
+    assessmentId: session.assessmentId ?? null,
+    assessmentVersion: session.assessmentVersion ?? null,
+    evaluationBasis: session.assessmentId ? 'clinician-targets-with-assessment' : 'default-or-legacy-targets',
     avgScore,
     avgConsistency,
     exercises: exerciseEvaluations,

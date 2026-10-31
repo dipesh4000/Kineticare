@@ -1,15 +1,18 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useRecords } from '../records/recordsContext';
 import { exerciseMeta, measureAngle, calibratedProgress, repConfig } from '../exercise/measure';
 import ReferenceVideo from '../components/ReferenceVideo';
 import SideArmRaiseDemo from '../components/SideArmRaiseDemo';
+import PreSessionChecklist from '../components/PreSessionChecklist';
 import { advanceRep, createRepState } from '../exercise/engine';
 import { calibrateRest } from '../exercise/reference';
 import { scoreRep, scoreRepetitions } from '../exercise/score';
 import usePoseCamera from '../vision/usePoseCamera';
+import { getPoseFilterConfig } from '../vision/oneEuroFilter';
 import { POSE_MODES, shoulderAngles } from '../vision/poseOverlay';
 import { smoothAngleEMA, checkBodyAlignment } from '../vision/geometry';
+import { validatePreSession, measureTorsoLength } from '../vision/sessionValidation';
 import { saveSessionDraft } from '../session/drafts';
 import { startProfiler } from '../session/profiler';
 
@@ -72,13 +75,18 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
   const completedRef = useRef(state?.done || []);
   const calibrationRef = useRef(null);
   const restRef = useRef(null);
+  const torsoLengthRef = useRef(null);
+  const baselineRef = useRef(null);
   const repRef = useRef(createRepState());
   const [alignmentIssue, setAlignmentIssue] = useState(null);
+  const [validation, setValidation] = useState(null);
   const prevAngleRef = useRef(null);
   const squatSideRef = useRef(null);
   const lastCueRef = useRef(0);
   const smoothRef = useRef([]);
   const profilerRef = useRef(null);
+  const fpsRef = useRef(30);
+  const lastPoseTimeRef = useRef(null);
 
   useEffect(() => { speechRef.current = speechEnabled; if (!speechEnabled && 'speechSynthesis' in window) speechSynthesis.cancel(); }, [speechEnabled]);
 
@@ -115,9 +123,20 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
 
   const onPose = useCallback((pose, timestamp) => {
     profilerRef.current?.tick();
+    if (lastPoseTimeRef.current && timestamp > lastPoseTimeRef.current) {
+      const deltaMs = timestamp - lastPoseTimeRef.current;
+      if (deltaMs > 0) fpsRef.current = Math.round(1000 / deltaMs);
+    }
+    lastPoseTimeRef.current = timestamp;
 
     const alignCheck = checkBodyAlignment(exercise.ex, pose?.keypoints);
     setAlignmentIssue(alignCheck.isAligned ? null : alignCheck.message);
+    const preCheck = validatePreSession({
+      exerciseName: exercise.ex,
+      keypoints: pose?.keypoints,
+      fps: fpsRef.current,
+    });
+    setValidation(preCheck);
 
     const raw = measurePose(pose);
     if (exercise.ex === 'Side Arm Raise') setArmAngles(shoulderAngles(pose?.keypoints));
@@ -136,15 +155,20 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
     setMeasurement(Number.isFinite(angle) ? Math.round(angle) : null);
 
     if (calibrationRef.current) {
-      if (Number.isFinite(raw) && alignCheck.isAligned) calibrationRef.current.values.push(raw);
+      const torsoLength = measureTorsoLength(pose?.keypoints);
+      if (Number.isFinite(raw) && alignCheck.isAligned) {
+        calibrationRef.current.samples.push({ angle: raw, torsoLength });
+      }
       const elapsed = timestamp - calibrationRef.current.startedAt;
       setCalibration(current => ({ ...current, progress: Math.min(100, Math.round(elapsed / CALIBRATION_MS * 100)) }));
       if (elapsed < CALIBRATION_MS) return;
 
-      const result = calibrateRest(calibrationRef.current.values);
+      const result = calibrateRest(calibrationRef.current.samples);
       calibrationRef.current = null;
       if (!result.ok) {
         restRef.current = null;
+        torsoLengthRef.current = null;
+        baselineRef.current = null;
         setCalibration({ status: 'error', progress: 0, message: result.reason });
         return;
       }
@@ -153,6 +177,13 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
         return;
       }
       restRef.current = result.value;
+      torsoLengthRef.current = result.torsoLength;
+      baselineRef.current = {
+        restAngle: result.value,
+        torsoLength: result.torsoLength,
+        variance: result.variance,
+        stdDev: result.stdDev,
+      };
       repRef.current = advanceRep(repRef.current, { progress: 0, timestamp, tracked: false });
       setRepState(repRef.current);
       setMovementProgress(0);
@@ -175,7 +206,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
     if (progress === null) return;
     setMovementProgress(Math.max(0, progress));
     const previous = repRef.current;
-    repRef.current = advanceRep(previous, { progress, timestamp }, repConfig(exercise.ex, restRef.current, exercise.targetExcursionDeg));
+    repRef.current = advanceRep(previous, { angle, progress, timestamp }, repConfig(exercise.ex, restRef.current, exercise.targetExcursionDeg));
     setRepState(repRef.current);
     if (repRef.current.rejectedReps > (previous.rejectedReps ?? 0)) {
       announce('Movement not counted. Check your camera position and move smoothly.', timestamp, true);
@@ -195,10 +226,11 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
     }
   }, [exercise.ex, exercise.targetExcursionDeg, exercise.targetReps, measurePose, paused, announce]);
 
+  const filterConfig = useMemo(() => getPoseFilterConfig(exercise.ex), [exercise.ex]);
   const {
     videoRef, canvasRef, status: cameraStatus, error: cameraError, tracking,
     start: startPoseCamera,
-  } = usePoseCamera(onPose);
+  } = usePoseCamera(onPose, filterConfig);
   const cameraReady = cameraStatus === 'running' && calibration.status === 'ready';
   const trackingUsable = measurement !== null;
   const active = mode === 'replay' ? !replayTrackingLost : cameraReady && trackingUsable;
@@ -259,6 +291,10 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
     finish({
       ex: exercise.ex, t: replayDuration, elapsedMs: replayDuration * 1000, activeMs: replayDuration * 1000,
       trackingCoverage: 1,
+      baseline: baselineRef.current || {
+        restAngle: restRef.current,
+        torsoLength: torsoLengthRef.current,
+      },
       s: score ? score.score / 100 : null, movementScore: score?.score ?? null,
       scoreComponents: score?.components ?? null, formulaVersion: score?.formulaVersion ?? null,
       targetExcursionDeg: exercise.targetExcursionDeg,
@@ -301,11 +337,15 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
   };
 
   const startCalibration = () => {
+    if (validation && !validation.ok) {
+      announce(validation.message, performance.now(), true);
+      return;
+    }
     setPaused(false);
     squatSideRef.current = null;
     smoothRef.current = [];
     prevAngleRef.current = null;
-    calibrationRef.current = { startedAt: performance.now(), values: [] };
+    calibrationRef.current = { startedAt: performance.now(), samples: [] };
     restRef.current = null;
     repRef.current = advanceRep(repRef.current, { progress: 0, timestamp: performance.now(), tracked: false });
     setRepState(repRef.current);
@@ -315,10 +355,10 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
 
   // Start calibrating automatically once the camera sees the required joints.
   useEffect(() => {
-    if (paused || cameraStatus !== 'running' || calibration.status !== 'idle' || !trackingUsable) return undefined;
+    if (paused || cameraStatus !== 'running' || calibration.status !== 'idle' || !trackingUsable || !validation?.ok) return undefined;
     const id = setTimeout(() => startCalibration(), 700);
     return () => clearTimeout(id);
-  }, [cameraStatus, calibration.status, trackingUsable, paused]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cameraStatus, calibration.status, trackingUsable, paused, validation?.ok]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const togglePause = () => {
     if (!paused) {
@@ -340,6 +380,10 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       unassessedMs: timing.unassessed * 1000,
       readyRestMs: timing.readyRest * 1000,
       trackingCoverage: timing.elapsed - timing.paused > 0 ? +(timing.active / (timing.elapsed - timing.paused)).toFixed(3) : null,
+      baseline: baselineRef.current || {
+        restAngle: restRef.current,
+        torsoLength: torsoLengthRef.current,
+      },
       s: score ? score.score / 100 : null,
       movementScore: score?.score ?? null,
       scoreComponents: score?.components ?? null,
@@ -385,7 +429,16 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       {mode === 'camera' && cameraStatus === 'loading-model' && <p className="session-status" role="status">Loading {POSE_MODES[poseMode].label.toLowerCase()} tracking. The first start downloads the model and needs an internet connection.</p>}
       {mode === 'replay' && <div className="demo">Replay demo: movement and score are simulated.</div>}
       {mode === 'camera' && cameraStatus === 'running' && <div className="tracking-panel" aria-label="Tracking quality"><div><b>{tracking.visible}/{tracking.total || 33}</b><span>Landmarks visible</span></div><div><b>{tracking.confidence}%</b><span>Detection confidence</span></div><div><b>{tracking.fps || '—'}</b><span>Frames / sec</span></div><p><span className="tracking-dot left" />Your left side <span className="tracking-dot right" />Your right side · {tracking.model}</p></div>}
-      {mode === 'camera' && cameraStatus === 'running' && calibration.status !== 'ready' && <div className="session-status" role="status"><b>{calibration.status === 'collecting' ? 'Hold still — setting your resting position…' : calibration.status === 'error' ? 'Setup needs another try' : 'Position yourself for camera setup'}</b><p>{calibration.message || (exercise.ex === 'Side Arm Raise' ? 'Face the camera with both arms down. Keep both hips, shoulders and elbows visible.' : meta.setup + ' Stand upright and still. Setup will begin automatically.')}</p>{cameraStatus === 'running' && calibration.status !== 'collecting' && <button className="btn" disabled={!trackingUsable} onClick={startCalibration}>{calibration.status === 'error' ? 'Retry setup' : 'Set resting position now'}</button>}</div>}
+      {mode === 'camera' && cameraStatus === 'running' && calibration.status !== 'ready' && (
+        <PreSessionChecklist
+          validation={validation}
+          calibrationStatus={calibration.status}
+          calibrationProgress={calibration.progress}
+          calibrationMessage={calibration.message}
+          onRetryCalibration={startCalibration}
+          canCalibrate={trackingUsable && validation?.ok}
+        />
+      )}
       <div className="live-monitor" hidden={!mode}>
       <div className={`cam${paused || !active ? ' paused' : ''}`} aria-label={mode === 'camera' ? 'Live camera with pose overlay' : 'Exercise preview'}>
         <video ref={videoRef} className="pose-layer" style={{ visibility: viewMode === 'skeleton' ? 'hidden' : 'visible' }} muted playsInline />

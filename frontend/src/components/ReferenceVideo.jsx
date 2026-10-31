@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { loadReferenceMedia } from '../services/media';
+import SideArmRaiseDemo from './SideArmRaiseDemo';
 
 export default function ReferenceVideo({ mediaPath, loop = false, autoPlay = false, controls = true }) {
+  if (mediaPath === 'demo:armraise') {
+    return <SideArmRaiseDemo studio={false} />;
+  }
+
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
 

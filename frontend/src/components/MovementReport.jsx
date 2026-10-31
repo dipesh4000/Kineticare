@@ -35,6 +35,7 @@ export default function MovementReport({ patient, session, plan }) {
     </header>
     <div className="movement-context"><span>{replay ? 'REPLAY · SYNTHETIC DATA' : session.mode === 'live' ? 'CAMERA SESSION' : 'SESSION MODE NOT RECORDED'}</span><span>{session.reviewStatus === 'reviewed' ? 'Reviewed' : 'Awaiting review'} · {session.status ?? 'In progress'}</span></div>
     <p className="movement-caption">Prototype score from target reach and tempo. Colors group scores: 0–49 / 50–74 / 75–100; they are not clinical grades.</p>
+    <p className="movement-caption">{session.assessmentId ? `Assessment ${session.assessmentId} · version ${session.assessmentVersion}. Evaluated against clinician-set exercise targets.` : 'Evaluated against default or legacy targets; no assessment baseline is recorded for this session.'} Camera excursions are approximate 2D measurements and are not directly comparable to clinician-measured ROM.</p>
     <div className="movement-results">{results.map((result, index) => {
       const reps = result.reps ?? [];
       const validPeaks = reps.map(rep => number(rep.peakDeg) ? rep.peakDeg : number(rep.peak) && number(result.targetExcursionDeg) ? rep.peak * result.targetExcursionDeg : null).filter(number);

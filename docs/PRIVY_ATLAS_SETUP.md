@@ -18,6 +18,10 @@ Collections are created on first use: users, relationships, careInvites, patient
 
 Clinicians generate a cryptographically random invite code from Patients or Settings. The code expires after 24 hours. Patients enter it under Info, preview the clinician's name/verification state, then explicitly consent to share saved sessions, progress and care messages and receive plans and feedback. Knowing a code alone does not grant access. One clinician connection is active at a time; revoke before changing clinicians.
 
+Clinicians can also choose **Add new patient**, enter a name and email, and select **Send invitation**. Configure server-only `RESEND_API_KEY`, `INVITATION_FROM_EMAIL` (a verified Resend sender), and `APP_URL` (the public frontend origin; `http://localhost:3000` for local testing). The backend uses the [Resend send-email API](https://resend.com/docs/api-reference/emails/send-email) without an additional SDK. Restart the backend after changing configuration. Missing configuration and provider failures are shown as errors, never as a successful send.
+
+Email invitations appear separately from linked patients, with pending, accepted, expired or failed status. The emailed link preserves the invite through email login and account creation, then opens Info with the code filled in. Only a Patient account with the invited verified email can review and accept it. Consent is still required before the patient appears in the clinician’s linked patient list. Email invitations expire after 24 hours and cannot be reused after acceptance. A pending status means the provider accepted the email request, not that inbox delivery has been verified.
+
 Revocation denies subsequent clinician API requests without deleting patient records. Previously downloaded records cannot be remotely erased. Assignments from a revoked clinician are no longer active. All clinician patient reads and writes are authorized against the current Atlas relationship.
 
 ## Demonstrations and Gemini
@@ -27,6 +31,34 @@ Only bundled static videos are supported. Squat and toe touch have videos; side 
 Set GEMINI_API_KEY and an available generateContent model ID in GEMINI_MODEL. In clinician Exercise Library, provide an exercise brief, edition/chapter/page and your original summary of the reference. Explicitly permit sending those fields to Google and exclude patient-identifying information. Structured responses are validated and saved as pending review. Decisions persist; drafts do not automatically become assignable or measured exercises.
 
 Kisner & Colby may be cited in your source notes. The supplied sixth-edition (2012) PDF is not uploaded, reproduced, indexed or used for training. Check generated content against the actual source and current guidance. Patient-history AI recommendations and clinically reviewed independent-use rules remain pending.
+
+## Groq AI Chat Assistant
+
+The app includes an intelligent real-time chat assistant accessible via the floating bottom-right widget across both Patient and Clinician dashboards.
+
+### Environment variables
+Set these in the root `.env` (recommended) or in `.env.groq`:
+```env
+# Server-only. Never prefix with VITE_ or expose to the frontend client.
+GROQ_API_KEY=gsk_your_groq_api_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_MAX_TOKENS=700
+AI_CHAT_RATE_LIMIT=12
+```
+
+### Key characteristics
+1. **Unified Configuration**: Configured directly in `.env` (also specified in `.env.example`). Both `.env` and `.env.groq` are automatically loaded by `backend/config/environment.js` and `scripts/launch.mjs`.
+2. **Patient & Clinician Modes**:
+   - For patients: Answers questions about their prescribed exercises, target angles, repetition pacing, and rest periods based on active assignments.
+   - For clinicians: Summarizes patient activity, sessions, recent tracking gaps, and helps prepare clinical notes.
+3. **Privacy & Data Minimization**:
+   - Explicit user consent (`consent: true`) is required before sending queries.
+   - Verified identity required via Privy access tokens.
+   - Context is built strictly server-side: patient emails, raw database `_id` values, camera feeds, and unrelated patient records are strictly excluded from prompts.
+   - In-memory ephemeral conversations: chat history is not written to disk or database.
+4. **Rate Limiting & Safety**:
+   - Rate limited per user per minute (configured via `AI_CHAT_RATE_LIMIT`, default 12 requests/minute).
+   - Structured error mapping: 401 (invalid credentials), 404 (model unavailable), 429 (rate exceeded), and 503 (unconfigured key).
 
 ## Run and deploy
 

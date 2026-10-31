@@ -63,6 +63,7 @@ try {
   if (major < 22 || major === 22 && minor < 12) throw new Error(`Node.js 22.12+ is required; found ${process.versions.node}. Install a supported Node.js release.`);
   process.chdir(root);
   if (existsSync('.env')) process.loadEnvFile('.env');
+  if (existsSync('.env.groq')) process.loadEnvFile('.env.groq');
   const frontendPort = Number(process.env.FRONTEND_PORT ?? 3000);
   const backendPort = Number(process.env.PORT ?? 3001);
   for (const port of [frontendPort, backendPort]) {

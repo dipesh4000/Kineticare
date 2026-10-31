@@ -31,6 +31,7 @@ export const DEMO_REFERENCES = [
     status: 'approved', mediaPath: 'demo:squat', demo: true, ownerUid: 'C-001' },
   { referenceId: 'demo-toe-touch', versionId: 'demo-toe-touch-v1', version: 1, exerciseName: 'Toe Touch', cameraView: 'side',
     status: 'approved', mediaPath: 'demo:toetouch', demo: true, ownerUid: 'C-001' },
+  { referenceId: 'demo-arm-raise', versionId: 'demo-arm-raise-v1', version: 1, exerciseName: 'Side Arm Raise', cameraView: 'front', status: 'approved', mediaPath: 'demo:armraise', demo: true, ownerUid: 'C-001' },
 ];
 
 export const DATA = {

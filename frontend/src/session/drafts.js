@@ -13,7 +13,7 @@ export function clearSessionDraft(patientId) {
 }
 
 export function startDraft(plan, patientId, exIdx, all) {
-  const draft = { sessionId: crypto.randomUUID(), assignmentId: plan.assignmentId, assignmentVersion: plan.v, exIdx, all, done: [], startedAtClient: new Date().toISOString() };
+  const draft = { sessionId: crypto.randomUUID(), assignmentId: plan.assignmentId, assignmentVersion: plan.v, assessmentId: plan.assessmentId ?? null, assessmentVersion: plan.assessmentVersion ?? null, exIdx, all, done: [], startedAtClient: new Date().toISOString() };
   saveSessionDraft(patientId, draft);
   return draft;
 }

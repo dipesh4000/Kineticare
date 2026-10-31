@@ -10,6 +10,7 @@ const TABS = [
   ['overview', 'Overview', 'home'],
   ['patients', 'Patients', 'me'],
   ['library', 'Exercise library', 'workout'],
+  ['ai-copilot', 'AI Copilot', 'physio'],
   ['settings', 'Settings', 'settings'],
 ];
 
@@ -28,7 +29,12 @@ export default function ClientLayout() {
           <ThemeToggle />
           <details className="mobile-account" key={pathname}>
             <summary aria-label="Open account menu">{(user?.displayName ?? 'Clinician').split(' ').filter(Boolean).map(part => part[0]).slice(0, 2).join('')}</summary>
-            <div className="mobile-account-menu"><b>{user?.displayName ?? 'Clinician'}</b><small>Clinician account</small><Link to="/client/settings">Account settings</Link><button type="button" onClick={async () => { await signOut(); nav('/'); }}>Sign out</button></div>
+            <div className="mobile-account-menu">
+              <b>{user?.displayName ?? 'Clinician'}</b>
+              <small>Clinician account</small>
+              <Link to="/client/settings">Account settings</Link>
+              <button type="button" onClick={async () => { await signOut(); nav('/'); }}>Sign out</button>
+            </div>
           </details>
         </div>
       </header>
@@ -50,11 +56,27 @@ export default function ClientLayout() {
       </nav>
       <main className="main">
         {error && <p role="alert" className="demo">{error}</p>}
-        <div className="workspace-bar"><span>YOUR CARE WORKSPACE</span><span>{new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date())}</span></div>
+        <div className="workspace-bar">
+          <span>YOUR CARE WORKSPACE</span>
+          <span>{new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date())}</span>
+        </div>
         <PageMotion><Outlet /></PageMotion>
       </main>
-      <nav className="nav clinician-mobile-nav" aria-label="Mobile workspace navigation" style={{ '--active-tab': Math.max(0, TABS.findIndex(([key]) => key === active)) }}>
-        {TABS.map(([key, label, icon]) => <button key={key} className={active === key ? 'on' : ''} aria-current={active === key ? 'page' : undefined} onClick={() => nav(`/client/${key}`)}><Icon name={icon} size={22} /><span className="label">{key === 'library' ? 'Exercises' : label}</span></button>)}
+      <nav
+        className="nav clinician-mobile-nav"
+        aria-label="Mobile workspace navigation"
+        style={{
+          '--active-tab': Math.max(0, TABS.findIndex(([key]) => key === active)),
+          '--tab-count': TABS.length,
+          gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))`,
+        }}
+      >
+        {TABS.map(([key, label, icon]) => (
+          <button key={key} className={active === key ? 'on' : ''} aria-current={active === key ? 'page' : undefined} onClick={() => nav(`/client/${key}`)}>
+            <Icon name={icon} size={22} />
+            <span className="label">{key === 'library' ? 'Exercises' : key === 'ai-copilot' ? 'AI Physio' : label}</span>
+          </button>
+        ))}
       </nav>
     </div>
   );

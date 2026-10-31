@@ -1,9 +1,17 @@
 /**
  * Kineticare Biomechanics & Clinical Analytics Service
  * Computes clinically relevant metrics for physiotherapists, orthopedists, and patients.
+ *
+ * Service-layer error contract:
+ *   - evaluateExerciseRepetitions throws AppError(400) for obviously invalid inputs
+ *     instead of swallowing errors or returning raw exceptions to callers.
+ *   - generateSoapNote is pure template interpolation (no network, no AI) and
+ *     throws AppError(400) when the required session argument is missing.
  */
+import { AppError } from '../middleware/errorHandler.js';
 
 const clamp = (val, min = 0, max = 1) => Math.max(min, Math.min(max, val));
+
 
 /**
  * Evaluates repetition biometrics:
@@ -199,8 +207,15 @@ export function evaluateExerciseRepetitions(reps = [], exerciseMeta = {}) {
 
 /**
  * Generates an automated SOAP progress note for Clinicians and EHR integration.
+ *
+ * NOTE: This function is purely template-based — string interpolation only.
+ * No patient data is sent to any external service or AI provider.
+ * Throws a typed AppError for obviously missing required inputs.
  */
 export function generateSoapNote(patient = {}, session = {}, evaluation = {}) {
+  if (!session || typeof session !== 'object') {
+    throw new AppError('session is required to generate a SOAP note.', 400, 'VALIDATION_ERROR');
+  }
   const patientName = patient.n || patient.displayName || 'Dipesh';
   const patientId = patient.id || patient.patientUid || 'P-101';
   const clinicianName = patient.clinicianName || 'Dr. Aditi Yadav';

@@ -24,6 +24,67 @@ export const EXERCISE_DEFINITIONS = {
   },
 };
 
+/**
+ * Starting repetition state machine parameters.
+ * NOTE: These are initial engineering defaults to be tuned on real patient/participant data.
+ * They do not constitute clinically validated thresholds.
+ */
+export const EXERCISE_REP_PARAMETERS = {
+  Squat: {
+    name: 'Squat',
+    joint: 'knee',
+    direction: 'decreasing',
+    upAngle: 165,             // degrees: standing extension
+    downAngle: 130,           // degrees: flexion depth (default target 45° excursion from ~175°)
+    hysteresisGap: 15,        // degrees gap between inflection and return thresholds
+    minRom: 25,               // degrees: minimum knee excursion required to count
+    minRomProgress: 0.65,     // ratio of target excursion
+    minPhaseDurationMs: 300,  // ms: minimum phase duration (outbound and return)
+    minDurationMs: 700,       // ms: minimum cycle duration to filter twitch/artifact
+    maxCycleDurationMs: 7000, // ms: maximum duration before cycle is rejected as stalled
+    targetMin: 0.9,           // prescribed target reach window lower bound
+    targetMax: 1.1,           // prescribed target reach window upper bound
+  },
+  'Side Arm Raise': {
+    name: 'Side Arm Raise',
+    joint: 'shoulder',
+    direction: 'increasing',
+    upAngle: 70,              // degrees: elevation depth (for ~75° target)
+    downAngle: 25,            // degrees: resting arms at sides
+    hysteresisGap: 15,        // degrees gap between inflection and return thresholds
+    minRom: 35,               // degrees: minimum shoulder abduction excursion required
+    minRomProgress: 0.65,
+    minPhaseDurationMs: 300,
+    minDurationMs: 700,
+    maxCycleDurationMs: 7000,
+    targetMin: 0.9,
+    targetMax: 1.1,
+  },
+  'Toe Touch': {
+    name: 'Toe Touch',
+    joint: 'hip',
+    direction: 'decreasing',
+    upAngle: 155,
+    downAngle: 115,
+    hysteresisGap: 15,
+    minRom: 35,
+    minRomProgress: 0.65,
+    minPhaseDurationMs: 300,
+    minDurationMs: 800,
+    maxCycleDurationMs: 8000,
+    targetMin: 0.9,
+    targetMax: 1.1,
+  },
+};
+
+export function squatSideConfidence(keypoints, side = 'left') {
+  const points = namedKeypoints(keypoints);
+  const joints = [points[`${side}_hip`], points[`${side}_knee`], points[`${side}_ankle`]];
+  const valid = joints.filter(j => j && Number.isFinite(j.score));
+  if (!valid.length) return 0;
+  return valid.reduce((sum, j) => sum + j.score, 0) / joints.length;
+}
+
 export function squatKneeAngle(keypoints, side = 'left', minimumScore = 0.3) {
   const points = namedKeypoints(keypoints);
   const joints = [points[`${side}_hip`], points[`${side}_knee`], points[`${side}_ankle`]];

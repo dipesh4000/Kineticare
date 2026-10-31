@@ -14,7 +14,10 @@ Camera-guided home exercise that keeps patients and clinicians connected between
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-styling-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
 ![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-MoveNet-FF6F00?style=flat-square&logo=tensorflow&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=nodedotjs&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase-Auth%20%C2%B7%20Firestore%20%C2%B7%20Storage-FFCA28?style=flat-square&logo=firebase&logoColor=black)
+![Privy](https://img.shields.io/badge/Privy-Email_Auth-7C3AED?style=flat-square)
+![MongoDB Atlas](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat-square&logo=mongodb&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Gemini-AI_Studio-4285F4?style=flat-square&logo=google&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-Fast_LLM_Chat-F55036?style=flat-square)
 ![Status](https://img.shields.io/badge/status-MVP%20prototype-8b5cf6?style=flat-square)
 
 **[The idea](#why-kineticare)** · **[Live walkthrough](#see-it-in-action)** · **[Care loop](#the-care-loop)** · **[Exercises](#supported-exercises)** · **[How it works](#how-it-works)** · **[Architecture](#architecture)** · **[Get started](#get-started)** · **[Roadmap](#roadmap)**
@@ -261,37 +264,44 @@ sequenceDiagram
 
 | Layer | Implementation |
 | :-- | :-- |
-| **Interface** | React, Vite, Tailwind CSS, responsive patient and clinician white-mode UI |
-| **Backend & API** | Node.js, Express REST API, modular Exercise Registry, Biomechanics Engine |
+| **Interface** | React 19, Vite, Tailwind CSS, responsive patient and clinician white-mode UI |
+| **Backend & API** | Node.js (22.12+), Express REST API, Biomechanics Engine, Exercise Registry |
 | **Pose estimation** | TensorFlow.js with MoveNet SinglePose Lightning (on-device, WebGL) |
-| **Movement logic** | Exercise-specific geometry, calibration, concentric/eccentric phases, fatigue scoring |
-| **Identity** | Firebase Authentication with provisioned roles (demo: Patient *Shyam Yadav*, Clinician *Dr. Aditi Singh*) |
-| **Shared records** | Cloud Firestore: assignments, sessions, clinical feedback, requests |
-| **Reference media** | Protected Cloud Storage in Firebase mode; IndexedDB and local staging fallback |
+| **Movement logic** | Strict state machine, One-Euro landmark jitter filter, concentric/eccentric phases, ROM deficit |
+| **Identity & Auth** | Privy email authentication with immutable clinician/patient roles |
+| **Database & Persistence** | MongoDB Atlas TLS connection via official driver (assignments, sessions, relationships, leases) |
+| **AI Knowledge Studio** | Google Gemini (`gemini-3.8-flash`) for source-grounded clinician exercise drafts & textbook retrieval |
+| **AI Chat Copilot** | Groq Cloud (`llama-3.3-70b-versatile`) for instant patient exercise Q&A and clinician chart assistance |
+| **Notifications** | Resend API for cryptographic patient email invitations |
+| **Desktop Launcher** | Compiled native executable (`Launch-Kineticare.exe`) & script (`Launch-Kineticare.cmd`) with port supervision |
 
 <details>
 <summary><b>Project structure</b></summary>
 
 ```text
+Launch-Kineticare.exe    Compiled Windows desktop launcher
+Launch-Kineticare.cmd    Command-line batch launcher
 backend/
-  config/        Server and environment definitions
-  routes/        Express routers: /api/exercises, /api/analytics, /api/reports
-  services/      Exercise registry, biomechanical calculation, SOAP note generation
-  server.js      Production fullstack server
+  config/                Environment loaders (.env, .env.groq) and app constants
+  routes/                Express routers: /api/exercises, /api/records, /api/ai, /api/chat, /api/health
+  services/              Atlas DB, Privy identity, Groq chat, Gemini provider, Biomechanics engine
+  server.js              Production fullstack server
 frontend/
   src/
-    auth/        Account and role state
-    client/      Clinician dashboard, patient drilldowns, reference capture
-    patient/     Setup, live practice, summaries, recovery progress
-    exercise/    Exercise definitions, repetition engine, scoring
-    vision/      Camera lifecycle, MoveNet, geometry
-    records/     Shared records and local workspace state
-    services/    Backend API client, Firebase, media storage
-    session/     Recoverable workout drafts
-  test/          Logic and security-rule checks
-docs/assets/     README animations and project illustrations
-firebase.json · firestore.rules · firestore.indexes.json · storage.rules
-overview.md · plan.md · .env.example
+    auth/                Privy authentication and role management
+    client/              Clinician dashboard, patient drilldowns, AI exercise studio
+    patient/             Setup, live camera practice, summaries, recovery progress
+    components/          Floating Groq AI Chat assistant, UI modals, feedback cards
+    exercise/            Exercise definitions, repetition state machine, scoring
+    vision/              MoveNet camera lifecycle, One-Euro filtering, geometry
+    records/             Atlas connected records and local workspace state
+  test/                  Biomechanical, state machine, and flow checks
+scripts/
+  launch.mjs             Node orchestrator (port availability check, reverse proxy, graceful shutdown)
+  Launcher.cs            C# source for Launch-Kineticare.exe
+  build-launcher.ps1     Build script compiling Launcher.cs into Launch-Kineticare.exe
+docs/                    Architecture diagrams, Privy/Atlas setup, and walkthroughs
+.env.example             Root environment template (Privy, Atlas, Gemini, Groq, Resend)
 ```
 
 </details>
@@ -300,21 +310,51 @@ overview.md · plan.md · .env.example
 
 ## Get started
 
-> Full installation, run commands, Firebase setup, and checks live in the **[frontend README](frontend/README.md)**. The quick start below is the short version.
+### 1. Prerequisites
+- **Node.js 22.12+** (Node 24 recommended)
+- **MongoDB Atlas** database cluster (free tier works)
+- **Privy App ID & Secret** (from privy.io dashboard)
+- *(Optional)* **Groq API Key** (for conversational AI chat copilot)
+- *(Optional)* **Gemini API Key** (for clinician textbook knowledge drafts)
 
+### 2. Configure Environment
+Copy `.env.example` to `.env` in the project root:
 ```bash
-git clone https://github.com/dipesh4000/Kineticare.git
-cd Kineticare
+cp .env.example .env
+```
+Fill in your credentials:
+```env
+PRIVY_APP_ID=your_privy_app_id
+PRIVY_APP_SECRET=your_privy_app_secret
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net
+MONGODB_DB=kineticare
 
-cp .env.example .env     # add your Firebase config if you want shared (Firebase) mode
-bun install              # or: npm install
-bun run dev              # see frontend/README.md for the exact scripts
+# Optional AI features
+GROQ_API_KEY=gsk_your_groq_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Frontend public config (must match backend PRIVY_APP_ID)
+VITE_PRIVY_APP_ID=your_privy_app_id
 ```
 
-| Mode | What you get |
-| :-- | :-- |
-| **Browser-local demo** | One clinician and two patient accounts, data kept in the browser; ideal for trying the full loop on one machine |
-| **Firebase mode** | Real authentication, shared Firestore records, and protected reference media across devices |
+### 3. Install Dependencies
+```bash
+npm install
+```
+
+### 4. Start Kineticare
+
+**Option A — Windows Desktop Launcher (Recommended):**
+- Double-click **`Launch-Kineticare.exe`** (or run `.\Launch-Kineticare.cmd`).
+- It validates Node 22.12+, checks port availability (3000 & 3001), boots both servers, and opens the app.
+- Press `Ctrl+C` to gracefully terminate both frontend and backend processes.
+
+**Option B — Terminal:**
+```bash
+npm run dev
+```
+
+Open your browser at **`http://localhost:3000`**.
 
 ---
 

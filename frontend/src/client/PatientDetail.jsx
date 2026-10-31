@@ -9,6 +9,7 @@ import { toast } from '../components/toastBus';
 import { evaluateSessionServer, generateSoapNoteServer, reportExerciseIssue } from '../services/api';
 import { workoutStreak } from '../patientFlow';
 import ExportPdf from '../components/ExportPdf';
+import AssessmentPanel from './assessment/AssessmentPanel';
 
 export default function ClientPatientDetail() {
   const nav = useNavigate();
@@ -126,6 +127,7 @@ export default function ClientPatientDetail() {
         {chosen && <ExportPdf patient={patient} plan={plan} session={chosen} label="Analysis PDF" />}
       </div>
 
+      <AssessmentPanel patientId={id} />
       {chosen ? (
         <>
           <div className="row sp" style={{ margin: '14px 0 8px' }}>

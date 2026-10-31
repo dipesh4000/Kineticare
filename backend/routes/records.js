@@ -4,6 +4,7 @@ import { canAccessPatient, requireIdentity } from '../services/identity.js';
 import { bundledReferences } from '../services/bundledReferences.js';
 import { randomUUID } from 'node:crypto';
 import { validateMeeting } from '../services/meetingValidation.js';
+import { assessmentKey, findAssessment, validateAssessment } from '../services/assessments.js';
 
 const fail = (message, status = 400) => { throw Object.assign(new Error(message), { status }); };
 const validId = value => typeof value === 'string' && /^[\w:-]{1,128}$/.test(value);
@@ -17,25 +18,28 @@ recordsRouter.get('/workspace', async (req, res) => {
   const identity = req.identity;
   const db = await database();
   const ids = identity.role === 'patient' ? [identity.uid] : (await db.collection('relationships').find({ clinicianUid: identity.uid, active: true }).toArray()).map(link => link._id);
-  const workspace = { schemaVersion: 1, patients: [], invites: [], assignments: {}, assignmentDrafts: {}, sessions: {}, feedback: {}, requests: {}, references: [] };
+  const workspace = { schemaVersion: 1, patients: [], invites: [], assessments: {}, assignments: {}, assignmentDrafts: {}, sessions: {}, feedback: {}, requests: {}, references: [] };
   const records = await db.collection('patientRecords').find({ patientId: { $in: ids } }).toArray();
   const profiles = await db.collection('users').find({ _id: { $in: ids } }).toArray();
   workspace.patients = profiles.map(profile => ({ id: profile._id, n: profile.displayName, email: profile.email, a: 'Patient' }));
   const link = identity.role === 'patient' ? await db.collection('relationships').findOne({ _id: identity.uid, active: true }) : null;
   if (link) {
     const clinician = await db.collection('users').findOne({ _id: link.clinicianUid });
-    workspace.relationship = { clinicianUid: link.clinicianUid, clinicianName: clinician?.displayName, consentAt: link.consentAt };
+    workspace.relationship = { clinicianUid: link.clinicianUid, clinicianName: clinician?.displayName, clinicianEmail: clinician?.email, consentAt: link.consentAt };
   }
   workspace.meetings = identity.role === 'clinician'
     ? await db.collection('meetings').find({ clinicianUid: identity.uid }).toArray()
     : link ? await db.collection('meetings').find({ patientId: identity.uid, clinicianUid: link.clinicianUid }).toArray() : [];
   for (const { patientId, kind, data } of records) {
-    if (kind === 'assignments' && (identity.role === 'clinician' ? data.clinicianUid === identity.uid : data.clinicianUid === link?.clinicianUid)) {
+    if (kind === 'assessments' && (identity.role === 'patient' || data.clinicianUid === identity.uid)) {
+      (workspace.assessments[patientId] ??= []).push(data);
+    } else if (kind === 'assignments' && (identity.role === 'clinician' ? data.clinicianUid === identity.uid : data.clinicianUid === link?.clinicianUid)) {
       if (data.status === 'draft') workspace.assignmentDrafts[patientId] = data;
       else if (data.v > (workspace.assignments[patientId]?.v ?? 0)) workspace.assignments[patientId] = data;
     } else if (['sessions', 'feedback', 'requests'].includes(kind)) (workspace[kind][patientId] ??= []).push(data);
   }
   for (const id of ids) {
+    workspace.assessments[id]?.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.version - a.version);
     workspace.sessions[id]?.sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
     workspace.feedback[id]?.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
     for (const session of workspace.sessions[id] ?? []) {
@@ -69,7 +73,7 @@ recordsRouter.post('/:patientId/:operation', async (req, res) => {
   const { patientId, operation } = req.params;
   if (!validId(patientId)) fail('Invalid patient ID.');
   if (!await authorize(req.identity, patientId)) fail('Patient access denied.', 403);
-  const clinicianOps = ['saveAssignmentDraft', 'publishAssignment', 'sendFeedback', 'markSessionReviewed', 'resolveRequest', 'replyToRequest'];
+  const clinicianOps = ['publishAssessment', 'saveAssignmentDraft', 'publishAssignment', 'sendFeedback', 'markSessionReviewed', 'resolveRequest', 'replyToRequest'];
   const patientOps = ['saveSession', 'markFeedbackRead', 'createRequest'];
   if (!(req.identity.role === 'clinician' ? clinicianOps : patientOps).includes(operation)) fail('Operation denied.', 403);
   const body = req.body;
@@ -77,11 +81,32 @@ recordsRouter.post('/:patientId/:operation', async (req, res) => {
   const collection = (await database()).collection('patientRecords');
   const now = new Date().toISOString();
   const put = (kind, id, data) => collection.updateOne({ _id: key(patientId, kind, id) }, { $setOnInsert: { patientId, kind, data } }, { upsert: true });
-  if (operation === 'saveSession') {
+  if (operation === 'publishAssessment') {
+    const assessment = validateAssessment(body);
+    let supersedes = null;
+    if (assessment.version > 1) {
+      await findAssessment(collection, patientId, assessment.assessmentId, assessment.version - 1, req.identity.uid);
+      supersedes = `${assessment.assessmentId}-v${assessment.version - 1}`;
+    }
+    const data = { ...assessment, patientId, clinicianUid: req.identity.uid, clinicianName: req.identity.displayName, supersedes, status: 'published', createdAt: now };
+    try { await collection.insertOne({ _id: assessmentKey(patientId, assessment.assessmentId, assessment.version), patientId, kind: 'assessments', data }); }
+    catch (error) { if (error.code === 11000) fail('This assessment version is already published. Reload before creating a new version.', 409); throw error; }
+  } else if (operation === 'saveSession') {
     if (!validId(body.sessionId) || !Array.isArray(body.exerciseResults) || body.exerciseResults.length > 10 || body.schemaVersion !== 1 || !['live', 'replay'].includes(body.mode) || !['completed', 'partial'].includes(body.status)) fail('Invalid finalized session.');
-    await put('sessions', body.sessionId, { ...body, patientUid: patientId, submittedAt: now });
+    let assessmentId = null;
+    let assessmentVersion = null;
+    if (body.assignmentId && body.assignmentId !== 'self-guided-starter') {
+      const assigned = await collection.findOne({ _id: key(patientId, 'assignments', `${body.assignmentId}-v${body.assignmentVersion}`) });
+      if (!assigned || assigned.data.status !== 'published') fail('The session assignment version is unavailable.', 400);
+      assessmentId = assigned.data.assessmentId ?? null;
+      assessmentVersion = assigned.data.assessmentVersion ?? null;
+    }
+    if ((body.assessmentId ?? null) !== assessmentId || (body.assessmentVersion ?? null) !== assessmentVersion) fail('Session assessment must match the published assignment.', 400);
+    await put('sessions', body.sessionId, { ...body, assessmentId, assessmentVersion, evaluationBasis: assessmentId ? 'clinician-targets-with-assessment' : 'default-or-legacy-targets', patientUid: patientId, submittedAt: now });
   } else if (operation === 'saveAssignmentDraft' || operation === 'publishAssignment') {
     if (!validId(body.assignmentId) || !Number.isInteger(body.v) || body.v < 1 || !Array.isArray(body.items) || !body.items.length || body.items.length > 10) fail('Invalid assignment.');
+    if (body.assessmentId != null || body.assessmentVersion != null) await findAssessment(collection, patientId, body.assessmentId, body.assessmentVersion, req.identity.uid);
+    else if (operation === 'publishAssignment') fail('Select a published assessment before publishing this assignment.');
     for (const item of body.items) {
       if (!['Squat', 'Side Arm Raise', 'Toe Touch'].includes(item.ex) || !Number.isInteger(item.targetReps) || item.targetReps < 1 || item.targetReps > 100 || !Number.isFinite(item.targetExcursionDeg) || item.targetExcursionDeg <= 0 || item.targetExcursionDeg > 180) fail('Unsupported exercise or invalid targets.');
       if (operation === 'publishAssignment') {

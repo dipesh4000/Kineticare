@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny for all collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isClinician() {
+      return isAuthenticated() && request.auth.token.role == 'clinician';
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId)
+        && request.resource.data.role in ['patient', 'clinician']
+        && request.resource.data.professionalVerified == false;
+      allow update: if isOwner(userId)
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.professionalVerified == resource.data.professionalVerified;
+      allow delete: if false;
+    }
+
+    // Care sharing relationships
+    match /relationships/{patientId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == patientId ||
+        (resource != null && resource.data.clinicianUid == request.auth.uid)
+      );
+      allow create, update: if isAuthenticated() && request.auth.uid == patientId
+        && request.resource.data.consentVersion != null
+        && request.resource.data.consentAt != null;
+      allow delete: if false;
+    }
+
+    // Patient clinical records
+    match /patientRecords/{recordId} {
+      function patientHasConsented(patientUid) {
+        return exists(/databases/$(database)/documents/relationships/$(patientUid)) &&
+          get(/databases/$(database)/documents/relationships/$(patientUid)).data.active == true &&
+          get(/databases/$(database)/documents/relationships/$(patientUid)).data.clinicianUid == request.auth.uid;
+      }
+
+      allow read: if isAuthenticated() && (
+        resource.data.patientId == request.auth.uid ||
+        patientHasConsented(resource.data.patientId)
+      );
+
+      allow create, update: if isAuthenticated() && (
+        (request.resource.data.patientId == request.auth.uid) ||
+        (isClinician() && patientHasConsented(request.resource.data.patientId))
+      );
+      allow delete: if false;
+    }
+
+    // Tele-consultation meetings
+    match /meetings/{meetingId} {
+      allow read: if isAuthenticated() && (
+        resource.data.clinicianUid == request.auth.uid ||
+        resource.data.patientId == request.auth.uid
+      );
+      allow create: if isClinician() && request.resource.data.clinicianUid == request.auth.uid;
+      allow update: if isClinician() && resource.data.clinicianUid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // Care invites
+    match /careInvites/{inviteId} {
+      allow create: if isClinician() && request.resource.data.clinicianUid == request.auth.uid;
+      allow read: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if false;
+    }
+  }
+}

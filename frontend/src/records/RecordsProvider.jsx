@@ -5,7 +5,7 @@ import { atlasMutations, subscribeAtlasWorkspace } from '../services/atlasRecord
 import { buildSelfGuidedPlan } from '../patient/selfGuided';
 
 const starterPlan = buildSelfGuidedPlan();
-const emptyWorkspace = { schemaVersion: 1, patients: [], assignments: {}, assignmentDrafts: {}, sessions: {}, feedback: {}, requests: {}, references: [], meetings: [] };
+const emptyWorkspace = { schemaVersion: 1, patients: [], assessments: {}, assignments: {}, assignmentDrafts: {}, sessions: {}, feedback: {}, requests: {}, references: [], meetings: [] };
 export default function RecordsProvider({ children }) {
   const { user } = useAuth();
   const [snapshot, setSnapshot] = useState({ uid: null, workspace: emptyWorkspace, error: '', ready: false });
@@ -19,7 +19,12 @@ export default function RecordsProvider({ children }) {
     recordsReady: snapshot.uid === user?.uid && snapshot.ready,
     backend: 'mongodb-atlas', patientId: user?.role === 'patient' ? user.uid : null,
     assignment: id => workspace.assignments[id] ?? null,
-    patientPlan: id => snapshot.uid === user?.uid && snapshot.ready && !snapshot.error ? workspace.assignments[id] ?? starterPlan : null,
+    patientPlan: id => {
+      if (snapshot.uid === user?.uid && snapshot.ready && workspace.assignments[id]) {
+        return workspace.assignments[id];
+      }
+      return starterPlan;
+    },
     assignmentDraft: id => workspace.assignmentDrafts[id] ?? null,
     sessions: id => workspace.sessions[id] ?? [],
     feedback: id => workspace.feedback[id] ?? [],
@@ -28,4 +33,3 @@ export default function RecordsProvider({ children }) {
   }), [workspace, snapshot, user]);
   return <RecordsContext.Provider value={value}>{children}</RecordsContext.Provider>;
 }
-

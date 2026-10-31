@@ -1,4 +1,5 @@
 import { angleAt, namedKeypoints, visible } from './geometry.js';
+import { PoseFilter, DEFAULT_POSE_FILTER_CONFIG } from './oneEuroFilter.js';
 
 export const POSE_MODES = {
   detailed: { label: 'Detailed · 33 landmarks', model: 'BlazePose', modelType: 'full', landmarks: 33 },
@@ -25,6 +26,36 @@ export function poseSummary(pose, minimumScore = 0.3) {
   return { visible: tracked.length, total: points.length, confidence: tracked.length ? Math.round(tracked.reduce((sum, point) => sum + point.score, 0) / tracked.length * 100) : 0 };
 }
 
+/**
+ * Create a session-scoped pose filter.
+ * Call once when the camera starts; pass the returned object to filterPose().
+ *
+ * @param {Partial<import('./oneEuroFilter.js').PoseFilterConfig>} config
+ * @returns {PoseFilter}
+ */
+export function createPoseFilter(config = {}) {
+  return new PoseFilter({ ...DEFAULT_POSE_FILTER_CONFIG, ...config });
+}
+
+/**
+ * Apply a One Euro filter bank to a raw pose frame.
+ * Replaces the former fixed-alpha smoothPose() in the hot loop.
+ *
+ * @param {PoseFilter} poseFilter  Instance returned by createPoseFilter().
+ * @param {{keypoints: Array}} pose  Raw MoveNet / BlazePose output.
+ * @param {number} timestamp  performance.now() value for this frame.
+ * @returns {{keypoints: Array}|null}
+ */
+export function filterPose(poseFilter, pose, timestamp) {
+  if (!pose) return null;
+  return { ...pose, keypoints: poseFilter.filter(pose.keypoints, timestamp) };
+}
+
+/**
+ * Legacy export — kept so existing tests that call smoothPose() keep passing.
+ * New code should use createPoseFilter() + filterPose() instead.
+ * @deprecated
+ */
 export function smoothPose(pose, previous, alpha = 0.7) {
   if (!pose) return null;
   const prior = namedKeypoints(previous?.keypoints ?? []);

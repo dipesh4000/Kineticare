@@ -46,7 +46,11 @@ test('signup roles stay immutable; consent links records and revocation removes 
   const profile = async (req, res, next) => { const user = await db.collection('users').findOne({ _id: req.privyId }); req.identity = { ...user, uid: user._id }; next(); };
   const app = express();
   app.use(express.json());
-  app.use('/auth', createAuthRouter({ database, authenticate, authenticatedProfile: profile, getUser: async id => ({ linked_accounts: [{ type: 'email', address: id + '@example.test' }] }) }));
+  const sent = [];
+  app.use('/auth', createAuthRouter({ database, authenticate, authenticatedProfile: profile, getUser: async id => ({ linked_accounts: [{ type: 'email', address: id + '@example.test' }] }), sendInvite: async data => {
+    if (data.email === 'fail@example.test') throw Object.assign(new Error('Email unavailable'), { status: 502 });
+    sent.push(data);
+  } }));
   app.use('/records', createRecordsRouter({ database, authenticate: [authenticate, profile], authorize: (identity, id) => canAccessPatient(identity, id, database) }));
   app.use((error, req, res, next) => res.status(error.status || 500).json({ error: error.message }));
   await serve(app, async base => {
@@ -58,6 +62,30 @@ test('signup roles stay immutable; consent links records and revocation removes 
     await call('did:privy:p1', '/auth/register', { displayName: 'Changed', role: 'clinician' });
     assert.equal((await db.collection('users').findOne({ _id: 'did:privy:p1' })).role, 'patient');
     assert.equal((await call('did:privy:p1', '/auth/invite-code', {})).status, 403);
+    assert.equal((await call('did:privy:p1', '/auth/invitations', { patientName: 'Patient', email: 'patient@example.test' })).status, 403);
+    assert.equal((await call('did:privy:c1', '/auth/invitations', { patientName: ' ', email: 'invalid' })).status, 400);
+    assert.equal((await call('did:privy:c1', '/auth/invitations', { patientName: ' Patient ', email: ' DID:PRIVY:P1@example.test ' })).status, 201);
+    assert.equal(sent[0].email, 'did:privy:p1@example.test');
+    assert.equal(sent[0].patientName, 'Patient');
+    const emailedCode = sent[0].code;
+    let invitations = (await (await call('did:privy:c1', '/auth/invitations')).json()).invitations;
+    assert.equal(invitations[0].status, 'pending');
+    assert.equal(invitations[0].code, undefined);
+    assert.equal((await (await call('did:privy:c1', '/records/workspace')).json()).patients.length, 0);
+    await call('did:privy:p2', '/auth/register', { displayName: 'Other patient', role: 'patient' });
+    assert.equal((await call('did:privy:p2', '/auth/link', { code: emailedCode })).status, 403);
+    assert.equal((await call('did:privy:p1', '/auth/link', { code: emailedCode })).status, 200);
+    assert.equal(await canAccessPatient({ uid: 'did:privy:c1', role: 'clinician' }, 'did:privy:p1', database), false);
+    assert.equal((await call('did:privy:p1', '/auth/link', { code: emailedCode, consent: true, clinicianUid: 'did:privy:c1' })).status, 200);
+    invitations = (await (await call('did:privy:c1', '/auth/invitations')).json()).invitations;
+    assert.equal(invitations[0].status, 'accepted');
+    await call('did:privy:p1', '/auth/revoke', {});
+    assert.equal((await call('did:privy:p1', '/auth/link', { code: emailedCode })).status, 404);
+    assert.equal((await call('did:privy:c1', '/auth/invitations', { patientName: 'Failed', email: 'fail@example.test' })).status, 502);
+    invitations = (await (await call('did:privy:c1', '/auth/invitations')).json()).invitations;
+    assert.equal(invitations[0].status, 'failed');
+    await call('did:privy:c2', '/auth/register', { displayName: 'Other clinician', role: 'clinician' });
+    assert.equal((await (await call('did:privy:c2', '/auth/invitations')).json()).invitations.length, 0);
     const { code } = await (await call('did:privy:c1', '/auth/invite-code', {})).json();
     assert.equal((await call('did:privy:p1', '/auth/link', { code: 'bad' })).status, 400);
     assert.equal((await call('did:privy:p1', '/auth/link', { code: 'x'.repeat(32) })).status, 404);

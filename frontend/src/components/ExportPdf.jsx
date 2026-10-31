@@ -35,6 +35,7 @@ function ReportPreview({ patient, plan, session, onClose }) {
           <div><dt>{session ? 'Session date' : 'Generated'}</dt><dd>{session?.d ?? new Date().toLocaleDateString()}</dd></div>
         </dl>
           <h2>{plan.name} <span className="tag">Version {plan.v}</span></h2>
+          <p>{plan.assessmentId ? `Assessment: ${plan.assessmentId}, version ${plan.assessmentVersion}.` : 'No assessment baseline recorded for this plan.'}</p>
           <p><b>Frequency:</b> {plan.schedule?.weeklyFrequency ? `${plan.schedule.weeklyFrequency} times per week` : 'As directed by your clinician'}. Follow your clinician’s prescribed rest days.</p>
           <table>
             <thead><tr><th>Exercise</th><th>Target reps</th><th>Duration</th><th>Target angle</th></tr></thead>

@@ -10,7 +10,6 @@ Kineticare is a tele-rehabilitation platform that uses on-device computer vision
 Kineticare/
 ├── backend/                 # Node.js Express 5 API
 │   ├── config/              # Port, host, env loader
-│   ├── db/                  # Drizzle schema (unused) + Neon client (unused fallback)
 │   ├── routes/              # Express routers (auth, records, ai, analytics, exercises, reports)
 │   ├── services/            # MongoDB client, Privy auth, analytics engine, exercise registry
 │   ├── test/                # Backend integration tests (Node built-in test runner)

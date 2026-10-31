@@ -6,7 +6,7 @@ export async function connectedApi(path, body, timeoutMs = 45000) {
   if (!token) throw new Error('Sign in to use connected services.');
   const response = await fetch(`${base}/api/${path}`, { method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(timeoutMs) });
   const data = await response.json().catch(() => null);
-  if (!response.ok || !data) throw new Error(data?.error || 'The backend could not complete this request.');
+  if (!response.ok || !data) throw new Error(data?.message || data?.error || 'The backend could not complete this request.');
   return data;
 }
 
@@ -30,6 +30,7 @@ async function mutate(patientId, operation, body) {
   return result;
 }
 export const atlasMutations = {
+  publishAssessment: (id, data) => mutate(id, 'publishAssessment', data),
   scheduleMeeting: async data => { const result = await connectedApi('records/meetings', data); window.dispatchEvent(new Event('kineticare-records-updated')); return result; },
   cancelMeeting: async id => { const result = await connectedApi(`records/meetings/${encodeURIComponent(id)}/cancel`, {}); window.dispatchEvent(new Event('kineticare-records-updated')); return result; },
   saveAssignmentDraft: (id, data) => mutate(id, 'saveAssignmentDraft', data),

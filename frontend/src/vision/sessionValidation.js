@@ -148,8 +148,10 @@ export function checkFramingMargin(keypoints, frame = { width: 640, height: 480 
   }
 
   const isNormalized = validPoints.every(p => p.x <= 1.05 && p.y <= 1.05);
-  const width = isNormalized ? 1.0 : (frame?.width || 640);
-  const height = isNormalized ? 1.0 : (frame?.height || 480);
+  const maxXVal = isNormalized ? 1.0 : Math.max(...validPoints.map(p => p.x));
+  const maxYVal = isNormalized ? 1.0 : Math.max(...validPoints.map(p => p.y));
+  const width = isNormalized ? 1.0 : (frame?.width && frame.width > 640 ? frame.width : maxXVal > 640 ? Math.max(1280, maxXVal + 40) : (frame?.width || 640));
+  const height = isNormalized ? 1.0 : (frame?.height && frame.height > 480 ? frame.height : maxYVal > 480 ? Math.max(720, maxYVal + 40) : (frame?.height || 480));
 
   const minX = width * marginRatio;
   const maxX = width * (1 - marginRatio);

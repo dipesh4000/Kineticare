@@ -103,7 +103,13 @@ export default function AiChat({ role = 'patient', patientId = null, hidden = fa
     setError(null);
 
     try {
-      const payloadMessages = nextMessages.slice(-10);
+      // Truncate assistant messages in history to stay within the 8000-char backend limit.
+      // User messages are already capped at 1500 via the textarea maxLength.
+      const payloadMessages = nextMessages.slice(-10).map(m =>
+        m.role === 'assistant' && m.content.length > 7900
+          ? { ...m, content: m.content.slice(0, 7900) + '…' }
+          : m
+      );
       const res = await sendChat(payloadMessages, { patientId });
       setMessages([...nextMessages, { role: 'assistant', content: res.reply }]);
     } catch (err) {

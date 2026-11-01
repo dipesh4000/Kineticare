@@ -264,7 +264,7 @@
 }
 
 .physio-bubble {
-  max-width: 80%;
+  max-width: 82%;
   padding: 10px 14px;
   font-size: 13px;
   line-height: 1.5;
@@ -279,10 +279,14 @@
 }
 
 .physio-msg-row.assistant .physio-bubble {
+  max-width: 90%;
+  width: 100%;
+  padding: 12px 14px;
   background: var(--soft, #f7f6fb);
   color: var(--ink, #1c1c1f);
   border: 1px solid var(--card-border, #e9e7f0);
-  border-radius: 16px 16px 16px 4px;
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .physio-bubble pre {

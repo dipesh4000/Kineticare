@@ -15,7 +15,7 @@ import { workoutStreak } from '../patientFlow';
 export default function PatientHome() {
   const nav = useNavigate();
   const { user } = useAuth();
-  const { patientId, assignment, patientPlan, sessions, feedback, requests, createRequest, backend, workspace, recordsReady } = useRecords();
+  const { patientId, assignment, patientPlan, sessions, feedback, requests, createRequest, backend, workspace } = useRecords();
   const [contactOpen, setContactOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);

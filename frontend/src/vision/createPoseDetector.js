@@ -73,15 +73,39 @@ async function loadDetector(mode) {
   ]);
 
   if (selected.model === 'BlazePose') {
-    const base = `${import.meta.env.BASE_URL}pose/0.5.1675469404`;
-    await loadPoseRuntime(base);
+    const rawBase = import.meta.env.BASE_URL || '/';
+    const localBase = `${rawBase.endsWith('/') ? rawBase : `${rawBase}/`}pose/0.5.1675469404`;
+    const cdnBase = 'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404';
 
-    return retryWithBackoff(() => poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {
-      runtime: 'mediapipe',
-      modelType: selected.modelType,
-      enableSmoothing: true,
-      solutionPath: base,
-    }), { maxRetries: 3, initialDelayMs: 600 });
+    try {
+      let solutionPath = localBase;
+      try {
+        await loadPoseRuntime(localBase, cdnBase);
+      } catch (localRuntimeErr) {
+        console.warn('Local pose runtime unavailable, trying CDN solutionPath:', localRuntimeErr);
+        solutionPath = cdnBase;
+        await loadPoseRuntime(cdnBase);
+      }
+
+      const detector = await retryWithBackoff(() => poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {
+        runtime: 'mediapipe',
+        modelType: selected.modelType,
+        enableSmoothing: true,
+        solutionPath,
+      }), { maxRetries: 2, initialDelayMs: 400 });
+
+      return detector;
+    } catch (blazePoseErr) {
+      console.warn('BlazePose detector failed to initialize (common in restricted WebViews or mobile environments). Gracefully falling back to MoveNet (Fast mode):', blazePoseErr);
+      // Seamlessly fall back to MoveNet
+      await initializeBackend(tf);
+      const fallbackDetector = await retryWithBackoff(() => poseDetection.createDetector(poseDetection.SupportedModels.MoveNet, {
+        modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+        enableSmoothing: true,
+      }), { maxRetries: 2, initialDelayMs: 500 });
+      fallbackDetector.fallbackMode = 'fast';
+      return fallbackDetector;
+    }
   }
 
   // MoveNet: Initialize WebGL with WASM/CPU fallback

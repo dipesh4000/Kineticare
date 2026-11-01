@@ -3,6 +3,7 @@ import { useRecords } from '../records/recordsContext';
 import { useAuth } from '../auth/authContext';
 import { getChatStatus, sendChat } from '../services/chatApi';
 import Icon from '../components/Icon';
+import FormattedAiMessage from '../components/FormattedAiMessage';
 import '../patient/PatientAiPhysio.css';
 
 const CLINICIAN_PROMPTS = [
@@ -50,7 +51,9 @@ export default function ClientAiCopilot() {
   const giveConsent = () => {
     try {
       localStorage.setItem('kineticare_ai_chat_consent', 'true');
-    } catch {}
+    } catch {
+      /* ignore storage failure */
+    }
     setHasConsent(true);
   };
 
@@ -181,9 +184,7 @@ export default function ClientAiCopilot() {
                   {m.role === 'assistant' ? 'AI' : 'DR'}
                 </div>
                 <div className="physio-bubble">
-                  {m.content.split('\n\n').map((paragraph, pIdx) => (
-                    <p key={pIdx}>{paragraph}</p>
-                  ))}
+                  <FormattedAiMessage content={m.content} role={m.role} />
                 </div>
               </div>
             ))}

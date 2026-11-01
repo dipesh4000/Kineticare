@@ -85,19 +85,39 @@ export function squatSideConfidence(keypoints, side = 'left') {
   return valid.reduce((sum, j) => sum + j.score, 0) / joints.length;
 }
 
-export function squatKneeAngle(keypoints, side = 'left', minimumScore = 0.3) {
+export function squatKneeAngle(keypoints, side = 'left', minimumScore = 0.25) {
   const points = namedKeypoints(keypoints);
-  const joints = [points[`${side}_hip`], points[`${side}_knee`], points[`${side}_ankle`]];
-  return visible(joints, minimumScore) ? angleAt(...joints) : null;
+  const hip = points[`${side}_hip`];
+  const knee = points[`${side}_knee`];
+  const ankle = points[`${side}_ankle`];
+  if (visible([hip, knee], minimumScore)) {
+    if (visible([ankle], minimumScore)) {
+      return angleAt(hip, knee, ankle);
+    }
+    // Fallback: if ankle has valid coords and score >= 0.1, use it
+    if (ankle && Number.isFinite(ankle.x) && Number.isFinite(ankle.y) && (ankle.score ?? 0) >= 0.1) {
+      return angleAt(hip, knee, ankle);
+    }
+  }
+  return null;
 }
 
-export function armRaiseAngle(keypoints, side, minimumScore = 0.3) {
+export function armRaiseAngle(keypoints, side, minimumScore = 0.2) {
   const points = namedKeypoints(keypoints);
-  const joints = [points[`${side}_hip`], points[`${side}_shoulder`], points[`${side}_elbow`]];
-  return visible(joints, minimumScore) ? angleAt(...joints) : null;
+  const hip = points[`${side}_hip`];
+  const shoulder = points[`${side}_shoulder`];
+  const elbow = points[`${side}_elbow`];
+  const wrist = points[`${side}_wrist`];
+  if (visible([hip, shoulder, elbow], minimumScore)) {
+    return angleAt(hip, shoulder, elbow);
+  }
+  if (visible([hip, shoulder, wrist], minimumScore)) {
+    return angleAt(hip, shoulder, wrist);
+  }
+  return null;
 }
 
-export function toeTouchHipAngle(keypoints, side = 'left', minimumScore = 0.3) {
+export function toeTouchHipAngle(keypoints, side = 'left', minimumScore = 0.2) {
   const points = namedKeypoints(keypoints);
   const joints = [points[`${side}_shoulder`], points[`${side}_hip`], points[`${side}_knee`]];
   return visible(joints, minimumScore) ? angleAt(...joints) : null;

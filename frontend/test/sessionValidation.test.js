@@ -304,10 +304,10 @@ test('estimatePatientDistance & checkPatientDistance: calculates patient distanc
   assert.equal(shoulderEst.distanceMeters, 2.0);
 });
 
-test('validatePreSession: distance validation blocks calibration when patient is too close or too far', () => {
+test('validatePreSession: distance check is advisory and does not block calibration', () => {
   const frame = { width: 640, height: 480 };
 
-  // Stance where body is too close to camera (< 1.6m)
+  // Stance where body is too close to camera (< 1.6m) but landmarks and framing are ok
   const tooCloseValidation = validatePreSession({
     exerciseName: 'Squat',
     keypoints: [
@@ -321,10 +321,10 @@ test('validatePreSession: distance validation blocks calibration when patient is
     frame,
     fps: 30,
   });
-  assert.equal(tooCloseValidation.ok, false);
+  // Distance factor does not block validation
+  assert.equal(tooCloseValidation.ok, true);
   assert.equal(tooCloseValidation.checks.distance.status, 'too_close');
-  assert.equal(tooCloseValidation.failingCheck.code, 'DISTANCE_TOO_CLOSE');
-  assert.ok(tooCloseValidation.message.includes('Step back from camera'));
+  assert.equal(tooCloseValidation.failingCheck, null);
 
   // Stance where body is too far from camera (> 3.2m)
   const tooFarValidation = validatePreSession({
@@ -340,8 +340,8 @@ test('validatePreSession: distance validation blocks calibration when patient is
     frame,
     fps: 30,
   });
-  assert.equal(tooFarValidation.ok, false);
+  // Distance factor does not block validation
+  assert.equal(tooFarValidation.ok, true);
   assert.equal(tooFarValidation.checks.distance.status, 'too_far');
-  assert.equal(tooFarValidation.failingCheck.code, 'DISTANCE_TOO_FAR');
-  assert.ok(tooFarValidation.message.includes('Step closer to camera'));
+  assert.equal(tooFarValidation.failingCheck, null);
 });

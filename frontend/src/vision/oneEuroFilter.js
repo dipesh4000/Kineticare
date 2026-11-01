@@ -106,7 +106,7 @@ export const DEFAULT_POSE_FILTER_CONFIG = {
   minCutoff: 1.0,
   beta: 0.007,
   dCutoff: 1.0,
-  minScore: 0.3,
+  minScore: 0.2,
   resetAfterMs: 1000,
 };
 
@@ -116,21 +116,21 @@ export const EXERCISE_FILTER_CONFIGS = {
     minCutoff: 1.0,
     beta: 0.008,
     dCutoff: 1.0,
-    minScore: 0.3,
+    minScore: 0.2,
     resetAfterMs: 1000,
   },
   'Side Arm Raise': {
     minCutoff: 1.2,
     beta: 0.015,
     dCutoff: 1.0,
-    minScore: 0.3,
+    minScore: 0.2,
     resetAfterMs: 1000,
   },
   'Toe Touch': {
     minCutoff: 1.0,
     beta: 0.008,
     dCutoff: 1.0,
-    minScore: 0.3,
+    minScore: 0.2,
     resetAfterMs: 1000,
   },
 };

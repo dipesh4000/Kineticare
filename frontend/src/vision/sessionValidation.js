@@ -8,9 +8,9 @@ import { namedKeypoints, visible } from './geometry.js';
  * to adjust their stance or environment before calibration or workout can begin.
  */
 
-export const MINIMUM_CONFIDENCE = 0.3;
+export const MINIMUM_CONFIDENCE = 0.2;
 export const MINIMUM_FPS = 15;
-export const DEFAULT_MARGIN_RATIO = 0.05; // 5% border margin
+export const DEFAULT_MARGIN_RATIO = 0.02; // Relaxed margin for home webcams
 export const MIN_OPTIMAL_DISTANCE_M = 1.6;
 export const MAX_OPTIMAL_DISTANCE_M = 3.2;
 
@@ -140,7 +140,7 @@ export function checkFramingMargin(keypoints, frame = { width: 640, height: 480 
     };
   }
 
-  const validPoints = keypoints.filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y) && (p.score ?? 1) >= 0.25);
+  const validPoints = keypoints.filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y) && (p.score ?? 1) >= 0.2);
   if (!validPoints.length) {
     return {
       ok: false,
@@ -246,7 +246,7 @@ export function checkViewOrientation(exerciseName, keypoints) {
   if (isSideExercise) {
     // In side view, shoulders overlap along camera ray (spreadRatio is small, usually < 0.38)
     // When facing front, spreadRatio is typically > 0.45
-    if (spreadRatio > 0.42) {
+    if (spreadRatio > 0.55) {
       return {
         ok: false,
         code: 'VIEW_MISMATCH_SIDE',
@@ -265,7 +265,7 @@ export function checkViewOrientation(exerciseName, keypoints) {
   // Front view exercise (e.g. Side Arm Raise)
   // In front view, shoulders are spaced wide (spreadRatio >= 0.30)
   // When turned sideways, shoulders overlap (spreadRatio < 0.25)
-  if (spreadRatio < 0.28) {
+  if (spreadRatio < 0.22) {
     return {
       ok: false,
       code: 'VIEW_MISMATCH_FRONT',
@@ -429,7 +429,8 @@ export function validatePreSession({
   const frameRate = checkFrameRate(fps, minFps);
 
   const checks = { landmarks, framing, distance, orientation, frameRate };
-  const failingCheck = [landmarks, framing, distance, orientation, frameRate].find(c => !c.ok) || null;
+  // Distance check is non-blocking (advisory only) so pose detection is not blocked by distance
+  const failingCheck = [landmarks, framing, orientation, frameRate].find(c => !c.ok) || null;
 
   return {
     ok: !failingCheck,

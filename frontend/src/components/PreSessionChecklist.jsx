@@ -35,14 +35,6 @@ export default function PreSessionChecklist({
       hint: 'Body inside camera view with margin',
     },
     {
-      id: 'distance',
-      label: 'Camera distance',
-      check: checks?.distance,
-      hint: checks?.distance?.distanceMeters != null
-        ? `${checks.distance.distanceMeters} m (${checks.distance.status === 'optimal' ? 'Optimal' : checks.distance.status === 'too_close' ? 'Too close' : 'Too far'})`
-        : '1.8–2.8 m recommended',
-    },
-    {
       id: 'orientation',
       label: 'Camera orientation',
       check: checks?.orientation,

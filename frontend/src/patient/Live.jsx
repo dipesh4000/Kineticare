@@ -153,28 +153,11 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       const prevDist = distanceRef.current ?? distCheck.distanceMeters;
       const smoothed = +(0.3 * distCheck.distanceMeters + 0.7 * prevDist).toFixed(1);
       distanceRef.current = smoothed;
-      const distStatus = smoothed < MIN_OPTIMAL_DISTANCE_M ? 'too_close' : smoothed > MAX_OPTIMAL_DISTANCE_M ? 'too_far' : 'optimal';
-      setPatientDistance({ meters: smoothed, status: distStatus });
-
-      if (distStatus === 'too_close') {
-        const msg = `Too close to camera (~${smoothed}m). Step back so your entire body is tracked.`;
-        setDistanceIssue(msg);
-        if (mode === 'camera' && calibration.status === 'ready') {
-          announce('Step back from the camera.', timestamp);
-        }
-      } else if (distStatus === 'too_far') {
-        const msg = `Too far from camera (~${smoothed}m). Step closer for accurate movement tracking.`;
-        setDistanceIssue(msg);
-        if (mode === 'camera' && calibration.status === 'ready') {
-          announce('Step closer to the camera.', timestamp);
-        }
-      } else {
-        setDistanceIssue(null);
-      }
+      setPatientDistance({ meters: smoothed, status: 'optimal' });
     } else {
       setPatientDistance(null);
-      setDistanceIssue(null);
     }
+    setDistanceIssue(null);
 
     const raw = measurePose(pose);
     if (exercise.ex === 'Side Arm Raise') setArmAngles(shoulderAngles(pose?.keypoints));
@@ -194,7 +177,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
 
     if (calibrationRef.current) {
       const torsoLength = measureTorsoLength(pose?.keypoints);
-      if (Number.isFinite(raw) && alignCheck.isAligned) {
+      if (Number.isFinite(raw)) {
         calibrationRef.current.samples.push({ angle: raw, torsoLength });
       }
       const elapsed = timestamp - calibrationRef.current.startedAt;
@@ -381,7 +364,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
   };
 
   const startCalibration = () => {
-    if (validation && !validation.ok) {
+    if (validation?.failingCheck?.code === 'LANDMARKS_MISSING' || validation?.failingCheck?.code === 'LANDMARKS_EMPTY') {
       announce(validation.message, performance.now(), true);
       return;
     }
@@ -399,7 +382,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
 
   // Start calibrating automatically once the camera sees the required joints.
   useEffect(() => {
-    if (paused || cameraStatus !== 'running' || calibration.status !== 'idle' || !trackingUsable || !validation?.ok) return undefined;
+    if (paused || cameraStatus !== 'running' || calibration.status !== 'idle' || !trackingUsable) return undefined;
     const id = setTimeout(() => startCalibration(), 700);
     return () => clearTimeout(id);
   }, [cameraStatus, calibration.status, trackingUsable, paused, validation?.ok]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -503,10 +486,8 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
           <div><b>{tracking.confidence}%</b><span>Detection confidence</span></div>
           <div><b>{tracking.fps || '—'}</b><span>Frames / sec</span></div>
           <div>
-            <b style={{ color: patientDistance?.status === 'optimal' ? 'var(--ok)' : patientDistance ? 'var(--warn)' : 'inherit' }}>
-              {patientDistance?.meters != null ? `${patientDistance.meters}m` : '—'}
-            </b>
-            <span>Distance ({patientDistance?.status === 'optimal' ? 'Optimal' : patientDistance?.status === 'too_close' ? 'Too close' : patientDistance?.status === 'too_far' ? 'Too far' : 'checking'})</span>
+            <b>{patientDistance?.meters != null ? `${patientDistance.meters}m` : '—'}</b>
+            <span>Distance</span>
           </div>
           <p><span className="tracking-dot left" />Your left side <span className="tracking-dot right" />Your right side · {tracking.model}</p>
         </div>
@@ -518,7 +499,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
           calibrationProgress={calibration.progress}
           calibrationMessage={calibration.message}
           onRetryCalibration={startCalibration}
-          canCalibrate={trackingUsable && validation?.ok}
+          canCalibrate={trackingUsable}
         />
       )}
       <div className="live-monitor" hidden={!mode}>
@@ -560,12 +541,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
           <span>⚠️ <b>Orientation Check:</b> {alignmentIssue}</span>
         </div>
       )}
-      {distanceIssue && mode === 'camera' && (
-        <div className="demo" role="alert" style={{ background: 'var(--warnb)', color: 'var(--warn)', borderColor: 'rgba(180,83,9,0.3)', display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-          <span>📏 <b>Distance Alert:</b> {distanceIssue}</span>
-        </div>
-      )}
-
+      
       <div hidden={!mode} style={{ marginTop: 12 }}>
         <div className="prog" style={{ height: 22 }} role="progressbar" aria-label="Movement progress" aria-valuemin={0} aria-valuemax={100}
           aria-valuenow={Math.round(Math.min(100, movementProgress * 100))}>

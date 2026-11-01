@@ -20,7 +20,7 @@ export const POSE_CONNECTIONS = [
   ]),
 ];
 
-export function poseSummary(pose, minimumScore = 0.3) {
+export function poseSummary(pose, minimumScore = 0.2) {
   const points = pose?.keypoints ?? [];
   const tracked = points.filter(point => visible([point], minimumScore) && Number.isFinite(point.x) && Number.isFinite(point.y));
   return { visible: tracked.length, total: points.length, confidence: tracked.length ? Math.round(tracked.reduce((sum, point) => sum + point.score, 0) / tracked.length * 100) : 0 };

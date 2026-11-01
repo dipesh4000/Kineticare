@@ -5,29 +5,49 @@ import { atlasDb } from '../services/atlas.js';
 import { buildKnowledgeContext, citedSources, exerciseCatalog, illustrativePreview, knowledgeSystemParts, providerSchema, validateKnowledgePlan } from '../services/exerciseKnowledge.js';
 
 export async function callKnowledgeGemini(context, history, { fetchImpl = fetch, env = process.env } = {}) {
-  let response;
-  try {
-    response = await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${env.GEMINI_MODEL}:generateContent`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY }, signal: AbortSignal.timeout(60000),
-      body: JSON.stringify({
-        systemInstruction: { parts: knowledgeSystemParts.map(text => ({ text })) },
-        contents: [{ role: 'user', parts: [{ text: JSON.stringify({ context, previous_turns: history }) }] }],
-        generationConfig: { responseMimeType: 'application/json', responseJsonSchema: providerSchema(), maxOutputTokens: 4096,
-          ...(env.GEMINI_MODEL === 'gemini-3.8-flash' ? { thinkingConfig: { thinkingLevel: 'LOW' } } : {}),
-        },
-      }),
-    });
-  } catch { throw Object.assign(new Error('Gemini is unavailable or timed out. No response was saved.'), { status: 502 }); }
-  if (!response.ok) {
-    const detail = response.status === 404 ? 'The configured Gemini model is unavailable for this account.' : response.status === 429 ? 'Gemini quota or rate limit was reached.' : response.status === 401 || response.status === 403 ? 'Gemini rejected the configured credentials or account access.' : 'Gemini rejected the request; check model compatibility and configuration.';
-    throw Object.assign(new Error(detail), { status: response.status === 429 ? 503 : 502 });
+  const models = [env.GEMINI_MODEL, 'gemini-3.5-flash'].filter((m, i, arr) => m && arr.indexOf(m) === i);
+  let lastError;
+
+  for (const model of models) {
+    let response;
+    try {
+      response = await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY }, signal: AbortSignal.timeout(60000),
+        body: JSON.stringify({
+          systemInstruction: { parts: knowledgeSystemParts.map(text => ({ text })) },
+          contents: [{ role: 'user', parts: [{ text: JSON.stringify({ context, previous_turns: history }) }] }],
+          generationConfig: { responseMimeType: 'application/json', responseJsonSchema: providerSchema(), maxOutputTokens: 4096,
+            ...(model === 'gemini-3.8-flash' ? { thinkingConfig: { thinkingLevel: 'LOW' } } : {}),
+          },
+        }),
+      });
+    } catch {
+      lastError = Object.assign(new Error('Gemini is unavailable or timed out. No response was saved.'), { status: 502, isOperational: true });
+      continue;
+    }
+
+    if (!response.ok) {
+      if (response.status === 503 && model !== models[models.length - 1]) {
+        continue;
+      }
+      const detail = response.status === 404 ? 'The configured Gemini model is unavailable for this account.' : response.status === 429 ? 'Gemini quota or rate limit was reached.' : response.status === 401 || response.status === 403 ? 'Gemini rejected the configured credentials or account access.' : response.status === 503 ? 'Gemini is currently experiencing high demand. Please try again in a moment.' : 'Gemini rejected the request; check model compatibility and configuration.';
+      throw Object.assign(new Error(detail), { status: response.status === 429 || response.status === 503 ? 503 : 502, isOperational: true });
+    }
+
+    try {
+      const payload = await response.json();
+      const candidate = payload.candidates?.[0];
+      if (candidate?.finishReason !== 'STOP') throw new Error('Incomplete response');
+      return validateKnowledgePlan(JSON.parse(candidate.content.parts.filter(part => !part.thought).map(part => part.text ?? '').join('')), context);
+    } catch (parseErr) {
+      if (parseErr.message && (parseErr.message.includes('outside the exercise contract') || parseErr.message.includes('evidence that was not retrieved') || parseErr.message.includes('unsupported movement phase'))) {
+        throw Object.assign(parseErr, { status: 502, isOperational: true });
+      }
+      throw Object.assign(new Error('Gemini returned incomplete, unsupported or ungrounded exercise metadata. No response was saved.'), { status: 502, isOperational: true });
+    }
   }
-  try {
-    const payload = await response.json();
-    const candidate = payload.candidates?.[0];
-    if (candidate?.finishReason !== 'STOP') throw new Error('Incomplete response');
-    return validateKnowledgePlan(JSON.parse(candidate.content.parts.filter(part => !part.thought).map(part => part.text ?? '').join('')), context);
-  } catch { throw Object.assign(new Error('Gemini returned incomplete, unsupported or ungrounded exercise metadata. No response was saved.'), { status: 502 }); }
+
+  throw lastError || Object.assign(new Error('Gemini is unavailable or timed out. No response was saved.'), { status: 502, isOperational: true });
 }
 
 export function createKnowledgeChatRouter({ authenticate = requireIdentity, database = atlasDb, generate = callKnowledgeGemini, env = process.env } = {}) {

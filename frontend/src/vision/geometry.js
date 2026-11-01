@@ -12,7 +12,7 @@ export function namedKeypoints(keypoints) {
   return Object.fromEntries(keypoints.map(point => [point.name, point]));
 }
 
-export function visible(points, minimumScore = 0.3) {
+export function visible(points, minimumScore = 0.2) {
   return points.every(point => point && Number.isFinite(point.x) && Number.isFinite(point.y) && Number.isFinite(point.score) && point.score >= minimumScore);
 }
 
@@ -52,7 +52,7 @@ export function checkBodyAlignment(exerciseName, keypoints) {
       const shoulderSpreadRatio = shoulderDx / torsoDy;
 
       // In side view, shoulders align closely along x axis (ratio usually < 0.35)
-      if (shoulderSpreadRatio > 0.45) {
+      if (shoulderSpreadRatio > 0.55) {
         return {
           isAligned: false,
           orientation: 'front',
@@ -65,10 +65,10 @@ export function checkBodyAlignment(exerciseName, keypoints) {
   }
 
   // Front-view exercise (e.g. Side Arm Raise)
-  if (visible([ls, rs], 0.35)) {
+  if (visible([ls, rs], 0.25)) {
     const shoulderDx = Math.abs(ls.x - rs.x);
-    const torsoHeight = visible([lh, rh], 0.3) ? Math.abs((ls.y + rs.y - lh.y - rh.y) / 2) : null;
-    if (torsoHeight && shoulderDx / torsoHeight < 0.2) {
+    const torsoHeight = visible([lh, rh], 0.2) ? Math.abs((ls.y + rs.y - lh.y - rh.y) / 2) : null;
+    if (torsoHeight && shoulderDx / torsoHeight < 0.15) {
       return {
         isAligned: false,
         orientation: 'side',

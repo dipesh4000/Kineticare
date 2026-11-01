@@ -133,15 +133,41 @@ export default function usePoseCamera(onPose, filterConfig = {}) {
       await video.play();
       if (generation !== generationRef.current) return false;
 
+      // Wait until video has valid dimensions and ready state
+      if (!video.videoWidth || video.readyState < 2) {
+        await new Promise(resolve => {
+          if (video.videoWidth && video.readyState >= 2) return resolve();
+          const onReady = () => {
+            video.removeEventListener('loadeddata', onReady);
+            video.removeEventListener('canplay', onReady);
+            resolve();
+          };
+          video.addEventListener('loadeddata', onReady, { once: true });
+          video.addEventListener('canplay', onReady, { once: true });
+          setTimeout(resolve, 1500);
+        });
+      }
+
       setStatus('loading-model');
 
       // 2. Load detector with WebGL -> WASM/CPU fallback & retry backoff
       const detector = await createPoseDetector(mode);
       if (generation !== generationRef.current) { detector.dispose(); return false; }
       detectorRef.current = detector;
+
+      // Detect if fallback mode occurred (e.g. MoveNet fallback when BlazePose failed in WebView)
+      const effectiveMode = detector.fallbackMode || mode;
+      const effectiveSelected = POSE_MODES[effectiveMode] ?? selected;
+      activeModeRef.current = effectiveMode;
+
       poseFilterRef.current = createPoseFilter(runFilterConfig || filterConfig);
       runningRef.current = true;
       setStatus('running');
+      setTracking(prev => ({
+        ...prev,
+        model: effectiveSelected.label,
+        total: effectiveSelected.landmarks,
+      }));
 
       // Attach WebGL context loss listener
       const detachContextListener = attachWebGLContextLossListener(canvasRef.current, lostDesc => {
@@ -154,17 +180,24 @@ export default function usePoseCamera(onPose, filterConfig = {}) {
       });
 
       let previousFrame = null;
+      let consecutiveErrors = 0;
       const estimate = async () => {
         if (!runningRef.current || generation !== generationRef.current) return;
         try {
+          const currentVid = videoRef.current;
+          if (!currentVid || !currentVid.videoWidth || !currentVid.videoHeight || currentVid.readyState < 2) {
+            frameRef.current = requestAnimationFrame(estimate);
+            return;
+          }
           const now = typeof window !== 'undefined' && window.performance ? window.performance.now() : Date.now();
-          const poses = await detector.estimatePoses(video, { flipHorizontal: false }, now);
+          const poses = await detector.estimatePoses(currentVid, { flipHorizontal: false }, now);
           if (generation !== generationRef.current) return;
+          consecutiveErrors = 0;
           const timestamp = now;
           const rawPose = poses[0] ?? null;
           const pose = filterPose(poseFilterRef.current, rawPose, timestamp);
-          drawPose(canvasRef.current, video, pose);
-          onPoseRef.current(pose, timestamp);
+          drawPose(canvasRef.current, currentVid, pose);
+          onPoseRef.current(pose, timestamp, currentVid);
 
           // Performance and FPS sampling
           if (timestamp - lastStatsRef.current >= 500) {
@@ -193,9 +226,9 @@ export default function usePoseCamera(onPose, filterConfig = {}) {
             }
 
             setTracking({
-              model: selected.label,
+              model: effectiveSelected.label,
               ...poseSummary(pose),
-              total: selected.landmarks,
+              total: effectiveSelected.landmarks,
               fps: currentFps,
             });
           }
@@ -203,6 +236,12 @@ export default function usePoseCamera(onPose, filterConfig = {}) {
           previousFrame = timestamp;
           frameRef.current = requestAnimationFrame(estimate);
         } catch (runtimeErr) {
+          consecutiveErrors++;
+          if (consecutiveErrors < 5 && runningRef.current && generation === generationRef.current) {
+            console.warn('Transient pose estimation frame error (retrying frame):', runtimeErr);
+            frameRef.current = requestAnimationFrame(estimate);
+            return;
+          }
           if (generation !== generationRef.current) return;
           runningRef.current = false;
           detachContextListener();

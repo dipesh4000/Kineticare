@@ -13,6 +13,8 @@ export function poseAssets() {
       server.middlewares.use(`/${poseAssetPath}/`, (req, res, next) => {
         const name = req.url?.split('?')[0]?.replace(/^\//, '');
         if (!poseAssetFiles.includes(name)) return next();
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         res.setHeader('Content-Type', name.endsWith('.js') ? 'application/javascript' : name.endsWith('.wasm') ? 'application/wasm' : 'application/octet-stream');
         const stream = createReadStream(asset(name));
         stream.on('error', next); stream.pipe(res);

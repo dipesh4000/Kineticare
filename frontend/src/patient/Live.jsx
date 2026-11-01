@@ -121,11 +121,14 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
     return result.angle;
   }, [exercise.ex]);
 
-  const onPose = useCallback((pose, timestamp) => {
+  const onPose = useCallback((pose, timestamp, video) => {
     profilerRef.current?.tick();
     if (lastPoseTimeRef.current && timestamp > lastPoseTimeRef.current) {
       const deltaMs = timestamp - lastPoseTimeRef.current;
-      if (deltaMs > 0) fpsRef.current = Math.round(1000 / deltaMs);
+      if (deltaMs > 0) {
+        const measuredFps = Math.round(1000 / deltaMs);
+        fpsRef.current = Math.round(0.7 * fpsRef.current + 0.3 * measuredFps);
+      }
     }
     lastPoseTimeRef.current = timestamp;
 
@@ -134,6 +137,10 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
     const preCheck = validatePreSession({
       exerciseName: exercise.ex,
       keypoints: pose?.keypoints,
+      frame: {
+        width: video?.videoWidth || 640,
+        height: video?.videoHeight || 480,
+      },
       fps: fpsRef.current,
     });
     setValidation(preCheck);
@@ -229,7 +236,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
   const filterConfig = useMemo(() => getPoseFilterConfig(exercise.ex), [exercise.ex]);
   const {
     videoRef, canvasRef, status: cameraStatus, error: cameraError, tracking,
-    start: startPoseCamera,
+    start: startPoseCamera, stop: stopPoseCamera,
   } = usePoseCamera(onPose, filterConfig);
   const cameraReady = cameraStatus === 'running' && calibration.status === 'ready';
   const trackingUsable = measurement !== null;
@@ -419,8 +426,32 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
 
   return (
     <>
-      <div className="row sp">
-        <h2 style={{ margin: 0 }}>{exercise.ex}</h2><span className="tag">{exercise.targetReps} reps · {exercise.targetExcursionDeg}° target</span>
+      {typeof navigator !== 'undefined' && /WhatsApp|FBAN|FBAV|Instagram|Line/i.test(navigator.userAgent) && (
+        <div className="card" style={{ background: 'var(--soft)', border: '1px solid var(--card-border)', padding: '10px 14px', margin: '0 0 12px', fontSize: 12 }}>
+          💡 <b>Opening in WhatsApp?</b> For optimal camera access and tracking performance, tap <b>⋮</b> or <b>•••</b> in the top corner and select <b>"Open in Chrome"</b> or <b>"Open in Safari"</b>.
+        </div>
+      )}
+      <div className="row sp" style={{ alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <h2 style={{ margin: 0 }}>{exercise.ex}</h2>
+        <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+          {plan?.items?.map((item, idx) => (
+            <button
+              key={idx}
+              type="button"
+              className={`btn s sm ${idx === exIdx ? 'pri' : ''}`}
+              style={{ padding: '4px 10px', fontSize: 12, fontWeight: idx === exIdx ? 700 : 400 }}
+              onClick={() => {
+                if (idx !== exIdx) {
+                  stopPoseCamera();
+                  nav('/patient/live', { state: { ...state, exIdx: idx } });
+                }
+              }}
+            >
+              {item.ex}
+            </button>
+          ))}
+          <span className="tag">{exercise.targetReps} reps · {exercise.targetExcursionDeg}° target</span>
+        </div>
       </div>
       <p className="mut">{!mode ? '1. Preview the movement. 2. Start exercise below. 3. Hold still for camera setup.' : calibration.status === 'ready' ? 'Move slowly, then return fully to your resting position to count each rep.' : mode === 'replay' ? 'Practice preview — these repetitions are simulated.' : 'Wait for “Tracking movement” before starting your reps.'}</p>
       {exercise.ex === 'Side Arm Raise' && !mode && <SideArmRaiseDemo target={exercise.targetExcursionDeg} />}
@@ -441,7 +472,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       )}
       <div className="live-monitor" hidden={!mode}>
       <div className={`cam${paused || !active ? ' paused' : ''}`} aria-label={mode === 'camera' ? 'Live camera with pose overlay' : 'Exercise preview'}>
-        <video ref={videoRef} className="pose-layer" style={{ visibility: viewMode === 'skeleton' ? 'hidden' : 'visible' }} muted playsInline />
+        <video ref={videoRef} className="pose-layer" style={{ visibility: viewMode === 'skeleton' ? 'hidden' : 'visible' }} autoPlay playsInline webkit-playsinline="true" muted />
         <canvas ref={canvasRef} className="pose-layer" />
         {mode !== 'camera' && <Skeleton paused={paused || replayTrackingLost || !mode} />}
         <span className={`tag ${active ? 'ok' : 'warn'} st`}>

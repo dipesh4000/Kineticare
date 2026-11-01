@@ -51,7 +51,7 @@ export default function ClientAiCopilot() {
   const giveConsent = () => {
     try {
       localStorage.setItem('kineticare_ai_chat_consent', 'true');
-    } catch (_err) {
+    } catch {
       /* ignore storage failure */
     }
     setHasConsent(true);

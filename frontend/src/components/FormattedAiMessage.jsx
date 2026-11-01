@@ -96,6 +96,31 @@ export default function FormattedAiMessage({ content, role = 'assistant' }) {
           );
         }
 
+        if (block.type === 'table') {
+          return (
+            <div key={idx} className="ai-table-wrap">
+              <table className="ai-table">
+                <thead>
+                  <tr>
+                    {block.headers.map((h, hIdx) => (
+                      <th key={hIdx}>{renderInlineElements(h)}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {block.rows.map((row, rIdx) => (
+                    <tr key={rIdx}>
+                      {row.map((cell, cIdx) => (
+                        <td key={cIdx}>{renderInlineElements(cell)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        }
+
         // Standard narrative paragraph
         return (
           <p key={idx} className="ai-paragraph">

@@ -23,6 +23,11 @@ app.use('/api', apiApp);
 
 // Serve frontend static build in production
 const distPath = path.resolve(__dirname, '../frontend/dist');
+app.use('/pose', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
 app.use(express.static(distPath));
 
 app.get('/{*path}', (req, res, next) => {

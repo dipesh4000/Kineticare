@@ -3,17 +3,13 @@ import { loadReferenceMedia } from '../services/media';
 import SideArmRaiseDemo from './SideArmRaiseDemo';
 
 export default function ReferenceVideo({ mediaPath, loop = false, autoPlay = false, controls = true }) {
-  if (mediaPath === 'demo:armraise') {
-    return <SideArmRaiseDemo studio={false} />;
-  }
-
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
     let currentUrl = '';
     let cancelled = false;
-    if (!mediaPath) return undefined;
+    if (!mediaPath || mediaPath === 'demo:armraise') return undefined;
     loadReferenceMedia(mediaPath).then(nextUrl => {
       if (cancelled) return URL.revokeObjectURL(nextUrl);
       currentUrl = nextUrl;
@@ -24,6 +20,10 @@ export default function ReferenceVideo({ mediaPath, loop = false, autoPlay = fal
       if (currentUrl) URL.revokeObjectURL(currentUrl);
     };
   }, [mediaPath]);
+
+  if (mediaPath === 'demo:armraise') {
+    return <SideArmRaiseDemo studio={false} />;
+  }
 
   if (error) return <p className="demo" role="alert">{error}</p>;
   if (!url) return <p className="mut">Loading reference video…</p>;

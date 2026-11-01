@@ -106,7 +106,7 @@ export function parseClinicalBlocks(content = '') {
 
     // Check if this whole paragraph is an emergency red flag warning
     if (isRedFlagWarning(p)) {
-      const cleanAlert = p.replace(/^[>\s*#]+/u, '').replace(/^[⚠️🚨\s]+/u, '').trim();
+      const cleanAlert = p.replace(/^[>\s*#]+/u, '').replace(/^(?:⚠️|🚨|\s)+/u, '').trim();
       blocks.push({
         type: 'alert',
         title: 'Urgent Medical Safety Boundary',
@@ -135,7 +135,7 @@ export function parseClinicalBlocks(content = '') {
           blocks.push({
             type: 'alert',
             title: 'Urgent Medical Safety Boundary',
-            body: line.replace(/^[>\s*#]+/u, '').replace(/^[⚠️🚨\s]+/u, '').trim(),
+            body: line.replace(/^[>\s*#]+/u, '').replace(/^(?:⚠️|🚨|\s)+/u, '').trim(),
           });
           continue;
         }
@@ -208,6 +208,25 @@ export function parseClinicalBlocks(content = '') {
         items,
       });
       continue;
+    }
+
+    // Check if paragraph is a markdown table
+    if (lines.length >= 2 && lines[0].includes('|') && lines[1].includes('|') && /^[|\s:-]+$/.test(lines[1])) {
+      const headers = lines[0].split('|').map(c => c.trim()).filter(Boolean);
+      const rows = [];
+      for (let i = 2; i < lines.length; i++) {
+        if (!lines[i].includes('|')) continue;
+        const rowCells = lines[i].split('|').map(c => c.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length);
+        if (rowCells.length) rows.push(rowCells);
+      }
+      if (headers.length && rows.length) {
+        blocks.push({
+          type: 'table',
+          headers,
+          rows,
+        });
+        continue;
+      }
     }
 
     // Default: Narrative conversational paragraph

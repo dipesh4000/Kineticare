@@ -271,7 +271,59 @@
   line-height: 1.5;
 }
 
+/* Table styles (light mode) */
+.ai-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.ai-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  background: #ffffff;
+}
+
+.ai-table th {
+  background: #f9fafb;
+  color: #111827;
+  font-weight: 700;
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.ai-table td {
+  color: #374151;
+  padding: 7px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: top;
+}
+
+.ai-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ai-table tr:nth-child(even) td {
+  background: #f9fafb;
+}
+
 /* Dark mode adjustments */
+[data-theme="dark"] .ai-formatted-container {
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .ai-paragraph {
+  color: #d1d5db;
+}
+
+[data-theme="dark"] .ai-paragraph strong {
+  color: #f3f4f6;
+}
+
 [data-theme="dark"] .ai-clinical-card {
   background: #1f1f23;
   border-color: #2e2e34;
@@ -280,6 +332,54 @@
 [data-theme="dark"] .ai-card-header {
   background: #26262c;
   border-bottom-color: #2e2e34;
+}
+
+/* Override all theme-specific pastel header backgrounds in dark mode */
+[data-theme="dark"] .ai-clinical-card.theme-biomechanics .ai-card-header,
+[data-theme="dark"] .ai-clinical-card.theme-pacing .ai-card-header,
+[data-theme="dark"] .ai-clinical-card.theme-safety .ai-card-header,
+[data-theme="dark"] .ai-clinical-card.theme-activity .ai-card-header {
+  background: #26262c;
+}
+
+/* Override theme badge backgrounds in dark mode — pastels are unreadable on dark */
+[data-theme="dark"] .ai-clinical-card.theme-biomechanics .ai-card-badge {
+  background: #312e81;
+  color: #a5b4fc;
+}
+[data-theme="dark"] .ai-clinical-card.theme-pacing .ai-card-badge {
+  background: #134e4a;
+  color: #5eead4;
+}
+[data-theme="dark"] .ai-clinical-card.theme-safety .ai-card-badge {
+  background: #451a03;
+  color: #fcd34d;
+}
+[data-theme="dark"] .ai-clinical-card.theme-activity .ai-card-badge {
+  background: #1e3a8a;
+  color: #93c5fd;
+}
+
+/* Override theme cue label backgrounds in dark mode */
+[data-theme="dark"] .ai-clinical-card.theme-biomechanics .ai-cue-label {
+  background: #312e81;
+  color: #a5b4fc;
+  border-color: #4338ca;
+}
+[data-theme="dark"] .ai-clinical-card.theme-pacing .ai-cue-label {
+  background: #134e4a;
+  color: #5eead4;
+  border-color: #0f766e;
+}
+[data-theme="dark"] .ai-clinical-card.theme-safety .ai-cue-label {
+  background: #451a03;
+  color: #fcd34d;
+  border-color: #92400e;
+}
+[data-theme="dark"] .ai-clinical-card.theme-activity .ai-cue-label {
+  background: #1e3a8a;
+  color: #93c5fd;
+  border-color: #1d4ed8;
 }
 
 [data-theme="dark"] .ai-card-title {
@@ -303,4 +403,46 @@
 
 [data-theme="dark"] .ai-card-alert-body {
   color: #fecdd3;
+}
+
+/* Table — dark mode */
+[data-theme="dark"] .ai-table-wrap {
+  background: transparent;
+}
+
+[data-theme="dark"] .ai-table {
+  background: #1f1f23;
+  border-color: #2e2e34;
+}
+
+[data-theme="dark"] .ai-table th {
+  background: #26262c;
+  color: #f3f4f6;
+  border-color: #2e2e34;
+}
+
+[data-theme="dark"] .ai-table td {
+  background: #1f1f23;
+  color: #d1d5db;
+  border-color: #2e2e34;
+}
+
+[data-theme="dark"] .ai-table tr:nth-child(even) td {
+  background: #26262c;
+}
+
+[data-theme="dark"] .ai-message-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .ai-copy-btn {
+  border-color: #3f3f46;
+  color: #d1d5db;
+}
+
+[data-theme="dark"] .ai-copy-btn:hover {
+  background: #27272a;
+  border-color: #818cf8;
+  color: #818cf8;
 }

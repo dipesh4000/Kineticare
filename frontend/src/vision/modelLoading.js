@@ -34,25 +34,46 @@ export async function retryWithBackoff(fn, { maxRetries = 3, initialDelayMs = 50
   throw lastError;
 }
 
-let runtime;
-export function loadPoseRuntime(base) {
+let runtime = null;
+export function loadPoseRuntime(base, fallbackBase = null) {
   if (globalThis.Pose) return Promise.resolve();
-  return runtime ??= retryWithBackoff(() => new Promise((resolve, reject) => {
+  if (runtime) return runtime;
+
+  const loadFrom = url => new Promise((resolve, reject) => {
+    const cleanUrl = url.replace(/\/+$/, '');
     const script = document.createElement('script');
-    script.src = `${base}/pose.js`;
+    script.src = `${cleanUrl}/pose.js`;
+    script.crossOrigin = 'anonymous';
     script.onload = () => {
       if (globalThis.Pose) resolve();
       else {
         script.remove();
-        runtime = null;
         reject(new Error('The pose runtime is unavailable. Retry setup.'));
       }
     };
     script.onerror = () => {
       script.remove();
-      runtime = null;
       reject(new Error('Tracking files could not be downloaded. Check your connection and retry.'));
     };
     document.head.appendChild(script);
-  }), { maxRetries: 3, initialDelayMs: 600 });
+  });
+
+  const attemptLoad = async () => {
+    try {
+      return await retryWithBackoff(() => loadFrom(base), { maxRetries: 2, initialDelayMs: 400 });
+    } catch (primaryErr) {
+      if (fallbackBase && fallbackBase !== base) {
+        console.warn(`Primary pose runtime from ${base} failed, falling back to ${fallbackBase}:`, primaryErr);
+        return await retryWithBackoff(() => loadFrom(fallbackBase), { maxRetries: 2, initialDelayMs: 500 });
+      }
+      throw primaryErr;
+    }
+  };
+
+  runtime = attemptLoad().catch(err => {
+    runtime = null;
+    throw err;
+  });
+
+  return runtime;
 }

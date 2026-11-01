@@ -4,6 +4,7 @@ import { useRecords } from '../records/recordsContext';
 import { useAuth } from '../auth/authContext';
 import { getChatStatus, sendChat } from '../services/chatApi';
 import Icon from '../components/Icon';
+import FormattedAiMessage from '../components/FormattedAiMessage';
 import './PatientAiPhysio.css';
 
 const TRIAGE_CATEGORIES = [
@@ -18,12 +19,10 @@ const TRIAGE_CATEGORIES = [
 export default function PatientAiPhysio() {
   const nav = useNavigate();
   const { user } = useAuth();
-  const { patientId, patientPlan, assignment, sessions, feedback } = useRecords();
+  const { patientId, patientPlan, sessions } = useRecords();
 
   const plan = patientPlan(patientId);
-  const activeAssignment = assignment(patientId);
   const sessionList = sessions(patientId);
-  const feedbackList = feedback(patientId);
 
   const [hasConsent, setHasConsent] = useState(() => {
     try {
@@ -58,7 +57,9 @@ export default function PatientAiPhysio() {
   const giveConsent = () => {
     try {
       localStorage.setItem('kineticare_ai_chat_consent', 'true');
-    } catch {}
+    } catch (_err) {
+      /* ignore storage failure */
+    }
     setHasConsent(true);
   };
 
@@ -223,9 +224,7 @@ export default function PatientAiPhysio() {
                     {m.role === 'assistant' ? 'PT' : (user?.displayName?.[0] || 'U')}
                   </div>
                   <div className="physio-bubble">
-                    {m.content.split('\n\n').map((paragraph, pIdx) => (
-                      <p key={pIdx}>{paragraph}</p>
-                    ))}
+                    <FormattedAiMessage content={m.content} role={m.role} />
                   </div>
                 </div>
               ))}

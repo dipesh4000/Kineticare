@@ -185,6 +185,38 @@ h3 { margin: 0; color: var(--ink); font-weight: 650; letter-spacing: -0.02em; fo
 .brand-dot { color: var(--pri); }
 .brand-mark { display: block; width: 36px; height: 38px; overflow: hidden; border-radius: 11px; background: var(--soft); flex: none; border: 1px solid #e1e6df; border-color: var(--card-border); }
 .brand-lockup small { display: block; font-size: 9px; color: var(--mut); margin-top: 3px; letter-spacing: .3px; }
+
+.ai-physio-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--soft);
+  border: 1px solid var(--card-border);
+  color: var(--pri);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  transition: all 180ms ease;
+  white-space: nowrap;
+}
+.ai-physio-header-btn:hover {
+  background: var(--pri2);
+  border-color: rgba(109, 40, 217, 0.3);
+  transform: translateY(-1px);
+}
+.ai-physio-header-btn.on {
+  background: var(--pri);
+  color: #fff;
+  border-color: var(--pri);
+  box-shadow: 0 2px 10px rgba(109, 40, 217, 0.28);
+}
+.ai-physio-header-btn.on svg {
+  color: #fff !important;
+}
+
 .brand-caption { font-size: 9px; letter-spacing: 1.5px; color: var(--mut); }
 .eyebrow { display: block; font-size: 9px; font-weight: 500; letter-spacing: 1.5px; color: var(--mut); }
 .section-number { font: 8px ui-monospace,monospace; letter-spacing: .6px; color: var(--mut); }
@@ -210,11 +242,11 @@ select:focus { outline: none; border-color: var(--pri); box-shadow: 0 0 0 3px #6
 .tag { display: inline-flex; align-items: center; border-radius: 8px; padding: 4px 8px; font-size: 10px; font-weight: 500; letter-spacing: 0; background: var(--soft); color: var(--ink-secondary); border: 1px solid #e3e5e1; border-color: transparent; }
 .av { width: 40px; height: 40px; border-radius: 13px; background: var(--pri2); color: var(--pri); display: grid; place-items: center; font-weight: 700; font-size: 12px; position: relative; border: 1px solid #dfe5dc; flex-shrink: 0; border-color: transparent; }
 .current-week { max-width: 460px; margin: 0 auto 30px; }
-.week-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-weight: 650; font-size: 13px; }
+.week-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-weight: 650; font-size: 12px; }
 .week-heading small { color: var(--mut); font-size: 11px; font-weight: 400; }
 .week-days { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 8px; text-align: center; }
-.week-days small { display: block; color: var(--mut); font-size: 10px; margin-bottom: 7px; }
-.week-days span { display: grid; place-items: center; width: 34px; height: 34px; margin: auto; border-radius: 50%; font-size: 12px; font-weight: 600; }
+.week-days small { display: block; color: var(--mut); font-size: 9px; margin-bottom: 3px; }
+.week-days span { display: grid; place-items: center; width: 26px; height: 26px; margin: auto; border-radius: 50%; font-size: 11px; font-weight: 600; }
 .week-days .is-today span { background: var(--ink); color: var(--card); }
 .hello { font-size: 22px; font-weight: 650; line-height: 1.25; margin: 0; color: var(--ink); letter-spacing: -.6px; }
 .greeting-dot { color: var(--pri); }
@@ -516,14 +548,14 @@ summary { cursor: pointer; min-height: 44px; padding-block: 10px; font-weight: 6
 .session-start-actions .session-primary { flex-basis: 100%; width: 100%; min-height: 50px; }
 .session-start-actions > .btn.s { flex: 1; }
 .calendar-controls { display: flex; align-items: center; gap: 4px; }
-.calendar-controls button { display: grid; place-items: center; min-width: 36px; min-height: 36px; padding: 6px 10px; background: var(--soft); color: var(--ink); border: 1px solid var(--card-border); border-radius: 9px; cursor: pointer; font-size: 12px; }
-.calendar-range { margin: -5px 0 12px; color: var(--mut); font-size: 11px; }
-.week-days > button { display: flex; flex-direction: column; align-items: center; gap: 4px; border: 1px solid transparent; border-radius: 12px; padding: 8px 0; background: transparent; color: var(--ink); cursor: pointer; min-width: 0; }
+.calendar-controls button { display: grid; place-items: center; min-width: 26px; min-height: 26px; padding: 3px 8px; background: var(--soft); color: var(--ink); border: 1px solid var(--card-border); border-radius: 7px; cursor: pointer; font-size: 11px; }
+.calendar-range { margin: 0 0 6px; color: var(--mut); font-size: 10px; }
+.week-days > button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 1px solid transparent; border-radius: 8px; padding: 4px 0; background: transparent; color: var(--ink); cursor: pointer; min-width: 0; }
 .week-days > button.is-selected { border-color: var(--pri); background: var(--pri2); }
 .week-days > button small { font-size: 10px; margin: 0; }
 .calendar-event-dot,.calendar-no-event { display: block; width: 5px; height: 5px; border-radius: 50%; }
 .calendar-event-dot { background: var(--pri); } .calendar-no-event { background: transparent; }
-.meetings-panel { margin: 0 0 24px; padding: 20px; background: var(--card); border: 1px solid var(--card-border); border-radius: 18px; }
+.meetings-panel { margin: 0 0 16px; padding: 14px 16px; background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; }
 .meetings-panel .current-week { width: 100%; max-width: none; margin-bottom: 0; }
 .meetings-panel .section-heading { margin: 16px 0 12px; }
 .meeting-list { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)); gap: 12px; }
@@ -550,7 +582,7 @@ summary { cursor: pointer; min-height: 44px; padding-block: 10px; font-weight: 6
   .meetings-panel { padding: 14px; margin-bottom: 18px; }
   .patient-shell .meetings-panel .current-week { padding-top: 0; border-top: 0; margin-bottom: 0; }
   .meetings-panel .section-heading h2 { font-size: 16px; }
-  .calendar-controls button { min-height: 36px; min-width: 30px; padding: 6px 8px; }
+  .calendar-controls button { min-height: 26px; min-width: 24px; padding: 2px 6px; font-size: 11px; }
   .meeting-dialog { padding: 20px; }
   .meeting-dialog input,.meeting-dialog select { font-size: 16px; min-width: 0; }
   .meeting-form-grid { grid-template-columns: minmax(0,1fr); gap: 0; }
@@ -559,4 +591,4 @@ summary { cursor: pointer; min-height: 44px; padding-block: 10px; font-weight: 6
 
 .session-demo video, .session-shell .vid video { max-height: 300px; object-fit: contain; background: #101827; margin-top: 12px; }
 
-@media (max-width:800px) { .meetings-panel .week-days span { width: 30px; height: 30px; } }
+@media (max-width:800px) { .meetings-panel .week-days span { width: 24px; height: 24px; font-size: 10px; } }

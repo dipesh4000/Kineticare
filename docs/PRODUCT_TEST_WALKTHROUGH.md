@@ -77,7 +77,13 @@ On the unassigned test patient, open **Workout → Side Arm Raise → Practice**
 | Try Balanced mode in a fresh attempt | BlazePose lite (MediaPipe runtime) still provides 33 landmarks, with a different speed/accuracy tradeoff. |
 | Try Fast mode in a fresh attempt | MoveNet Lightning provides 17 landmarks, explicitly labelled as such. Do not expect finger/heel landmarks in this mode. |
 | Deny camera access | A permission error and retry path appear. Re-enable permission in the browser, then retry. |
-| Finish exercise | Summary shows the attempted reps, on-target reps and measurement results. |
+| Verify distance in checklist | The 5-point checklist shows “Camera distance: X.X m (Optimal)”. 1.8–2.8 m is the recommended range. |
+| Test “Too close” stance (< 1.6 m) | Checklist shows ⚠️ Camera distance: Too close. Alert prompt instructs “Step back from camera (~X.X m). Recommended distance is 1.8–2.8 m.” Calibration is blocked until stepped back. |
+| Test “Too far” stance (> 3.2 m) | Checklist shows ⚠️ Camera distance: Too far. Alert prompt instructs “Step closer to camera (~X.X m).” Calibration is blocked until stepped forward. |
+| Check live distance in tracking HUD | Quality panel displays real-time distance: [X.Xm | Distance (Optimal)]. Color is green for optimal, amber for too close/far. |
+| Test live drift distance alert | While doing reps, step forward < 1.6 m. A yellow pill appears: “📏 Distance Alert: Too close to camera (~X.Xm)”. Spoken voice cue says: “Step back from the camera.” Stepping back clears the alert. |
+| Flip camera on phone (Front ↔ Back) | Tap “🔄 Back cam” (top-right of camera or bottom action bar). Feed switches to the rear environment camera. Video and pose overlay un-mirror (normal orientation) and joint angles stay legible. Tap “🔄 Front cam” to return to mirrored selfie mode. |
+| Finish exercise | Summary shows the attempted reps, on-target reps and measurement results. Calibrated baseline distance is saved with session metrics. |
 | Save the summary | Session appears in Progress/Workout after a reload. Merely viewing the summary does not save it. |
 
 Repeat Squat and Toe Touch from the linked patient's published plan. Stand side-on for these exercises. For a full workout, verify the next measured exercise opens and all results reach the final summary. Stop an exercise partway through and verify it is saved as partial, not completed.
@@ -135,7 +141,16 @@ The fixtures are excluded from the production app entry/build. Automated checks 
 
 Clinician: open Overview and select Schedule beside Upcoming meetings. Enter a title, future local date/time, duration, and optionally select a linked patient and paste an HTTPS meeting link. Save the meeting. It should appear in Upcoming meetings and add a dot to that date in the calendar. Select the date to filter its meetings; Today returns to the seven-day window with today in the middle (fourth column). Cancel a test meeting and confirm that its marker/list entry is removed. Linked patients see their appointments on Home after the workspace refresh; personal clinician meetings remain private. These meetings are stored in Atlas, not in an external calendar, and do not create a video call or email invitation.
 
-Camera setup now ends with a regular Start exercise button below the demonstration and tracking choice. Balanced 33-landmark tracking is the default for phones. The camera preview stays hidden until start; pause/finish controls are unavailable during model loading or failure. A failure shows its reason and Retry camera setup / Try Fast tracking. Restarting setup preserves completed reps and discards the unfinished rep.
+Camera setup now ends with a regular Start exercise button below the demonstration and tracking choice. Balanced 33-landmark tracking is the default for phones.
+
+A 5-point pre-session validation system verifies:
+1. Required body landmarks visible
+2. Safety margins (no head/feet clipping)
+3. Camera distance (1.8m–2.8m optimal, pinhole anthropometric projection with torso baseline)
+4. Exercise viewing orientation (side-on for Squats/Toe Touches, front-facing for Arm Raises)
+5. Stable frame rate (min 15 fps)
+
+Real-time audio and visual distance alerts notify patients when they step too close (< 1.6m) or too far (> 3.2m). On mobile devices, patients can tap "🔄 Flip camera" (top-right tag or action bar) to toggle between the front selfie camera (mirrored) and the back environment camera (unmirrored) for stand-mounted or clinician-guided recording. The camera preview stays hidden until start; pause/finish controls are unavailable during model loading or failure. A failure shows its reason and Retry camera setup / Try Fast tracking. Restarting setup preserves completed reps and discards the unfinished rep.
 
 The production build includes the pinned MediaPipe runtime, WASM, and Full/Lite model files under `pose/0.5.1675469404/`. Deploy the entire `frontend/dist` directory, including `pose/`, and restart the frontend/backend after updating code. Startup no longer depends on the jsDelivr CDN. Loading has a 45-second timeout; the first use still needs to download files from the app's own host.
 

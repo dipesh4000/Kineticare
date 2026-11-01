@@ -11,6 +11,8 @@ import { namedKeypoints, visible } from './geometry.js';
 export const MINIMUM_CONFIDENCE = 0.3;
 export const MINIMUM_FPS = 15;
 export const DEFAULT_MARGIN_RATIO = 0.05; // 5% border margin
+export const MIN_OPTIMAL_DISTANCE_M = 1.6;
+export const MAX_OPTIMAL_DISTANCE_M = 3.2;
 
 /**
  * Computes torso length between shoulder and hip midpoints.
@@ -303,6 +305,110 @@ export function checkFrameRate(fps, minFps = MINIMUM_FPS) {
 }
 
 /**
+ * Check 5: Estimates patient distance from camera in meters using
+ * anthropometric pinhole projection model (torso length baseline ~0.50m,
+ * camera VFOV ~55deg, equivalent focal length ~1.05 * frameHeight).
+ */
+export function estimatePatientDistance(
+  keypoints,
+  frame = { width: 640, height: 480 },
+  minOptimal = MIN_OPTIMAL_DISTANCE_M,
+  maxOptimal = MAX_OPTIMAL_DISTANCE_M
+) {
+  if (!keypoints || !keypoints.length) {
+    return {
+      ok: false,
+      distanceMeters: null,
+      status: 'unknown',
+      code: 'DISTANCE_UNKNOWN',
+      message: 'Step into camera view.',
+    };
+  }
+
+  const torsoPx = measureTorsoLength(keypoints);
+  const validPoints = keypoints.filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y));
+  const isNormalized = validPoints.length > 0 && validPoints.every(p => p.x <= 1.05 && p.y <= 1.05);
+  const height = isNormalized ? 1.0 : (frame?.height || 480);
+  const width = isNormalized ? 1.0 : (frame?.width || 640);
+
+  let rawDistance = null;
+  if (torsoPx && torsoPx > 0) {
+    const torsoRatio = torsoPx / height;
+    if (torsoRatio > 0.05) {
+      rawDistance = 0.525 / torsoRatio;
+    }
+  }
+
+  // Fallback to shoulder width if torso not measurable
+  if (!rawDistance) {
+    const pts = namedKeypoints(keypoints);
+    const ls = pts.left_shoulder, rs = pts.right_shoulder;
+    if (visible([ls, rs], 0.25)) {
+      const shoulderDx = Math.abs(ls.x - rs.x);
+      const shoulderRatio = shoulderDx / width;
+      if (shoulderRatio > 0.05) {
+        rawDistance = 0.315 / shoulderRatio;
+      }
+    }
+  }
+
+  if (!rawDistance || !Number.isFinite(rawDistance)) {
+    return {
+      ok: false,
+      distanceMeters: null,
+      status: 'unknown',
+      code: 'DISTANCE_UNKNOWN',
+      message: 'Position your body so shoulders and hips are visible.',
+    };
+  }
+
+  const distanceMeters = +rawDistance.toFixed(1);
+
+  if (distanceMeters < minOptimal) {
+    return {
+      ok: false,
+      distanceMeters,
+      status: 'too_close',
+      code: 'DISTANCE_TOO_CLOSE',
+      message: `Step back from camera (~${distanceMeters} m). Recommended distance is 1.8–2.8 m.`,
+      minOptimal,
+      maxOptimal,
+    };
+  }
+
+  if (distanceMeters > maxOptimal) {
+    return {
+      ok: false,
+      distanceMeters,
+      status: 'too_far',
+      code: 'DISTANCE_TOO_FAR',
+      message: `Step closer to camera (~${distanceMeters} m). Move to around 2 m for accurate tracking.`,
+      minOptimal,
+      maxOptimal,
+    };
+  }
+
+  return {
+    ok: true,
+    distanceMeters,
+    status: 'optimal',
+    code: 'DISTANCE_OK',
+    message: `Optimal camera distance (~${distanceMeters} m). Full body well framed.`,
+    minOptimal,
+    maxOptimal,
+  };
+}
+
+export function checkPatientDistance(
+  keypoints,
+  frame = { width: 640, height: 480 },
+  minOptimal = MIN_OPTIMAL_DISTANCE_M,
+  maxOptimal = MAX_OPTIMAL_DISTANCE_M
+) {
+  return estimatePatientDistance(keypoints, frame, minOptimal, maxOptimal);
+}
+
+/**
  * Aggregates all pre-session validation checks.
  */
 export function validatePreSession({
@@ -313,14 +419,17 @@ export function validatePreSession({
   minConfidence = MINIMUM_CONFIDENCE,
   minFps = MINIMUM_FPS,
   marginRatio = DEFAULT_MARGIN_RATIO,
+  minOptimalDistance = MIN_OPTIMAL_DISTANCE_M,
+  maxOptimalDistance = MAX_OPTIMAL_DISTANCE_M,
 }) {
   const landmarks = checkLandmarksVisible(exerciseName, keypoints, minConfidence);
   const framing = checkFramingMargin(keypoints, frame, marginRatio);
+  const distance = checkPatientDistance(keypoints, frame, minOptimalDistance, maxOptimalDistance);
   const orientation = checkViewOrientation(exerciseName, keypoints);
   const frameRate = checkFrameRate(fps, minFps);
 
-  const checks = { landmarks, framing, orientation, frameRate };
-  const failingCheck = [landmarks, framing, orientation, frameRate].find(c => !c.ok) || null;
+  const checks = { landmarks, framing, distance, orientation, frameRate };
+  const failingCheck = [landmarks, framing, distance, orientation, frameRate].find(c => !c.ok) || null;
 
   return {
     ok: !failingCheck,

@@ -43,7 +43,7 @@ export default function App() {
           <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<ErrorBoundary fallbackPath="/patient/home"><PatientHome /></ErrorBoundary>} />
           <Route path="workout" element={<ErrorBoundary fallbackPath="/patient/plan"><PatientWorkout /></ErrorBoundary>} />
-          <Route path="plan" element={<PatientPlan />} />
+          <Route path="plan" element={<ErrorBoundary fallbackPath="/patient/home"><PatientWorkout initialTab="plan" /></ErrorBoundary>} />
           <Route path="ai-physio" element={<ErrorBoundary fallbackPath="/patient/home"><PatientAiPhysio /></ErrorBoundary>} />
           <Route path="pre" element={<PatientPre />} />
           <Route path="live" element={<ErrorBoundary fallbackPath="/patient/plan"><PatientLive /></ErrorBoundary>} />

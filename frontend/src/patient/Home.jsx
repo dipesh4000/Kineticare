@@ -125,10 +125,10 @@ export default function PatientHome() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--pri)', color: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-            <Icon name="physio" size={22} color="#ffffff" />
+            <Icon name="kira" size={22} color="#ffffff" />
           </div>
           <div>
-            <b style={{ fontSize: 14, color: 'var(--ink)' }}>AI Physiotherapist</b>
+            <b style={{ fontSize: 14, color: 'var(--ink)' }}>Kira · AI Physio</b>
             <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--mut)' }}>
               Movement analysis, pain check, form cueing & recovery guidance
             </p>

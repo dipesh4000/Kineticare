@@ -21,7 +21,9 @@ export default function usePoseCamera(onPose, filterConfig = {}) {
   const wasRunningBeforeHideRef = useRef(false);
   const lowFpsCounterRef = useRef(0);
   const reducedResolutionRef = useRef(false);
+  const facingModeRef = useRef('user');
 
+  const [facingMode, setFacingMode] = useState('user');
   const [tracking, setTracking] = useState({ model: '', visible: 0, total: 0, confidence: 0, fps: 0 });
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
@@ -77,9 +79,11 @@ export default function usePoseCamera(onPose, filterConfig = {}) {
     recorder.stop();
   }), []);
 
-  const start = useCallback(async (mode = 'detailed', runFilterConfig = null) => {
+  const start = useCallback(async (mode = 'detailed', runFilterConfig = null, requestedFacingMode = facingModeRef.current) => {
     stop();
     activeModeRef.current = mode;
+    facingModeRef.current = requestedFacingMode;
+    setFacingMode(requestedFacingMode);
     const generation = generationRef.current;
     const selected = POSE_MODES[mode] ?? POSE_MODES.detailed;
     setTracking({ model: selected.label, visible: 0, total: selected.landmarks, confidence: 0, fps: 0 });
@@ -93,14 +97,14 @@ export default function usePoseCamera(onPose, filterConfig = {}) {
     try {
       const standardConstraints = {
         audio: false,
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: { ideal: requestedFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
       };
       try {
         stream = await navigator.mediaDevices.getUserMedia(standardConstraints);
       } catch (firstErr) {
         if (firstErr?.name === 'OverconstrainedError') {
-          console.warn('Overconstrained camera constraints, falling back to basic user camera.');
-          stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user' } });
+          console.warn('Overconstrained camera constraints, falling back to basic camera with facingMode:', requestedFacingMode);
+          stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: requestedFacingMode } });
           reducedResolutionRef.current = true;
           setPerformance(prev => ({ ...prev, degraded: true, resolution: { width: 640, height: 480 } }));
         } else {
@@ -196,7 +200,7 @@ export default function usePoseCamera(onPose, filterConfig = {}) {
           const timestamp = now;
           const rawPose = poses[0] ?? null;
           const pose = filterPose(poseFilterRef.current, rawPose, timestamp);
-          drawPose(canvasRef.current, currentVid, pose);
+          drawPose(canvasRef.current, currentVid, pose, { mirrored: facingModeRef.current === 'user' });
           onPoseRef.current(pose, timestamp, currentVid);
 
           // Performance and FPS sampling
@@ -289,6 +293,16 @@ export default function usePoseCamera(onPose, filterConfig = {}) {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [start]);
 
+  const flipCamera = useCallback(async () => {
+    const nextMode = facingModeRef.current === 'user' ? 'environment' : 'user';
+    facingModeRef.current = nextMode;
+    setFacingMode(nextMode);
+    if (runningRef.current) {
+      return start(activeModeRef.current, null, nextMode);
+    }
+    return true;
+  }, [start]);
+
   useEffect(() => stop, [stop]);
 
   return {
@@ -299,6 +313,8 @@ export default function usePoseCamera(onPose, filterConfig = {}) {
     errorDescriptor,
     tracking,
     performance,
+    facingMode,
+    flipCamera,
     start,
     stop,
     startRecording,

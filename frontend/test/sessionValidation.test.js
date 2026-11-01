@@ -9,6 +9,10 @@ import {
   validatePreSession,
   measureTorsoLength,
   normalizeDistance,
+  estimatePatientDistance,
+  checkPatientDistance,
+  MIN_OPTIMAL_DISTANCE_M,
+  MAX_OPTIMAL_DISTANCE_M,
 } from '../src/vision/sessionValidation.js';
 import { calibrateRest } from '../src/exercise/reference.js';
 
@@ -235,3 +239,109 @@ test('measureTorsoLength & normalizeDistance: extracts torso baseline and normal
   assert.equal(normalizeDistance(80, 0), null);
 });
 
+
+test('estimatePatientDistance & checkPatientDistance: calculates patient distance and validates optimal range', () => {
+  const frame = { width: 640, height: 480 };
+
+  // 1. Optimal distance: torso is ~125px on 480px frame -> 0.525 / (125/480) ≈ 2.0m
+  const optimalPose = [
+    pt('left_shoulder', 270, 100),
+    pt('right_shoulder', 285, 100),
+    pt('left_hip', 265, 225),
+    pt('right_hip', 275, 225),
+  ];
+  const optimal = estimatePatientDistance(optimalPose, frame);
+  assert.equal(optimal.ok, true);
+  assert.equal(optimal.status, 'optimal');
+  assert.equal(optimal.code, 'DISTANCE_OK');
+  assert.equal(optimal.distanceMeters, 2.0);
+  assert.ok(optimal.message.includes('Optimal camera distance'));
+
+  // 2. Too close: patient is standing right next to camera (< 1.6m)
+  // Torso is ~220px on 480px frame -> 0.525 / (220/480) ≈ 1.1m
+  const closePose = [
+    pt('left_shoulder', 270, 50),
+    pt('right_shoulder', 285, 50),
+    pt('left_hip', 265, 270),
+    pt('right_hip', 275, 270),
+  ];
+  const close = checkPatientDistance(closePose, frame);
+  assert.equal(close.ok, false);
+  assert.equal(close.status, 'too_close');
+  assert.equal(close.code, 'DISTANCE_TOO_CLOSE');
+  assert.equal(close.distanceMeters, 1.1);
+  assert.ok(close.message.includes('Step back from camera'));
+
+  // 3. Too far: patient is too far back (> 3.2m)
+  // Torso is ~60px on 480px frame -> 0.525 / (60/480) ≈ 4.2m
+  const farPose = [
+    pt('left_shoulder', 270, 100),
+    pt('right_shoulder', 285, 100),
+    pt('left_hip', 265, 160),
+    pt('right_hip', 275, 160),
+  ];
+  const far = checkPatientDistance(farPose, frame);
+  assert.equal(far.ok, false);
+  assert.equal(far.status, 'too_far');
+  assert.equal(far.code, 'DISTANCE_TOO_FAR');
+  assert.equal(far.distanceMeters, 4.2);
+  assert.ok(far.message.includes('Step closer to camera'));
+
+  // 4. Missing/empty keypoints
+  assert.equal(estimatePatientDistance([]).ok, false);
+  assert.equal(estimatePatientDistance(null).code, 'DISTANCE_UNKNOWN');
+
+  // 5. Fallback to shoulder width when hips are occluded
+  const shoulderOnlyPose = [
+    pt('left_shoulder', 200, 120),
+    pt('right_shoulder', 300, 120),
+    pt('left_hip', 200, 260, 0.1),
+    pt('right_hip', 300, 260, 0.1),
+  ];
+  const shoulderEst = estimatePatientDistance(shoulderOnlyPose, frame);
+  assert.equal(shoulderEst.ok, true);
+  assert.equal(shoulderEst.status, 'optimal');
+  assert.equal(shoulderEst.distanceMeters, 2.0);
+});
+
+test('validatePreSession: distance validation blocks calibration when patient is too close or too far', () => {
+  const frame = { width: 640, height: 480 };
+
+  // Stance where body is too close to camera (< 1.6m)
+  const tooCloseValidation = validatePreSession({
+    exerciseName: 'Squat',
+    keypoints: [
+      pt('left_shoulder', 270, 50),
+      pt('right_shoulder', 285, 50),
+      pt('left_hip', 265, 270),
+      pt('right_hip', 275, 270),
+      pt('left_knee', 270, 360),
+      pt('left_ankle', 270, 440),
+    ],
+    frame,
+    fps: 30,
+  });
+  assert.equal(tooCloseValidation.ok, false);
+  assert.equal(tooCloseValidation.checks.distance.status, 'too_close');
+  assert.equal(tooCloseValidation.failingCheck.code, 'DISTANCE_TOO_CLOSE');
+  assert.ok(tooCloseValidation.message.includes('Step back from camera'));
+
+  // Stance where body is too far from camera (> 3.2m)
+  const tooFarValidation = validatePreSession({
+    exerciseName: 'Squat',
+    keypoints: [
+      pt('left_shoulder', 270, 100),
+      pt('right_shoulder', 285, 100),
+      pt('left_hip', 265, 160),
+      pt('right_hip', 275, 160),
+      pt('left_knee', 270, 210),
+      pt('left_ankle', 270, 260),
+    ],
+    frame,
+    fps: 30,
+  });
+  assert.equal(tooFarValidation.ok, false);
+  assert.equal(tooFarValidation.checks.distance.status, 'too_far');
+  assert.equal(tooFarValidation.failingCheck.code, 'DISTANCE_TOO_FAR');
+  assert.ok(tooFarValidation.message.includes('Step closer to camera'));
+});

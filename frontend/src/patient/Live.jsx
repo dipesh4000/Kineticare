@@ -12,7 +12,7 @@ import usePoseCamera from '../vision/usePoseCamera';
 import { getPoseFilterConfig } from '../vision/oneEuroFilter';
 import { POSE_MODES, shoulderAngles } from '../vision/poseOverlay';
 import { smoothAngleEMA, checkBodyAlignment } from '../vision/geometry';
-import { validatePreSession, measureTorsoLength } from '../vision/sessionValidation';
+import { validatePreSession, measureTorsoLength, checkPatientDistance, MIN_OPTIMAL_DISTANCE_M, MAX_OPTIMAL_DISTANCE_M } from '../vision/sessionValidation';
 import { saveSessionDraft } from '../session/drafts';
 import { startProfiler } from '../session/profiler';
 
@@ -79,6 +79,9 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
   const baselineRef = useRef(null);
   const repRef = useRef(createRepState());
   const [alignmentIssue, setAlignmentIssue] = useState(null);
+  const [distanceIssue, setDistanceIssue] = useState(null);
+  const [patientDistance, setPatientDistance] = useState(null);
+  const distanceRef = useRef(null);
   const [validation, setValidation] = useState(null);
   const prevAngleRef = useRef(null);
   const squatSideRef = useRef(null);
@@ -145,6 +148,34 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
     });
     setValidation(preCheck);
 
+    const distCheck = checkPatientDistance(pose?.keypoints);
+    if (distCheck.distanceMeters != null) {
+      const prevDist = distanceRef.current ?? distCheck.distanceMeters;
+      const smoothed = +(0.3 * distCheck.distanceMeters + 0.7 * prevDist).toFixed(1);
+      distanceRef.current = smoothed;
+      const distStatus = smoothed < MIN_OPTIMAL_DISTANCE_M ? 'too_close' : smoothed > MAX_OPTIMAL_DISTANCE_M ? 'too_far' : 'optimal';
+      setPatientDistance({ meters: smoothed, status: distStatus });
+
+      if (distStatus === 'too_close') {
+        const msg = `Too close to camera (~${smoothed}m). Step back so your entire body is tracked.`;
+        setDistanceIssue(msg);
+        if (mode === 'camera' && calibration.status === 'ready') {
+          announce('Step back from the camera.', timestamp);
+        }
+      } else if (distStatus === 'too_far') {
+        const msg = `Too far from camera (~${smoothed}m). Step closer for accurate movement tracking.`;
+        setDistanceIssue(msg);
+        if (mode === 'camera' && calibration.status === 'ready') {
+          announce('Step closer to the camera.', timestamp);
+        }
+      } else {
+        setDistanceIssue(null);
+      }
+    } else {
+      setPatientDistance(null);
+      setDistanceIssue(null);
+    }
+
     const raw = measurePose(pose);
     if (exercise.ex === 'Side Arm Raise') setArmAngles(shoulderAngles(pose?.keypoints));
     // Combined 5-sample median window + Exponential Moving Average (EMA) smoother
@@ -188,6 +219,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       baselineRef.current = {
         restAngle: result.value,
         torsoLength: result.torsoLength,
+        distanceMeters: distanceRef.current,
         variance: result.variance,
         stdDev: result.stdDev,
       };
@@ -236,6 +268,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
   const filterConfig = useMemo(() => getPoseFilterConfig(exercise.ex), [exercise.ex]);
   const {
     videoRef, canvasRef, status: cameraStatus, error: cameraError, tracking,
+    facingMode, flipCamera,
     start: startPoseCamera, stop: stopPoseCamera,
   } = usePoseCamera(onPose, filterConfig);
   const cameraReady = cameraStatus === 'running' && calibration.status === 'ready';
@@ -301,6 +334,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       baseline: baselineRef.current || {
         restAngle: restRef.current,
         torsoLength: torsoLengthRef.current,
+        distanceMeters: distanceRef.current,
       },
       s: score ? score.score / 100 : null, movementScore: score?.score ?? null,
       scoreComponents: score?.components ?? null, formulaVersion: score?.formulaVersion ?? null,
@@ -329,6 +363,9 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
     setMode('camera');
     if (mode !== 'camera') setTiming({ elapsed: 0, active: 0, paused: 0, unassessed: 0, readyRest: 0 });
     setMeasurement(null);
+    setPatientDistance(null);
+    setDistanceIssue(null);
+    distanceRef.current = null;
     setCalibration({ status: 'idle', progress: 0, message: '' });
     restRef.current = null;
     squatSideRef.current = null;
@@ -390,6 +427,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       baseline: baselineRef.current || {
         restAngle: restRef.current,
         torsoLength: torsoLengthRef.current,
+        distanceMeters: distanceRef.current,
       },
       s: score ? score.score / 100 : null,
       movementScore: score?.score ?? null,
@@ -459,7 +497,20 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       {(!mode || cameraStatus === 'error') && <label className="tracking-select">Tracking detail<select value={poseMode} onChange={event => setPoseMode(event.target.value)}>{Object.entries(POSE_MODES).map(([key, option]) => <option key={key} value={key}>{option.label}</option>)}</select><span className="mut">Choose Balanced or Fast if your phone struggles. Retrying keeps completed repetitions; camera setup runs again.</span></label>}
       {mode === 'camera' && cameraStatus === 'loading-model' && <p className="session-status" role="status">Loading {POSE_MODES[poseMode].label.toLowerCase()} tracking. The first start downloads the model and needs an internet connection.</p>}
       {mode === 'replay' && <div className="demo">Replay demo: movement and score are simulated.</div>}
-      {mode === 'camera' && cameraStatus === 'running' && <div className="tracking-panel" aria-label="Tracking quality"><div><b>{tracking.visible}/{tracking.total || 33}</b><span>Landmarks visible</span></div><div><b>{tracking.confidence}%</b><span>Detection confidence</span></div><div><b>{tracking.fps || '—'}</b><span>Frames / sec</span></div><p><span className="tracking-dot left" />Your left side <span className="tracking-dot right" />Your right side · {tracking.model}</p></div>}
+      {mode === 'camera' && cameraStatus === 'running' && (
+        <div className="tracking-panel" aria-label="Tracking quality">
+          <div><b>{tracking.visible}/{tracking.total || 33}</b><span>Landmarks visible</span></div>
+          <div><b>{tracking.confidence}%</b><span>Detection confidence</span></div>
+          <div><b>{tracking.fps || '—'}</b><span>Frames / sec</span></div>
+          <div>
+            <b style={{ color: patientDistance?.status === 'optimal' ? 'var(--ok)' : patientDistance ? 'var(--warn)' : 'inherit' }}>
+              {patientDistance?.meters != null ? `${patientDistance.meters}m` : '—'}
+            </b>
+            <span>Distance ({patientDistance?.status === 'optimal' ? 'Optimal' : patientDistance?.status === 'too_close' ? 'Too close' : patientDistance?.status === 'too_far' ? 'Too far' : 'checking'})</span>
+          </div>
+          <p><span className="tracking-dot left" />Your left side <span className="tracking-dot right" />Your right side · {tracking.model}</p>
+        </div>
+      )}
       {mode === 'camera' && cameraStatus === 'running' && calibration.status !== 'ready' && (
         <PreSessionChecklist
           validation={validation}
@@ -472,20 +523,46 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
       )}
       <div className="live-monitor" hidden={!mode}>
       <div className={`cam${paused || !active ? ' paused' : ''}`} aria-label={mode === 'camera' ? 'Live camera with pose overlay' : 'Exercise preview'}>
-        <video ref={videoRef} className="pose-layer" style={{ visibility: viewMode === 'skeleton' ? 'hidden' : 'visible' }} autoPlay playsInline webkit-playsinline="true" muted />
-        <canvas ref={canvasRef} className="pose-layer" />
+        <video ref={videoRef} className="pose-layer" style={{ visibility: viewMode === 'skeleton' ? 'hidden' : 'visible', transform: facingMode === 'environment' ? 'none' : 'scaleX(-1)' }} autoPlay playsInline webkit-playsinline="true" muted />
+        <canvas ref={canvasRef} className="pose-layer" style={{ transform: facingMode === 'environment' ? 'none' : 'scaleX(-1)' }} />
         {mode !== 'camera' && <Skeleton paused={paused || replayTrackingLost || !mode} />}
         <span className={`tag ${active ? 'ok' : 'warn'} st`}>
           {mode === 'camera'
             ? cameraStatus === 'running' ? cameraLabel : cameraStatus.replace('-', ' ')
             : mode === 'replay' ? replayTrackingLost ? 'Tracking unavailable' : 'Replay tracking' : 'Camera not started'}
         </span>
+        {mode === 'camera' && cameraStatus === 'running' && (
+          <button
+            type="button"
+            className="tag st"
+            style={{
+              left: 'auto',
+              right: 12,
+              cursor: 'pointer',
+              background: 'rgba(17,24,39,0.85)',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.2)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+            onClick={flipCamera}
+            title="Flip camera (front / back)"
+          >
+            🔄 {facingMode === 'user' ? 'Back cam' : 'Front cam'}
+          </button>
+        )}
       </div>
 
       </div>
       {alignmentIssue && mode === 'camera' && (
         <div className="demo" role="alert" style={{ background: 'var(--warnb)', color: 'var(--warn)', borderColor: 'rgba(180,83,9,0.3)', display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
           <span>⚠️ <b>Orientation Check:</b> {alignmentIssue}</span>
+        </div>
+      )}
+      {distanceIssue && mode === 'camera' && (
+        <div className="demo" role="alert" style={{ background: 'var(--warnb)', color: 'var(--warn)', borderColor: 'rgba(180,83,9,0.3)', display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+          <span>📏 <b>Distance Alert:</b> {distanceIssue}</span>
         </div>
       )}
 
@@ -558,6 +635,7 @@ function LiveSession({ state, exIdx, plan, exercise, patientId }) {
         {mode === 'camera' && cameraStatus === 'error' && <><button className="btn session-primary" onClick={startCamera}>Retry camera setup</button>{poseMode !== 'fast' && <button className="btn s" onClick={() => startCamera('fast')}>Try Fast tracking</button>}</>}
         {mode === 'camera' && ['requesting', 'loading-model'].includes(cameraStatus) && <button className="btn session-primary" disabled>{cameraStatus === 'requesting' ? 'Opening camera…' : 'Loading tracking…'}</button>}
         {mode === 'camera' && cameraStatus === 'running' && <button className="btn s" onClick={() => setViewMode(value => value === 'camera' ? 'skeleton' : 'camera')}>{viewMode === 'camera' ? 'Skeleton view' : 'Show camera'}</button>}
+        {mode === 'camera' && cameraStatus === 'running' && <button className="btn s" onClick={flipCamera} title="Flip camera">🔄 {facingMode === 'user' ? 'Flip to back camera' : 'Flip to front camera'}</button>}
         {(mode === 'replay' || cameraReady) && <button className="btn s" onClick={togglePause}>{paused ? 'Resume' : 'Pause'}</button>}
         {mode === 'replay' && <button className="btn s" onClick={() => setReplayTrackingLost(value => !value)}>{replayTrackingLost ? 'Restore tracking' : 'Simulate tracking loss'}</button>}
         {(mode === 'replay' || cameraStatus === 'running') && <button className="btn s" aria-pressed={speechEnabled} onClick={() => {

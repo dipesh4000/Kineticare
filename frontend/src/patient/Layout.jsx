@@ -8,7 +8,6 @@ import { useRecords } from '../records/recordsContext';
 const TABS = [
   ['home', 'Home', 'home'],
   ['workout', 'Workout', 'workout'],
-  ['plan', 'Plan', 'plan'],
   ['ai-physio', 'AI Physio', 'physio'],
   ['prog', 'Progress', 'prog'],
   ['me', 'Info', 'info'],
@@ -21,7 +20,7 @@ export default function PatientLayout() {
   const nav = useNavigate();
   const { pathname } = useLocation();
   const hideNav = NO_NAV.some(p => pathname.startsWith(p));
-  const active = TABS.find(([k]) => pathname.includes(`/patient/${k}`))?.[0] ?? 'home';
+  const active = TABS.find(([k]) => pathname.includes(`/patient/${k}`))?.[0] ?? (pathname.includes('/patient/plan') ? 'workout' : 'home');
 
   return (
     <div className={`phone patient-shell${hideNav ? ' session-shell' : ''}`}>

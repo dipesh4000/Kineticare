@@ -74,7 +74,8 @@ export function shoulderAngles(keypoints) {
   }));
 }
 
-export function drawPose(canvas, video, pose) {
+export function drawPose(canvas, video, pose, options = {}) {
+  const mirrored = options?.mirrored ?? true;
   if (!canvas || !video.videoWidth || !video.videoHeight) return;
   if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
     canvas.width = video.videoWidth;
@@ -99,13 +100,16 @@ export function drawPose(canvas, video, pose) {
     context.fillStyle = color(point.name); context.fill();
     context.lineWidth = size * 0.4; context.strokeStyle = '#101827'; context.stroke();
   }
-  // Canvas and video share the same mirror transform. Counter-mirror labels so
-  // angle text stays readable on a front camera.
+  // When mirrored (front camera), counter-mirror labels so angle text stays readable.
+  // When unmirrored (environment camera), render angle text normally.
   const angles = shoulderAngles(pose.keypoints);
   for (const side of ['left', 'right']) {
     if (!Number.isFinite(angles[side])) continue;
     const shoulder = points[`${side}_shoulder`];
-    context.save(); context.translate(shoulder.x, shoulder.y - size * 5); context.scale(-1, 1);
+    context.save(); context.translate(shoulder.x, shoulder.y - size * 5);
+    if (mirrored) {
+      context.scale(-1, 1);
+    }
     context.font = `600 ${Math.round(size * 5)}px system-ui`;
     context.textAlign = 'center'; context.lineWidth = 4; context.strokeStyle = '#101827'; context.fillStyle = color(side);
     const label = `${Math.round(angles[side])}°`;

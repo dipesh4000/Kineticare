@@ -110,6 +110,7 @@ export default function PatientAiPhysio() {
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const sendingRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -130,25 +131,32 @@ export default function PatientAiPhysio() {
     setHasConsent(true);
   };
 
-  const handleSend = async (textToSend) => {
+  const handleSend = async (textToSend, baseMessages = null) => {
+    if (sendingRef.current) return;
     const text = (typeof textToSend === 'string' ? textToSend : input).trim();
-    if (!text || loading) return;
+    if (!text) return;
 
+    sendingRef.current = true;
+    const currentMessages = baseMessages ?? messages;
     const userMsg = { role: 'user', content: text };
-    const nextMessages = [...messages, userMsg];
+    const nextMessages = [...currentMessages, userMsg];
     setMessages(nextMessages);
     setInput('');
     setLoading(true);
     setError(null);
 
     try {
-      const payloadMessages = nextMessages.slice(-10);
+      const payloadMessages = nextMessages.slice(-10).map(m => ({
+        role: m.role,
+        content: m.role === 'assistant' && m.content.length > 7900 ? m.content.slice(0, 7900) : m.content,
+      }));
       const res = await sendChat(payloadMessages, { patientId });
       setMessages([...nextMessages, { role: 'assistant', content: res.reply }]);
     } catch (err) {
       setError(err.message || 'Unable to connect to Kira.');
     } finally {
       setLoading(false);
+      sendingRef.current = false;
     }
   };
 
@@ -349,8 +357,12 @@ export default function PatientAiPhysio() {
                   <button
                     type="button"
                     onClick={() => {
-                      const lastUser = [...messages].reverse().find(m => m.role === 'user');
-                      if (lastUser) handleSend(lastUser.content);
+                      const lastUserIdx = messages.findLastIndex(m => m.role === 'user');
+                      if (lastUserIdx !== -1) {
+                        const failedText = messages[lastUserIdx].content;
+                        const withoutFailed = messages.slice(0, lastUserIdx);
+                        handleSend(failedText, withoutFailed);
+                      }
                     }}
                   >
                     Retry
@@ -377,6 +389,8 @@ export default function PatientAiPhysio() {
                   onKeyDown={handleKeyDown}
                   placeholder="Ask Kira about Kisner & Colby form cues, soreness, or exercise tips..."
                   rows={1}
+                  maxLength={1500}
+                  disabled={loading}
                 />
                 <button
                   type="submit"

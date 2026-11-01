@@ -40,18 +40,23 @@ export function validateChatMessages(messages, consent) {
     if (m.role !== 'user' && m.role !== 'assistant') {
       throw new AppError(`Message role must be 'user' or 'assistant', got '${m.role}'.`, 400, 'VALIDATION_ERROR');
     }
-    // User messages are capped at 1500 chars (matches frontend textarea maxLength).
-    // Assistant messages are prior replies from Groq and can be longer — only validate non-empty.
-    const maxLen = m.role === 'user' ? 1500 : 8000;
-    if (typeof m.content !== 'string' || !m.content.trim() || m.content.length > maxLen) {
+    if (typeof m.content !== 'string' || !m.content.trim()) {
       const label = m.role === 'user' ? 'up to 1500 characters' : 'up to 8000 characters';
       throw new AppError(`Message content at index ${i} must be a non-empty string ${label}.`, 400, 'VALIDATION_ERROR');
+    }
+    // User messages are capped at 1500 chars (matches frontend textarea maxLength).
+    if (m.role === 'user' && m.content.length > 1500) {
+      throw new AppError(`Message content at index ${i} must be a non-empty string up to 1500 characters.`, 400, 'VALIDATION_ERROR');
     }
   }
   if (messages.at(-1)?.role !== 'user') {
     throw new AppError('The last message must be from the user.', 400, 'VALIDATION_ERROR');
   }
-  return messages.map(m => ({ role: m.role, content: m.content.trim() }));
+  // Assistant messages can be up to 8000 chars. If a prior reply in history is longer, safely clamp so history never breaks.
+  return messages.map(m => ({
+    role: m.role,
+    content: (m.role === 'assistant' && m.content.length > 8000 ? m.content.slice(0, 8000) : m.content).trim(),
+  }));
 }
 
 export async function callGroqChat({ messages, systemPrompt, env = process.env, fetchImpl = fetch } = {}) {

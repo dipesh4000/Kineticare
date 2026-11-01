@@ -276,6 +276,23 @@ test('validateChatMessages validates consent, length, roles, and user terminatio
   ], true);
   assert.equal(valid.length, 3);
   assert.equal(valid[2].content, 'What is my plan?');
+
+  // Assistant messages > 1500 chars (e.g. detailed clinical summaries) and > 8000 chars are safely handled
+  const longAssistantConv = validateChatMessages([
+    { role: 'user', content: 'Hi, what\'s my current progress' },
+    { role: 'assistant', content: 'x'.repeat(1525) },
+    { role: 'user', content: 'What exercise should i do tommorrow' },
+  ], true);
+  assert.equal(longAssistantConv.length, 3);
+  assert.equal(longAssistantConv[1].content.length, 1525);
+
+  const giantAssistantConv = validateChatMessages([
+    { role: 'user', content: 'Hi' },
+    { role: 'assistant', content: 'y'.repeat(8500) },
+    { role: 'user', content: 'Next step' },
+  ], true);
+  assert.equal(giantAssistantConv.length, 3);
+  assert.equal(giantAssistantConv[1].content.length, 8000);
 });
 
 // ── 4. callGroqChat & Error Mappings ──────────────────────────────────────────
